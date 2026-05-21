@@ -16,7 +16,13 @@ Delete it after verifying.
 from datetime import date
 from generate_content import post_recap_to_discord
 
-fake_team = {"name": "Washington Wizards (TEST)", "league": "NBA"}
+fake_team = {
+    "name": "Washington Wizards (TEST)",
+    "league": "NBA",
+    "persona": "Casper Wexler",
+    "voice": "modern, analytics-first NBA tone",
+    "channel_target": "RECAPS",  # change to "WIZARDS" once that webhook is configured
+}
 fake_summary = {
     "score": "Washington Wizards 112, Boston Celtics 108",
     "venue": "Capital One Arena",

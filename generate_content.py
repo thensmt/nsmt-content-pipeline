@@ -43,36 +43,83 @@ CATEGORY_IDS = {
 }
 
 # ── DC/MD/VA Teams to track ───────────────────────────────────────────────────
+#
+# Each team has:
+#   persona         — the AI writer's byline name. Always rendered with the
+#                     🤖 badge + ", AI Sports Writer" suffix downstream.
+#   voice           — one-line voice modifier injected into the Claude prompt.
+#                     Keeps baseline tone but flavors per beat.
+#   channel_target  — Cloudflare Worker target name → DISCORD_WEBHOOK_URL_<X>.
+#                     Default "RECAPS" routes to the shared #recap-pipeline.
+#                     When you set up a dedicated channel for a team, change
+#                     this AND add the matching worker secret.
+
 TEAMS = [
     # NFL
-    {"name": "Washington Commanders", "league": "NFL",      "espn_id": "28",  "sport": "football",    "league_slug": "nfl",                     "category": "pro"},
+    {"name": "Washington Commanders", "league": "NFL",      "espn_id": "28",  "sport": "football",    "league_slug": "nfl",                     "category": "pro",
+     "persona": "Maxwell Tucker",  "voice": "blunt, X's-and-O's focused, sounds like a longtime NFL beat writer",
+     "channel_target": "RECAPS"},
     # NBA
-    {"name": "Washington Wizards",    "league": "NBA",      "espn_id": "27",  "sport": "basketball",  "league_slug": "nba",                     "category": "pro"},
+    {"name": "Washington Wizards",    "league": "NBA",      "espn_id": "27",  "sport": "basketball",  "league_slug": "nba",                     "category": "pro",
+     "persona": "Casper Wexler",   "voice": "modern, analytics-first, pace-and-space NBA tone",
+     "channel_target": "RECAPS"},
     # NHL
-    {"name": "Washington Capitals",   "league": "NHL",      "espn_id": "15",  "sport": "hockey",      "league_slug": "nhl",                     "category": "pro"},
+    {"name": "Washington Capitals",   "league": "NHL",      "espn_id": "15",  "sport": "hockey",      "league_slug": "nhl",                     "category": "pro",
+     "persona": "Ada Frost",       "voice": "tactical, hockey-specific terminology, no-fluff rink-side voice",
+     "channel_target": "RECAPS"},
     # MLB
-    {"name": "Washington Nationals",  "league": "MLB",      "espn_id": "21",  "sport": "baseball",    "league_slug": "mlb",                     "category": "pro"},
+    {"name": "Washington Nationals",  "league": "MLB",      "espn_id": "21",  "sport": "baseball",    "league_slug": "mlb",                     "category": "pro",
+     "persona": "Bayes Cooper",    "voice": "stats-curious, contextualizes performances with historical baseball perspective",
+     "channel_target": "RECAPS"},
     # WNBA
-    {"name": "Washington Mystics",    "league": "WNBA",     "espn_id": "14",  "sport": "basketball",  "league_slug": "wnba",                    "category": "pro"},
+    {"name": "Washington Mystics",    "league": "WNBA",     "espn_id": "14",  "sport": "basketball",  "league_slug": "wnba",                    "category": "pro",
+     "persona": "Sibyl Avery",     "voice": "insightful, draws connections between plays and player tendencies",
+     "channel_target": "RECAPS"},
     # NWSL
-    {"name": "Washington Spirit",     "league": "NWSL",     "espn_id": "WAS", "sport": "soccer",      "league_slug": "usa.nwsl",                "category": "pro"},
+    {"name": "Washington Spirit",     "league": "NWSL",     "espn_id": "WAS", "sport": "soccer",      "league_slug": "usa.nwsl",                "category": "pro",
+     "persona": "Wren Holloway",   "voice": "tactical, internationalist, women's-soccer-savvy",
+     "channel_target": "RECAPS"},
     # MLS
-    {"name": "DC United",             "league": "MLS",      "espn_id": "DC",  "sport": "soccer",      "league_slug": "usa.1",                   "category": "pro"},
+    {"name": "DC United",             "league": "MLS",      "espn_id": "DC",  "sport": "soccer",      "league_slug": "usa.1",                   "category": "pro",
+     "persona": "Beckett Calloway","voice": "cosmopolitan, MLS-savvy, soccer-purist sensibility",
+     "channel_target": "RECAPS"},
     # NBA G-League
-    {"name": "Capital City Go-Go",    "league": "G-League", "espn_id": "CCG", "sport": "basketball",  "league_slug": "nba-g-league",            "category": "pro"},
+    {"name": "Capital City Go-Go",    "league": "G-League", "espn_id": "CCG", "sport": "basketball",  "league_slug": "nba-g-league",            "category": "pro",
+     "persona": "Chuck Harrington","voice": "hometown DC voice, prospect-focused, hopeful G-League energy",
+     "channel_target": "RECAPS"},
 ]
 
 COLLEGE_TEAMS = [
-    {"name": "Maryland Terrapins",     "league": "College Basketball",         "espn_id": "120",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
-    {"name": "Virginia Cavaliers",     "league": "College Basketball",         "espn_id": "258",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
-    {"name": "Virginia Tech Hokies",   "league": "College Basketball",         "espn_id": "259",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
-    {"name": "Georgetown Hoyas",       "league": "College Basketball",         "espn_id": "46",   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
-    {"name": "George Mason Patriots",  "league": "College Basketball",         "espn_id": "2244", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
-    {"name": "George Mason Patriots",  "league": "Women's College Basketball", "espn_id": "2244", "sport": "basketball", "league_slug": "womens-college-basketball", "category": "college"},
-    {"name": "Mary Washington Eagles", "league": "College Basketball (D3)",    "espn_id": "2942", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college"},
+    {"name": "Maryland Terrapins",     "league": "College Basketball",         "espn_id": "120",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Terry Lane",      "voice": "hometown Maryland pride, knows the Big Ten landscape",
+     "channel_target": "RECAPS"},
+    {"name": "Virginia Cavaliers",     "league": "College Basketball",         "espn_id": "258",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Cav Mitchell",    "voice": "refined, slow-burn analysis, ACC tradition",
+     "channel_target": "RECAPS"},
+    {"name": "Virginia Tech Hokies",   "league": "College Basketball",         "espn_id": "259",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Hayes Bremner",   "voice": "blue-collar, scrappy underdog energy, Lane Stadium pride",
+     "channel_target": "RECAPS"},
+    {"name": "Georgetown Hoyas",       "league": "College Basketball",         "espn_id": "46",   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Vance Hoya",      "voice": "prestige tone, Big East tradition, Hoya Saxa",
+     "channel_target": "RECAPS"},
+    {"name": "George Mason Patriots",  "league": "College Basketball",         "espn_id": "2244", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Mason Adams",     "voice": "scrappy mid-major, history-conscious patriot energy",
+     "channel_target": "RECAPS"},
+    {"name": "George Mason Patriots",  "league": "Women's College Basketball", "espn_id": "2244", "sport": "basketball", "league_slug": "womens-college-basketball", "category": "college",
+     "persona": "Mason Adams",     "voice": "scrappy mid-major, history-conscious patriot energy",
+     "channel_target": "RECAPS"},
+    {"name": "Mary Washington Eagles", "league": "College Basketball (D3)",    "espn_id": "2942", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Eagle Reed",      "voice": "passionate D3 small-school enthusiast",
+     "channel_target": "RECAPS"},
 ]
 
 ALL_TEAMS = TEAMS + COLLEGE_TEAMS
+
+
+def build_byline(team):
+    """Render the persona name as a byline with the AI badge."""
+    persona = team.get("persona") or "NSMT Staff"
+    return f"🤖 {persona}, AI Sports Writer"
 
 
 # ── ESPN API helpers ───────────────────────────────────────────────────────────
@@ -147,8 +194,11 @@ def generate_article(game_summary, team, article_type="recap"):
         print("ERROR: ANTHROPIC_API_KEY not set.")
         return None
 
+    persona_name = team.get("persona") or "an NSMT writer"
+    persona_voice = team.get("voice") or "professional and engaging"
+
     if article_type == "recap":
-        prompt = f"""You are a sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia.
+        prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers know your byline is AI-authored. Your voice: {persona_voice}.
 
 Write a professional, engaging game recap article (400-550 words) for the following game:
 
@@ -165,14 +215,15 @@ Guidelines:
 - Mention standout individual performances
 - Add context about standings or season implications
 - Close with a forward-looking line about the team's next challenge
-- Tone: professional but engaging, written for DC/MD/VA sports fans
+- Stay in your voice ({persona_voice}) but keep it professional, written for DC/MD/VA sports fans
 - Do NOT fabricate specific play-by-play details not given above
+- Do NOT refer to yourself in first person or call attention to being AI in the article body — the byline handles disclosure
 - Format: plain paragraphs only, no headers or bullet points
 
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters) for the article preview."""
 
     elif article_type == "preview":
-        prompt = f"""You are a sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet.
+        prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet. Your voice: {persona_voice}.
 
 Write a professional game preview article (350-450 words) for the upcoming game:
 
@@ -185,7 +236,8 @@ Guidelines:
 - Preview the matchup and what's at stake
 - Discuss key players to watch on both sides
 - Mention recent form or storylines where relevant
-- Tone: professional, written for DC/MD/VA fans
+- Stay in your voice but keep it professional, for DC/MD/VA fans
+- Do NOT refer to yourself in first person or call attention to being AI in the body
 - Format: plain paragraphs only, no headers or bullet points
 
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters)."""
@@ -263,7 +315,7 @@ def save_to_nsmt(title, slug, content, excerpt, team, game_date, token):
                 "title":        title,
                 "slug":         slug,
                 "category_id":  category_id,
-                "author":       "NSMT Staff",
+                "author":       build_byline(team),
                 "author_image": "blogs/authors/1748435759641.jpg",
                 "description":  content,
                 "content":      "",
@@ -283,8 +335,16 @@ def save_to_nsmt(title, slug, content, excerpt, team, game_date, token):
 
 
 def post_recap_to_discord(title, excerpt, team, summary, game_date):
-    """Best-effort notification to Discord #recap-pipeline via the Cloudflare
-    Worker proxy. Never raises — Discord failure must not block admin saves."""
+    """Best-effort notification to Discord via the Cloudflare Worker proxy.
+
+    Routes to the team's own channel if `team["channel_target"]` matches a
+    configured `DISCORD_WEBHOOK_URL_<X>` secret on the worker. Otherwise the
+    worker falls back to the default webhook (currently #recap-pipeline via
+    the RECAPS target, which is the default for all teams until you opt them
+    into per-team channels).
+
+    Never raises — Discord failure must not block admin saves.
+    """
     if not DISCORD_PROXY_URL or not DISCORD_PROXY_SECRET:
         print("  Discord notification skipped — DISCORD_PROXY_URL / DISCORD_PROXY_SECRET not set.")
         return False
@@ -293,15 +353,19 @@ def post_recap_to_discord(title, excerpt, team, summary, game_date):
     if len(safe_excerpt) > 400:
         safe_excerpt = safe_excerpt[:399] + "…"
 
+    channel_target = team.get("channel_target") or DISCORD_TARGET
+    byline = build_byline(team)
+
     embed = {
         "title":       f"📝 New Recap Draft — {team['name']}",
         "description": safe_excerpt,
         "color":       NSMT_BLUE,
         "fields": [
-            {"name": "🏆 Game",   "value": summary.get("score", "Score unavailable"), "inline": False},
-            {"name": "📅 Date",   "value": game_date.isoformat(),                      "inline": True},
-            {"name": "🏟️ Venue", "value": summary.get("venue") or "Unknown",         "inline": True},
-            {"name": "✏️ Review", "value": f"[Open in admin]({ADMIN_REVIEW_URL})",    "inline": False},
+            {"name": "✍️ Byline",  "value": byline,                                    "inline": False},
+            {"name": "🏆 Game",    "value": summary.get("score", "Score unavailable"), "inline": False},
+            {"name": "📅 Date",    "value": game_date.isoformat(),                      "inline": True},
+            {"name": "🏟️ Venue",  "value": summary.get("venue") or "Unknown",         "inline": True},
+            {"name": "✏️ Review",  "value": f"[Open in admin]({ADMIN_REVIEW_URL})",    "inline": False},
         ],
         "footer":    {"text": f"{team['league']} · status: draft (is_active=0) in admin"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -321,14 +385,14 @@ def post_recap_to_discord(title, excerpt, team, summary, game_date):
             DISCORD_PROXY_URL,
             headers={
                 "X-NSMT-Auth":   DISCORD_PROXY_SECRET,
-                "X-NSMT-Target": DISCORD_TARGET,
+                "X-NSMT-Target": channel_target,
                 "Content-Type":  "application/json",
             },
             json=payload,
             timeout=15,
         )
         if resp.status_code < 300:
-            print(f"  ✓ Discord notification posted (status {resp.status_code})")
+            print(f"  ✓ Discord notification posted to target='{channel_target}' (status {resp.status_code})")
             return True
         print(f"  ✗ Discord notification failed (status {resp.status_code}): {resp.text[:200]}")
         return False
