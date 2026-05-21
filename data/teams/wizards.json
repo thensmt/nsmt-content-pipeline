@@ -1,0 +1,78 @@
+{
+  "team_name": "Washington Wizards",
+  "slug": "wizards",
+  "league": "NBA",
+  "league_full": "National Basketball Association",
+  "conference": "Eastern Conference",
+  "division": "Southeast Division",
+  "espn_id": "27",
+  "official_url": "https://www.nba.com/wizards",
+  "founded": "1961",
+  "current_season": "2025-26",
+  "current_record": "17-65 (5th/last in Southeast Division; tied for worst record in NBA, missed playoffs)",
+  "venue": {
+    "name": "Capital One Arena",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": 20356,
+    "opened": "1997",
+    "notes": "NBA basketball configuration. Owned by Monumental Sports; undergoing $800M six-phase renovation through 2027"
+  },
+  "ownership": {
+    "primary_owner": "Ted Leonsis",
+    "ownership_group": "Monumental Sports & Entertainment"
+  },
+  "front_office": {
+    "general_manager": "Will Dawkins",
+    "president": "Michael Winger",
+    "head_of_football_ops": null,
+    "notes": "Winger holds title 'President of Monumental Basketball' and outranks Dawkins in the org chart"
+  },
+  "head_coach": {
+    "name": "Brian Keefe",
+    "tenure_start": "2024",
+    "background": "Hired as assistant coach in 2023, promoted to interim head coach in 2024 after Wes Unseld Jr. transitioned to a front-office role; made permanent thereafter. Expected to return for 2026-27 per GM Will Dawkins.",
+    "career_record_with_team": null
+  },
+  "coaching_staff": [
+    {"name": null, "role": "Lead Assistant Coach", "notes": "Not verified from authoritative source for this file"}
+  ],
+  "roster": [
+    {"name": "Trae Young", "position": "G", "number": "3", "notes": null},
+    {"name": "D'Angelo Russell", "position": "G", "number": "5", "notes": null},
+    {"name": "Bub Carrington", "position": "G", "number": "7", "notes": "Sophomore guard"},
+    {"name": "Jaden Hardy", "position": "G", "number": "8", "notes": null},
+    {"name": "Bilal Coulibaly", "position": "G", "number": "0", "notes": null},
+    {"name": "Tre Johnson", "position": "G", "number": "12", "notes": "2025 first-round pick, ~12.2 PPG"},
+    {"name": "Sharife Cooper", "position": "G", "number": "13", "notes": null},
+    {"name": "Will Riley", "position": "G", "number": "27", "notes": null},
+    {"name": "Jamir Watkins", "position": "G", "number": "5", "notes": "Duplicate #5 on ESPN page -- verify"},
+    {"name": "Anthony Davis", "position": "F", "number": "23", "notes": "Acquired via trade"},
+    {"name": "Cam Whitmore", "position": "F", "number": "1", "notes": null},
+    {"name": "Kyshawn George", "position": "F", "number": "18", "notes": null},
+    {"name": "Justin Champagnie", "position": "F", "number": "9", "notes": null},
+    {"name": "Leaky Black", "position": "F", "number": "12", "notes": "Duplicate #12 on ESPN page -- verify"},
+    {"name": "Anthony Gill", "position": "F", "number": "16", "notes": null},
+    {"name": "Julian Reese", "position": "F", "number": "15", "notes": null},
+    {"name": "Tristan Vukcevic", "position": "F", "number": "00", "notes": null},
+    {"name": "Alex Sarr", "position": "C", "number": "20", "notes": "2024 #2 overall pick; ~16.3 PPG"}
+  ],
+  "recent_games": [
+    {"date": "2026-04-12", "opponent": "Cleveland Cavaliers", "result": "L 117-130", "venue": "away", "notes": "Season finale"},
+    {"date": "2026-04-10", "opponent": "Miami Heat", "result": "L 117-140", "venue": "home", "notes": null},
+    {"date": "2026-04-09", "opponent": "Chicago Bulls", "result": "L 108-119", "venue": "home", "notes": null},
+    {"date": "2026-04-07", "opponent": "Chicago Bulls", "result": "L 98-129", "venue": "home", "notes": null},
+    {"date": "2026-04-05", "opponent": "Brooklyn Nets", "result": "L 115-121", "venue": "away", "notes": null}
+  ],
+  "upcoming_games": [],
+  "rivalries": ["Philadelphia 76ers", "New York Knicks", "Boston Celtics"],
+  "sources": [
+    {"url": "https://www.espn.com/nba/team/_/name/wsh/washington-wizards", "scraped_at": "2026-05-21", "notes": "Season record and standing"},
+    {"url": "https://www.espn.com/nba/team/roster/_/name/wsh/washington-wizards", "scraped_at": "2026-05-21", "notes": "Roster and head coach"},
+    {"url": "https://www.espn.com/nba/team/schedule/_/name/wsh/washington-wizards", "scraped_at": "2026-05-21", "notes": "Final 5 games"},
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Washington_Wizards_season", "scraped_at": "2026-05-21", "notes": "Confirmed Keefe/Dawkins/Leonsis"},
+    {"url": "https://sports.yahoo.com/nba/breaking-news/article/wizards-anticipate-return-of-brian-keefe-as-head-coach-after-last-place-finish-in-2025-26-season-171754827.html", "scraped_at": "2026-05-21", "notes": "Confirmed Keefe returning per Dawkins"}
+  ],
+  "verification_notes": "Head coach (Brian Keefe), GM (Will Dawkins), Pres. of Monumental Basketball (Michael Winger), and owner (Ted Leonsis) all confirmed. Record per ESPN is 17-65; one Wikipedia search reference said 16-55 / 17-64 which appears to be transcription noise -- ESPN's 17-65 is the figure used here. Roster has TWO sets of duplicate jersey numbers per ESPN (Tre Johnson and Leaky Black both #12; D'Angelo Russell and Jamir Watkins both #5) -- this likely reflects in-season roster turnover (waived/two-way players) and SHOULD be re-verified before any recap publishes. Anthony Davis is on roster (acquired in summer 2025 trade with Lakers); Trae Young likewise (acquired from Atlanta). Coaching staff beyond Keefe not verified -- left as null role placeholder. Stadium capacity 20,000 per Monumental's own description of Capital One Arena. Upcoming games empty: NBA offseason; Wizards missed playoffs. Won 2026 draft lottery per ownership tweet.",
+  "last_updated": "2026-05-21"
+}

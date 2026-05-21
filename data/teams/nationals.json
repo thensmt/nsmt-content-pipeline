@@ -1,0 +1,103 @@
+{
+  "team_name": "Washington Nationals",
+  "slug": "nationals",
+  "league": "MLB",
+  "league_full": "Major League Baseball",
+  "conference": "National League",
+  "division": "NL East",
+  "espn_id": "21",
+  "official_url": "https://www.mlb.com/nationals",
+  "founded": "1969",
+  "current_season": "2026",
+  "current_record": "25-25 (2nd in NL East as of 2026-05-21)",
+  "venue": {
+    "name": "Nationals Park",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": null,
+    "opened": "2008",
+    "notes": null
+  },
+  "ownership": {
+    "primary_owner": "Mark Lerner",
+    "ownership_group": "Lerner family (Lerner Enterprises); principal owner since 2018, family ownership since 2006"
+  },
+  "front_office": {
+    "general_manager": "Ani Kilambi",
+    "president": "Paul Toboni",
+    "head_of_football_ops": null,
+    "notes": "President of Baseball Operations Paul Toboni hired Sept 2025 from Boston Red Sox; GM Ani Kilambi hired Dec 2025 from Philadelphia Phillies. Both replace Mike Rizzo who was fired in July 2025."
+  },
+  "head_coach": {
+    "name": "Blake Butera",
+    "tenure_start": "2026",
+    "background": "Hired October 31, 2025 at age 33. Previously a minor-league manager in the Tampa Bay Rays organization. Replaces Davey Martinez (fired July 2025) and interim manager Miguel Cairo.",
+    "career_record_with_team": null
+  },
+  "coaching_staff": [
+    {"name": "Michael Johns", "role": "Bench Coach"},
+    {"name": "Tyler Smarslok", "role": "Field Coordinator"},
+    {"name": "Matt Borgschulte", "role": "Hitting Coach"},
+    {"name": "Andrew Aydt", "role": "Assistant Hitting Coach"},
+    {"name": "Simon Mathews", "role": "Pitching Coach", "notes": "Hired from Cincinnati Reds"},
+    {"name": "Sean Doolittle", "role": "Assistant Pitching Coach", "notes": "Former Nationals reliever, member of 2019 World Series team"},
+    {"name": "Dustin Glant", "role": "Assistant Pitching/Bullpen Coach"},
+    {"name": "Corey Ray", "role": "First Base / Outfield / Baserunning Coach"},
+    {"name": "Victor Estevez", "role": "Third Base / Infield Coach"},
+    {"name": "Bobby Wilson", "role": "Catching Coach / Run Game Coordinator"},
+    {"name": "Grant Anders", "role": "Bullpen Catcher / Development Coach"}
+  ],
+  "roster": [
+    {"name": "CJ Abrams", "position": "SS", "number": "5", "notes": "Team leader in batting avg (.300) and RBIs (42) as of May 2026"},
+    {"name": "Luis García Jr.", "position": "1B", "number": "2", "notes": null},
+    {"name": "Andrés Chaparro", "position": "1B", "number": "87", "notes": null},
+    {"name": "Curtis Mead", "position": "1B", "number": "45", "notes": null},
+    {"name": "Nasim Nuñez", "position": "2B", "number": "26", "notes": null},
+    {"name": "Jorbit Vivas", "position": "3B", "number": "84", "notes": null},
+    {"name": "Keibert Ruiz", "position": "C", "number": "20", "notes": null},
+    {"name": "Drew Millas", "position": "C", "number": "14", "notes": null},
+    {"name": "James Wood", "position": "RF", "number": "29", "notes": "Team leader in HRs (13) as of May 2026"},
+    {"name": "Dylan Crews", "position": "CF", "number": "3", "notes": "2023 #2 overall pick; recently returned from injury"},
+    {"name": "Jacob Young", "position": "CF", "number": "30", "notes": null},
+    {"name": "Daylen Lile", "position": "LF", "number": "4", "notes": null},
+    {"name": "José Tena", "position": "DH", "number": "8", "notes": null},
+    {"name": "Jake Irvin", "position": "SP", "number": "27", "notes": null},
+    {"name": "Miles Mikolas", "position": "SP", "number": "36", "notes": null},
+    {"name": "Zack Littell", "position": "SP", "number": "18", "notes": null},
+    {"name": "Cade Cavalli", "position": "SP", "number": "24", "notes": null},
+    {"name": "Foster Griffin", "position": "SP", "number": "22", "notes": null},
+    {"name": "Mitchell Parker", "position": "RP", "number": "70", "notes": null},
+    {"name": "Brad Lord", "position": "RP", "number": "41", "notes": null},
+    {"name": "Clayton Beeter", "position": "RP", "number": "39", "notes": null},
+    {"name": "Andrew Alvarez", "position": "RP", "number": "54", "notes": null},
+    {"name": "Richard Lovelady", "position": "RP", "number": "55", "notes": null},
+    {"name": "Gus Varland", "position": "RP", "number": "47", "notes": null},
+    {"name": "Orlando Ribalta", "position": "RP", "number": "64", "notes": null},
+    {"name": "Paxton Schultz", "position": "RP", "number": "75", "notes": null}
+  ],
+  "recent_games": [
+    {"date": "2026-05-17", "opponent": "Baltimore Orioles", "result": "L 3-7", "venue": "home", "notes": null},
+    {"date": "2026-05-16", "opponent": "Baltimore Orioles", "result": "W 13-3", "venue": "home", "notes": null},
+    {"date": "2026-05-15", "opponent": "Baltimore Orioles", "result": "W 3-2", "venue": "home", "notes": null},
+    {"date": "2026-05-14", "opponent": "Cincinnati Reds", "result": "L 1-15", "venue": "away", "notes": null},
+    {"date": "2026-05-13", "opponent": "Cincinnati Reds", "result": "W 8-7 (10 inn)", "venue": "away", "notes": null}
+  ],
+  "upcoming_games": [
+    {"date": "2026-05-22", "opponent": "Atlanta Braves", "venue": "away", "kickoff_et": "7:15 PM"},
+    {"date": "2026-05-23", "opponent": "Atlanta Braves", "venue": "away", "kickoff_et": "4:10 PM"},
+    {"date": "2026-05-24", "opponent": "Atlanta Braves", "venue": "away", "kickoff_et": "4:10 PM"},
+    {"date": "2026-05-25", "opponent": "Cleveland Guardians", "venue": "away", "kickoff_et": "6:10 PM"},
+    {"date": "2026-05-26", "opponent": "Cleveland Guardians", "venue": "away", "kickoff_et": "6:10 PM"}
+  ],
+  "rivalries": ["Atlanta Braves", "Philadelphia Phillies", "New York Mets", "Baltimore Orioles"],
+  "sources": [
+    {"url": "https://www.espn.com/mlb/team/_/name/wsh/washington-nationals", "scraped_at": "2026-05-21", "notes": "Record and standing"},
+    {"url": "https://www.espn.com/mlb/team/roster/_/name/wsh/washington-nationals", "scraped_at": "2026-05-21", "notes": "Active roster with positions and numbers"},
+    {"url": "https://www.espn.com/mlb/team/schedule/_/name/wsh", "scraped_at": "2026-05-21", "notes": "Last 5 / next 5 games"},
+    {"url": "https://www.mlb.com/news/blake-butera-introduced-as-manager-of-washington-nationals", "scraped_at": "2026-05-21", "notes": "Manager hiring"},
+    {"url": "https://en.wikipedia.org/wiki/2026_Washington_Nationals_season", "scraped_at": "2026-05-21", "notes": "Season overview"},
+    {"url": "https://www.si.com/mlb/nationals/onsi/news/nationals-officially-announce-2026-coaching-staff-under-blake-butera", "scraped_at": "2026-05-21", "notes": "Full coaching staff"}
+  ],
+  "verification_notes": "MAJOR ORG CHANGE: Old leadership (Dave Martinez as manager, Mike Rizzo as president of baseball ops) fired in July 2025. Miguel Cairo served as interim manager rest of 2025 (29-43) but was not retained. Current 2026 leadership: Manager Blake Butera (33, former Rays minor-league manager), Pres. of Baseball Ops Paul Toboni (35, from Boston), GM Ani Kilambi (31, from Philadelphia). Owner Mark Lerner (Lerner family) confirmed via Wikipedia. Coaching staff fully verified via SI / Federal Baseball / District on Deck reports. Roster pulled from ESPN as of 2026-05-21 -- this is current Active Roster mid-2026 season. Stadium capacity left null -- Wikipedia did not return it in fetch (true value is ~41,000 but not pulled from authoritative source so omitted per 'never fabricate' rule). Recent games and upcoming games verified directly from ESPN schedule page. Standings at 25-25 second in NL East is unusually competitive for a rebuilding team -- worth flagging.",
+  "last_updated": "2026-05-21"
+}

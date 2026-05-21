@@ -1,0 +1,74 @@
+{
+  "team_name": "Georgetown Hoyas",
+  "slug": "georgetown",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Big East",
+  "espn_id": "46",
+  "official_url": "https://guhoyas.com/sports/mens-basketball",
+  "school_official_url": "https://guhoyas.com",
+  "school_location": {"city": "Washington", "state": "D.C."},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "16-18 (overall) / 6-14 (Big East) — final, season ended March 2026",
+  "venue": {
+    "name": "Capital One Arena",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": 20356,
+    "opened": 1997
+  },
+  "athletic_director": "Lee Reed",
+  "head_coach": {
+    "name": "Ed Cooley",
+    "tenure_start": "2023-03",
+    "background": "Hired in March 2023 from Providence, where he was head coach from 2011-2023 and won 2014 Big East Tournament. Native of Providence, RI. Big East Coach of the Year multiple times at Providence.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Jeff Battle", "role": "Associate Head Coach"},
+    {"name": "Brian Blaney", "role": "Assistant Coach"},
+    {"name": "Walt Corbean", "role": "Assistant Coach"},
+    {"name": "LaDontae Henton", "role": "Assistant Coach"},
+    {"name": "Jason Williford", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Jayden Fort", "position": "F", "number": "0", "class_year": "SO", "height": "6'9\"", "hometown": "Washington, DC", "notes": null},
+    {"name": "DeShawn Harris-Smith", "position": "G", "number": "1", "class_year": "JR", "height": "6'5\"", "hometown": "Woodbridge, VA", "notes": null},
+    {"name": "Malik Mack", "position": "G", "number": "2", "class_year": "JR", "height": "6'2\"", "hometown": "Oxon Hill, MD", "notes": null},
+    {"name": "Vince Iwuchukwu", "position": "C", "number": "3", "class_year": "SR", "height": "7'1\"", "hometown": "Imo State, Nigeria", "notes": null},
+    {"name": "Caleb Williams", "position": "F", "number": "4", "class_year": "SO", "height": "6'7\"", "hometown": "Washington, DC", "notes": null},
+    {"name": "KJ Lewis", "position": "G", "number": "5", "class_year": "JR", "height": "6'4\"", "hometown": "El Paso, TX", "notes": null},
+    {"name": "Isaiah Abraham", "position": "F", "number": "7", "class_year": "SO", "height": "6'7\"", "hometown": "Gainesville, VA", "notes": null},
+    {"name": "Gabriel Landeira", "position": "G", "number": "8", "class_year": "FR", "height": "6'6\"", "hometown": "Rio de Janeiro, Brazil", "notes": "International freshman"},
+    {"name": "Julius Halaifonua", "position": "C", "number": "11", "class_year": "SO", "height": "7'0\"", "hometown": "Auckland, New Zealand", "notes": null},
+    {"name": "Austin Montgomery", "position": "F", "number": "12", "class_year": "JR", "height": "6'6\"", "hometown": "New Orleans, LA", "notes": null},
+    {"name": "Langston Love", "position": "G", "number": "13", "class_year": "GR", "height": "6'5\"", "hometown": "Universal City, TX", "notes": "Graduate transfer"},
+    {"name": "Seal Diouf", "position": "C", "number": "14", "class_year": "SO", "height": "6'9\"", "hometown": "Gouda, Netherlands", "notes": null},
+    {"name": "Hashem Asadallah", "position": "G", "number": "15", "class_year": "JR", "height": "6'2\"", "hometown": "Jabriya, Kuwait", "notes": null},
+    {"name": "Mason Moses", "position": "G", "number": "22", "class_year": "SO", "height": "6'6\"", "hometown": "New York City, NY", "notes": null},
+    {"name": "Jeremiah Williams", "position": "G", "number": "25", "class_year": "GR", "height": "6'4\"", "hometown": "Chicago, IL", "notes": "Graduate transfer"},
+    {"name": "Michael Van Raaphorst", "position": "G", "number": "30", "class_year": "SO", "height": "6'2\"", "hometown": "Chatham, NJ", "notes": null},
+    {"name": "Kayvaun Mulready", "position": "G", "number": "45", "class_year": "SO", "height": "6'4\"", "hometown": "Worcester, MA", "notes": null}
+  ],
+  "recent_games": [
+    {"date": "2026-03", "opponent": "DePaul", "result": "W", "venue": "neutral", "tournament": "Big East Tournament First Round (as 11 seed)"},
+    {"date": "2026-03", "opponent": "Villanova", "result": "W (upset)", "venue": "neutral", "tournament": "Big East Tournament Quarterfinal"},
+    {"date": "2026-03", "opponent": "UConn", "result": "L 51-67", "venue": "neutral", "tournament": "Big East Tournament Semifinal"}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify; reached Big East Tournament Semifinals as 11 seed (beat DePaul and Villanova, lost to UConn 51-67)"
+  },
+  "rivalries": ["Syracuse (historic)", "Villanova", "St. John's", "UConn"],
+  "sources": [
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Georgetown_Hoyas_men%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
+    {"url": "https://guhoyas.com/sports/mens-basketball/roster", "scraped_at": "2026-05-21", "notes": "Official roster page"},
+    {"url": "https://guhoyas.com/staff-directory/lee-reed/313", "scraped_at": "2026-05-21", "notes": "Athletic director Lee Reed"}
+  ],
+  "verification_notes": "Ed Cooley completed his 3rd season as head coach. Hoyas finished 16-18 (6-14 Big East, 10th place, 11 seed in Big East Tournament). Started 5-0 (program's best start since 2017-18). Upset DePaul and Villanova in Big East Tournament before losing to #6 UConn 51-67 in semifinals. Did NOT make NCAA Tournament. Georgetown plays home games primarily at Capital One Arena with select games at on-campus McDonough Gymnasium. Capital One Arena capacity (20,356) is the standard arena basketball capacity; effective Georgetown capacity may be configured lower. Ed Cooley's career record and tenure record not specifically verified — left null. Lee Reed in his 9th year as Georgetown AD. Roster shown is 2025-26 season-end. 2026-27 schedule TBD.",
+  "last_updated": "2026-05-21"
+}

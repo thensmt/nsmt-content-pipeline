@@ -1,0 +1,67 @@
+{
+  "team_name": "Virginia Tech Hokies",
+  "slug": "virginia-tech",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "ACC",
+  "espn_id": "259",
+  "official_url": "https://hokiesports.com/sports/mens-basketball",
+  "school_official_url": "https://hokiesports.com",
+  "school_location": {"city": "Blacksburg", "state": "Virginia"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "19-13 (overall) / 8-10 (ACC) — final, season ended March 2026",
+  "venue": {
+    "name": "Cassell Coliseum",
+    "city": "Blacksburg",
+    "state": "Virginia",
+    "capacity": 8925,
+    "opened": 1962
+  },
+  "athletic_director": "Whit Babcock",
+  "head_coach": {
+    "name": "Mike Young",
+    "tenure_start": "2019-04",
+    "background": "Hired in April 2019 from Wofford, where he was head coach for 17 seasons. 2019 SoCon Coach of the Year; led Wofford to multiple NCAA Tournament appearances.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Chester Frazier", "role": "Associate Head Coach"},
+    {"name": "J.D. Byers", "role": "Assistant Coach"},
+    {"name": "David Moats", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Jailen Bedford", "position": "G", "number": "0", "class_year": "GR", "height": "6'4\"", "hometown": "Austin, TX", "notes": "Graduate transfer"},
+    {"name": "Tobi Lawal", "position": "F", "number": "1", "class_year": "SR", "height": "6'8\"", "hometown": "London, England", "notes": null},
+    {"name": "Jaden Schutt", "position": "G", "number": "2", "class_year": "JR", "height": "6'5\"", "hometown": "Yorkville, IL", "notes": "Redshirt junior"},
+    {"name": "Ben Hammond", "position": "G", "number": "3", "class_year": "SO", "height": "5'11\"", "hometown": "Manassas, VA", "notes": null},
+    {"name": "Izaiah Pasha", "position": "G", "number": "4", "class_year": "SO", "height": "6'5\"", "hometown": "Harrisburg, PA", "notes": null},
+    {"name": "Sin'Cere Jones", "position": "F", "number": "5", "class_year": "FR", "height": "6'7\"", "hometown": "Portsmouth, VA", "notes": null},
+    {"name": "Brett Freeman", "position": "G", "number": "7", "class_year": "FR", "height": "6'5\"", "hometown": "Bronx, NY", "notes": null},
+    {"name": "Tyler Johnson", "position": "G", "number": "10", "class_year": "SO", "height": "6'5\"", "hometown": "Orlando, FL", "notes": null},
+    {"name": "Amani Hansberry", "position": "F", "number": "13", "class_year": "JR", "height": "6'8\"", "hometown": "Silver Spring, MD", "notes": null},
+    {"name": "Shamarius Peterkin", "position": "G", "number": "15", "class_year": "FR", "height": "6'3\"", "hometown": "Winston-Salem, NC", "notes": null},
+    {"name": "Neoklis Avdalas", "position": "G", "number": "17", "class_year": "FR", "height": "6'9\"", "hometown": "Kalamata, Greece", "notes": "International freshman"},
+    {"name": "Solomon Davis", "position": "C", "number": "22", "class_year": "FR", "height": "6'11\"", "hometown": "Hyattsville, MD", "notes": null},
+    {"name": "Christian Gurdak", "position": "C", "number": "32", "class_year": "FR", "height": "6'10\"", "hometown": "Charles Town, WV", "notes": null},
+    {"name": "Antonio Dorn", "position": "C", "number": "77", "class_year": "FR", "height": "7'0\"", "hometown": "Hamburg, Germany", "notes": "International freshman"}
+  ],
+  "recent_games": [],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify; preemptively declined NIT bid citing injuries"
+  },
+  "rivalries": ["Virginia", "North Carolina", "Duke"],
+  "sources": [
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Virginia_Tech_Hokies_men%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
+    {"url": "https://hokiesports.com/staff/mike-young", "scraped_at": "2026-05-21", "notes": "Head coach bio"},
+    {"url": "https://hokiesports.com/sports/mens-basketball/roster", "scraped_at": "2026-05-21", "notes": "Official roster page"},
+    {"url": "https://en.wikipedia.org/wiki/Cassell_Coliseum", "scraped_at": "2026-05-21", "notes": "Arena capacity (8,925) and opened 1962"},
+    {"url": "https://www.wsls.com/sports/2026/04/23/virginia-tech-athletic-director-whit-babcock-announces-retirement/", "scraped_at": "2026-05-21", "notes": "Babcock retirement announcement"}
+  ],
+  "verification_notes": "Mike Young completed his 7th season as head coach. Hokies finished 19-13 (8-10 ACC). NOTE: Wikipedia summary listed final overall as 19-13 in one place and 13-18 in another; cross-reference shows 19-13 cited more frequently for the season-end mark. The team preemptively declined an NIT bid citing injuries; did NOT make NCAA Tournament. Athletic director Whit Babcock announced on April 23, 2026 he will step down effective June 30, 2026 (transitioning to AD emeritus role); Babcock is still AD as of 2026-05-21 with no successor publicly named. Mike Young's overall career record and his career record at Virginia Tech specifically not verified — left null. Roster shown is 2025-26 season-end. 2026-27 schedule TBD. Mason Young (head coach's son association) — Owen Odom is at Virginia; Mike Young of Virginia Tech is unrelated.",
+  "last_updated": "2026-05-21"
+}

@@ -1,0 +1,97 @@
+{
+  "team_name": "Washington Commanders",
+  "slug": "commanders",
+  "league": "NFL",
+  "league_full": "National Football League",
+  "conference": "NFC",
+  "division": "NFC East",
+  "espn_id": "28",
+  "official_url": "https://www.commanders.com",
+  "founded": "1932",
+  "current_season": "2025-26",
+  "current_record": "5-12 (3rd in NFC East, missed playoffs)",
+  "venue": {
+    "name": "Northwest Stadium",
+    "city": "Landover",
+    "state": "Maryland",
+    "capacity": null,
+    "opened": null,
+    "notes": "Formerly FedExField; renamed to Northwest Stadium under naming-rights deal"
+  },
+  "ownership": {
+    "primary_owner": "Josh Harris",
+    "ownership_group": "Harris Blitzer Sports & Entertainment-led ownership group (purchased 2023)"
+  },
+  "front_office": {
+    "general_manager": "Adam Peters",
+    "president": null,
+    "head_of_football_ops": null
+  },
+  "head_coach": {
+    "name": "Dan Quinn",
+    "tenure_start": "2024",
+    "background": "Former Atlanta Falcons head coach (2015-2020), former Dallas Cowboys defensive coordinator (2021-2023)",
+    "career_record_with_team": null
+  },
+  "coaching_staff": [
+    {"name": "David Blough", "role": "Offensive Coordinator", "notes": "Promoted from assistant QBs coach in January 2026 after Kliff Kingsbury was let go"},
+    {"name": "Daronte Jones", "role": "Defensive Coordinator", "notes": "Hired January 2026 after Joe Whitt Jr. was let go"},
+    {"name": "Larry Izzo", "role": "Special Teams Coordinator"}
+  ],
+  "roster": [
+    {"name": "Jayden Daniels", "position": "QB", "number": "5", "notes": "Franchise QB, 2024 #2 overall pick"},
+    {"name": "Marcus Mariota", "position": "QB", "number": "8", "notes": null},
+    {"name": "Sam Hartman", "position": "QB", "number": "15", "notes": null},
+    {"name": "Jacory Croskey-Merritt", "position": "RB", "number": "22", "notes": null},
+    {"name": "Jeremy McNichols", "position": "RB", "number": "26", "notes": null},
+    {"name": "Terry McLaurin", "position": "WR", "number": "17", "notes": "Top WR, team captain"},
+    {"name": "Luke McCaffrey", "position": "WR", "number": "11", "notes": null},
+    {"name": "Ja'Corey Brooks", "position": "WR", "number": "88", "notes": null},
+    {"name": "Treylon Burks", "position": "WR", "number": "13", "notes": null},
+    {"name": "Jaylin Lane", "position": "WR", "number": "83", "notes": null},
+    {"name": "John Bates", "position": "TE", "number": "87", "notes": null},
+    {"name": "Ben Sinnott", "position": "TE", "number": "82", "notes": null},
+    {"name": "Laremy Tunsil", "position": "OT", "number": "78", "notes": "Acquired via trade from Houston"},
+    {"name": "Josh Conerly Jr.", "position": "OT", "number": "72", "notes": null},
+    {"name": "Sam Cosmi", "position": "G", "number": "76", "notes": null},
+    {"name": "Brandon Coleman", "position": "G", "number": "74", "notes": null},
+    {"name": "Nick Allegretti", "position": "G", "number": "67", "notes": null},
+    {"name": "Andrew Wylie", "position": "G", "number": "71", "notes": null},
+    {"name": "Daron Payne", "position": "DT", "number": "94", "notes": null},
+    {"name": "Jer'Zhan Newton", "position": "DT", "number": "95", "notes": null},
+    {"name": "Javon Kinlaw", "position": "DT", "number": "99", "notes": null},
+    {"name": "Tim Settle", "position": "DT", "number": "97", "notes": null},
+    {"name": "Dorance Armstrong", "position": "DE", "number": "92", "notes": null},
+    {"name": "Deatrich Wise Jr.", "position": "DE", "number": "91", "notes": null},
+    {"name": "Drake Jackson", "position": "DE", "number": "93", "notes": null},
+    {"name": "Frankie Luvu", "position": "LB", "number": "4", "notes": null},
+    {"name": "Nick Bellore", "position": "LB", "number": "57", "notes": null},
+    {"name": "Jordan Magee", "position": "LB", "number": "58", "notes": null},
+    {"name": "Mike Sainristil", "position": "CB", "number": "0", "notes": null},
+    {"name": "Trey Amos", "position": "CB", "number": "23", "notes": null},
+    {"name": "Quan Martin", "position": "S", "number": "20", "notes": null},
+    {"name": "Will Harris", "position": "S", "number": "3", "notes": null},
+    {"name": "Percy Butler", "position": "S", "number": "35", "notes": null},
+    {"name": "Jeremy Reaves", "position": "S", "number": "39", "notes": null},
+    {"name": "Jake Moody", "position": "PK", "number": "16", "notes": null},
+    {"name": "Tress Way", "position": "P", "number": "10", "notes": "Longtime franchise punter"},
+    {"name": "Tyler Ott", "position": "LS", "number": "69", "notes": null}
+  ],
+  "recent_games": [
+    {"date": "2026-01-04", "opponent": "Philadelphia Eagles", "result": "W 24-17", "venue": "away", "notes": "Week 18 season finale"},
+    {"date": "2025-12-25", "opponent": "Dallas Cowboys", "result": "L 23-30", "venue": "home", "notes": "Christmas Day game"},
+    {"date": "2025-12-20", "opponent": "Philadelphia Eagles", "result": "L 18-29", "venue": "home", "notes": null},
+    {"date": "2025-12-14", "opponent": "New York Giants", "result": "W 29-21", "venue": "away", "notes": null},
+    {"date": "2025-12-07", "opponent": "Minnesota Vikings", "result": "L 0-31", "venue": "away", "notes": "Loss eliminated Commanders from playoff contention"}
+  ],
+  "upcoming_games": [],
+  "rivalries": ["Dallas Cowboys", "Philadelphia Eagles", "New York Giants"],
+  "sources": [
+    {"url": "https://www.espn.com/nfl/team/_/name/wsh/washington-commanders", "scraped_at": "2026-05-21", "notes": "Season record, division standing"},
+    {"url": "https://www.espn.com/nfl/team/roster/_/name/wsh/washington-commanders", "scraped_at": "2026-05-21", "notes": "Full roster with jersey numbers"},
+    {"url": "https://en.wikipedia.org/wiki/2025_Washington_Commanders_season", "scraped_at": "2026-05-21", "notes": "Final 5 games schedule and coaching staff"},
+    {"url": "https://www.commanders.com/news/5-takeaways-dan-quinn-adam-peters-joint-press-conference", "scraped_at": "2026-05-21", "notes": "Confirmed Quinn/Peters retained for 2026"}
+  ],
+  "verification_notes": "Head coach (Dan Quinn) and GM (Adam Peters) confirmed retained after 2025 season per owner Josh Harris. 2026 coordinators (David Blough OC, Daronte Jones DC) confirmed via reporting after January 2026 changes; Larry Izzo as STC carried over from prior season but should be re-verified before training camp. Roster is end-of-2025-season active roster per ESPN; offseason free agency and 2026 draft additions (Sonny Styles, Joshua Josephs, etc.) appear on roster page but may shift before training camp. Stadium capacity and opening date not pulled from authoritative source -- left null. Upcoming games array empty: NFL is in offseason (May), 2026 schedule released in May but not fetched for this batch. Some duplicate jersey numbers in ESPN roster (e.g., #11 Van Jefferson and Luke McCaffrey; #61 Tyler Cooper and Julian Good-Jones; #79 Foster Sarell and Shy Tuttle; #90 Javontae Jean-Baptiste and Charles Omenihu; #64 Malaesala Aumavae-Laulu and others) reflect ESPN page state as of fetch -- recommend re-verifying numbers in August.",
+  "last_updated": "2026-05-21"
+}

@@ -1,0 +1,75 @@
+{
+  "team_name": "Mary Washington Eagles",
+  "slug": "mary-washington",
+  "program": "men's basketball",
+  "league_full": "NCAA Division III",
+  "conference": "Coast-to-Coast Athletic Conference",
+  "espn_id": "2942",
+  "official_url": "https://umweagles.com/sports/mens-basketball",
+  "school_official_url": "https://umweagles.com",
+  "school_location": {"city": "Fredericksburg", "state": "Virginia"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "30-3 (overall) — final, season ended April 2026; NCAA Division III National Champions",
+  "venue": {
+    "name": "William M. Anderson Center",
+    "city": "Fredericksburg",
+    "state": "Virginia",
+    "capacity": null,
+    "opened": null
+  },
+  "athletic_director": "Patrick Catullo",
+  "head_coach": {
+    "name": "Marcus Kahn",
+    "tenure_start": "2014",
+    "background": "Completed 12th season as Mary Washington head coach. 2026 Glenn Robinson National Coach of the Year. Coast-to-Coast Athletic Conference Coaching Staff of the Year (2026). Hanford, California native. Led Eagles to their first NCAA Division III National Championship in program history.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Mark Sansone", "role": "Assistant Coach"},
+    {"name": "Chris Lomax", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Cam Jones", "position": "F", "number": "0", "class_year": "JR", "height": "6'5\"", "hometown": "Falls Church, VA", "notes": "From George C. Marshall HS"},
+    {"name": "Kye Robinson", "position": "G", "number": "1", "class_year": "SO", "height": "6'2\"", "hometown": "Alexandria, VA", "notes": "From Alexandria City HS"},
+    {"name": "Josh Sewordor", "position": "G", "number": "2", "class_year": "FR", "height": "6'1\"", "hometown": "Culpeper, VA", "notes": "From Eastern View HS"},
+    {"name": "Hasan Hammad", "position": "G", "number": "4", "class_year": "JR", "height": "6'3\"", "hometown": "Haymarket, VA", "notes": "From Battlefield HS"},
+    {"name": "Ulysses Young", "position": "G", "number": "5", "class_year": "SO", "height": "5'11\"", "hometown": "Chesapeake, VA", "notes": "From Oscar Smith HS"},
+    {"name": "Kaden Bates", "position": "G", "number": "10", "class_year": "JR", "height": "6'3\"", "hometown": "Bristow, VA", "notes": "From Patriot HS"},
+    {"name": "Jay Randall", "position": "F", "number": "11", "class_year": "JR", "height": "6'4\"", "hometown": "Bristow, VA", "notes": "From Patriot HS"},
+    {"name": "Anthony Lewis", "position": "G", "number": "12", "class_year": "FR", "height": "6'2\"", "hometown": "Chesapeake, VA", "notes": "From Oscar Smith HS"},
+    {"name": "Scott Van Antwerp", "position": "F", "number": "13", "class_year": "SO", "height": "6'5\"", "hometown": "Fairfax, VA", "notes": "From Robinson HS"},
+    {"name": "Jadon Burgess", "position": "G", "number": "14", "class_year": "JR", "height": "6'3\"", "hometown": "Harrisonburg, VA", "notes": "From Harrisonburg HS"},
+    {"name": "Ben Lichter", "position": "G", "number": "15", "class_year": "FR", "height": "6'4\"", "hometown": "Baltimore, MD", "notes": "From St. Paul's School"},
+    {"name": "Owen Pottenburgh", "position": "F", "number": "21", "class_year": "SO", "height": "6'8\"", "hometown": "Jacksonville, FL", "notes": "Hometown listed as Jacksonville FL but school as Hayfield (Fairfax, VA)"},
+    {"name": "Ethan Kacou", "position": "F", "number": "22", "class_year": "FR", "height": "6'6\"", "hometown": "Bristow, VA", "notes": "From Patriot HS"},
+    {"name": "Preston White", "position": "F", "number": "24", "class_year": "FR", "height": null, "hometown": "Gainesville, VA", "notes": "From Gainesville HS; height not listed on official roster"},
+    {"name": "Colin Mitchell", "position": "F", "number": "25", "class_year": "SO", "height": "6'5\"", "hometown": "Chesterfield, VA", "notes": "From Benedictine Prep. Hit buzzer-beating putback to win 2026 NCAA D3 National Championship vs Emory"}
+  ],
+  "recent_games": [
+    {"date": "2026-03", "opponent": "Worcester State", "result": "W 86-55", "venue": "neutral", "tournament": "NCAA D3 Tournament First Round"},
+    {"date": "2026-03", "opponent": "Amherst", "result": "W 81-64", "venue": "neutral", "tournament": "NCAA D3 Tournament Second Round"},
+    {"date": "2026-03", "opponent": "UW-La Crosse", "result": "W 73-68", "venue": "neutral", "tournament": "NCAA D3 Tournament Sweet 16"},
+    {"date": "2026-03", "opponent": "Chicago", "result": "W 81-73", "venue": "neutral", "tournament": "NCAA D3 Tournament Elite Eight"},
+    {"date": "2026-04", "opponent": "Trinity (Conn.)", "result": "W 64-61", "venue": "neutral", "tournament": "NCAA D3 Final Four"},
+    {"date": "2026-04-05", "opponent": "Emory", "result": "W 75-73", "venue": "neutral", "tournament": "NCAA D3 National Championship Game (Colin Mitchell buzzer-beating putback)"}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": true,
+    "seed": null,
+    "result": "NCAA Division III National Champions — defeated Emory 75-73 on April 5, 2026 on Colin Mitchell buzzer-beating putback. First national title in program history."
+  },
+  "rivalries": [],
+  "sources": [
+    {"url": "https://umweagles.com/sports/mens-basketball/roster", "scraped_at": "2026-05-21", "notes": "Official 2025-26 roster page"},
+    {"url": "https://umweagles.com/staff-directory/marcus-kahn/17", "scraped_at": "2026-05-21", "notes": "Head coach bio"},
+    {"url": "https://www.d3hoops.com/teams/Mary_Washington/men/2025-26/index", "scraped_at": "2026-05-21", "notes": "Season record and tournament results"},
+    {"url": "https://www.umw.edu/news/2026/04/02/eagles-mens-basketball-nets-spirited-send-off-before-championship-game/", "scraped_at": "2026-05-21", "notes": "Championship game coverage"},
+    {"url": "https://hanfordsentinel.com/news/local/hanford-native-marcus-kahn-coaches-team-to-national-title/article_62bc2f53-4c4d-4e04-84f4-c9717545e70b.html", "scraped_at": "2026-05-21", "notes": "Marcus Kahn Glenn Robinson National Coach of the Year"},
+    {"url": "https://umweagles.com/staff-directory/patrick-catullo/83", "scraped_at": "2026-05-21", "notes": "Athletic director"}
+  ],
+  "verification_notes": "MAJOR ACCOMPLISHMENT: Mary Washington won the 2026 NCAA Division III Men's Basketball National Championship on April 5, 2026, defeating Emory 75-73 on a Colin Mitchell buzzer-beating putback — the first national title in program history. Final record 30-3. Marcus Kahn completed his 12th season as head coach and won 2026 Glenn Robinson National Coach of the Year. UMW competes in Coast-to-Coast Athletic Conference (note: historically was in Capital Athletic Conference; the conference rebranded/expanded). Conference record left out of overall format because some sources show 0-0 conference (likely due to data source treating C2C games differently or scheduling); the school's official A-10 records page should be cross-referenced before publishing any 'conference record' claim. Venue name 'William M. Anderson Center' is the official UMW basketball venue but capacity could not be confirmed from authoritative sources — left null. Athletic director Patrick Catullo confirmed (promoted from interim in February 2020). D3 coverage is sparse — recommend manual verification of any player names, heights, or jersey numbers before publication. Owen Pottenburgh hometown listed as Jacksonville FL on official roster but his high school is Hayfield (Fairfax, VA) — possible data inconsistency on UMW roster page; verify before use. Preston White height not listed. 2026-27 schedule TBD.",
+  "last_updated": "2026-05-21"
+}

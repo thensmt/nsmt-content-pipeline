@@ -1,0 +1,67 @@
+{
+  "team_name": "George Mason Patriots",
+  "slug": "george-mason-women",
+  "program": "women's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Atlantic 10",
+  "espn_id": "2244",
+  "official_url": "https://gomason.com/sports/womens-basketball",
+  "school_official_url": "https://gomason.com",
+  "school_location": {"city": "Fairfax", "state": "Virginia"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "23-10 (overall) / 16-2 (A-10) — final, season ended March 2026; won first A-10 Regular Season title in program history",
+  "venue": {
+    "name": "EagleBank Arena",
+    "city": "Fairfax",
+    "state": "Virginia",
+    "capacity": 7860,
+    "opened": 1985
+  },
+  "athletic_director": "Marvin Lewis",
+  "head_coach": {
+    "name": "Vanessa Blair-Lewis",
+    "tenure_start": "2020-04",
+    "background": "Hired in April 2020 (6th season completed in 2025-26). Previously head coach at Bethune-Cookman. Led George Mason to its first Atlantic 10 Regular Season title in 2025-26 with a program-best 16-2 conference record.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Andre Bolton", "role": "Associate Head Coach"},
+    {"name": "Demetria Frank", "role": "Associate Head Coach"},
+    {"name": "Brittany Ward", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Sanyiah Littlejohn", "position": "PG", "number": "1", "class_year": "FR", "height": "5'8\"", "hometown": "Philadelphia, PA", "notes": "From Lansdale Catholic HS"},
+    {"name": "Zahirah Walton", "position": "F", "number": "2", "class_year": "JR", "height": "5'11\"", "hometown": "Seattle, WA", "notes": "Redshirt junior; from Kentlake HS"},
+    {"name": "Kennedy Harris", "position": "G", "number": "3", "class_year": "JR", "height": "5'7\"", "hometown": "Hampton, VA", "notes": "From Hampton HS"},
+    {"name": "Kayla Johnson", "position": "SG", "number": "5", "class_year": "FR", "height": "5'9\"", "hometown": "Upper Marlboro, MD", "notes": "From Elizabeth Seton HS"},
+    {"name": "Kailani Merrell", "position": "G", "number": "8", "class_year": "FR", "height": "6'0\"", "hometown": "Daytona Beach, FL", "notes": "From Spruce Creek HS"},
+    {"name": "Trinity Massenburg", "position": "F", "number": "10", "class_year": "SO", "height": "6'0\"", "hometown": "Baltimore, MD", "notes": "Redshirt sophomore; from Baltimore Polytechnic"},
+    {"name": "Mary Amoateng", "position": "PG", "number": "11", "class_year": "SO", "height": "5'8\"", "hometown": "Baltimore, MD", "notes": "From Bishop McNamara HS"},
+    {"name": "Matilde Motta", "position": "G", "number": "12", "class_year": "FR", "height": "5'11\"", "hometown": "Saronno, Italy", "notes": "International; from A.S.D. Basket Costa Masnaga"},
+    {"name": "Jada Brown", "position": "G", "number": "13", "class_year": "SR", "height": "5'6\"", "hometown": "Falls Church, VA", "notes": "From New Hope Academy"},
+    {"name": "MJ Johnson", "position": "F", "number": "14", "class_year": "GR", "height": "6'3\"", "hometown": "Chicago, IL", "notes": "Graduate transfer from Ball State"},
+    {"name": "Hawa Komara", "position": "F", "number": "22", "class_year": "GR", "height": "6'2\"", "hometown": "Toulouse, France", "notes": "Graduate transfer from Rhode Island"},
+    {"name": "Leah Keyes", "position": "SF", "number": "23", "class_year": "FR", "height": "5'10\"", "hometown": "Stafford, VA", "notes": "From Virginia Academy"},
+    {"name": "Sara Blair", "position": "C", "number": "30", "class_year": "FR", "height": "6'5\"", "hometown": "Fort Lauderdale, FL", "notes": "From St. Thomas Aquinas HS"},
+    {"name": "Page Greenburg", "position": "G", "number": "32", "class_year": "JR", "height": "5'9\"", "hometown": "Washington, D.C.", "notes": "Redshirt junior; transfer from Brown"}
+  ],
+  "recent_games": [
+    {"date": "2026-03", "opponent": "Quinnipiac", "result": "L 64-71", "venue": "neutral", "tournament": "WBIT First Round"}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify for NCAA Tournament despite winning A-10 Regular Season title; lost in WBIT First Round to Quinnipiac 64-71"
+  },
+  "rivalries": ["VCU", "Richmond", "Dayton"],
+  "sources": [
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_George_Mason_Patriots_women%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
+    {"url": "https://gomason.com/sports/womens-basketball/roster", "scraped_at": "2026-05-21", "notes": "Official roster page"},
+    {"url": "https://gomason.com/sports/womens-basketball/schedule/2025-26", "scraped_at": "2026-05-21", "notes": "Official schedule"}
+  ],
+  "verification_notes": "Vanessa Blair-Lewis completed her 6th season as head coach. Patriots won their FIRST Atlantic 10 Regular Season Championship in program history with 16-2 conference record. Final overall 23-10. Did NOT receive NCAA Tournament bid (notable snub given regular season title); accepted WBIT bid and lost First Round to Quinnipiac 64-71. Shares EagleBank Arena, athletic director (Marvin Lewis), and school with men's program but has separate coaching staff and roster. Coach's overall career record not verified — left null. Roster reflects 2025-26 season-end composition with one correction: 'Louis Volker' (previously in roster per Wikipedia) was REMOVED 2026-05-21 because DePaul officially announced on 2026-04-21 that Volker signed with DePaul for 2026-27 (source: https://depaulbluedemons.com/news/2026/4/21/womens-basketball-louis-volker-signs-with-depaul). 2026-27 schedule TBD.",
+  "last_updated": "2026-05-21"
+}

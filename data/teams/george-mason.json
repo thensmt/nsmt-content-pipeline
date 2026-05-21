@@ -1,0 +1,73 @@
+{
+  "team_name": "George Mason Patriots",
+  "slug": "george-mason",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Atlantic 10",
+  "espn_id": "2244",
+  "official_url": "https://gomason.com/sports/mens-basketball",
+  "school_official_url": "https://gomason.com",
+  "school_location": {"city": "Fairfax", "state": "Virginia"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "23-10 (overall) / 11-7 (A-10) — final, season ended March 2026",
+  "venue": {
+    "name": "EagleBank Arena",
+    "city": "Fairfax",
+    "state": "Virginia",
+    "capacity": 7860,
+    "opened": 1985
+  },
+  "athletic_director": "Marvin Lewis",
+  "head_coach": {
+    "name": "Tony Skinn",
+    "tenure_start": "2023-04",
+    "background": "George Mason alum (played 2002-06, member of 2006 Final Four team). Hired in April 2023. Previously assistant coach at Maryland. 2025 Atlantic 10 Coach of the Year. Started 2025-26 season 18-1 (6-0 A-10), best start in program history.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Steve Curran", "role": "Associate Head Coach"},
+    {"name": "Louis Hinnant", "role": "Assistant Coach"},
+    {"name": "Andy Fox", "role": "Assistant Coach"},
+    {"name": "Mark Bialkoski", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Masai Troutman", "position": "G", "number": "0", "class_year": "SR", "height": "6'5\"", "hometown": "Frederick, MD", "notes": "Transfer from Northeastern"},
+    {"name": "Brayden O'Connor", "position": "G", "number": "1", "class_year": "SR", "height": "6'5\"", "hometown": "Ottawa, Ontario", "notes": "Transfer from UMass Lowell"},
+    {"name": "Jahari Long", "position": "G", "number": "2", "class_year": "GR", "height": "6'5\"", "hometown": "Houston, TX", "notes": "Graduate transfer from Maryland"},
+    {"name": "Kory Mincy", "position": "G", "number": "3", "class_year": "JR", "height": "6'2\"", "hometown": "East Point, GA", "notes": "Transfer from Presbyterian"},
+    {"name": "Dola Adebayo", "position": "F", "number": "4", "class_year": "GR", "height": "6'8\"", "hometown": "Fort Myers, FL", "notes": "Graduate transfer from Mount St. Mary's"},
+    {"name": "Fatt Hill", "position": "G", "number": "5", "class_year": "SR", "height": "6'5\"", "hometown": "Bessemer, AL", "notes": "Transfer from Ball State"},
+    {"name": "Isaiah Skinn", "position": "G", "number": "7", "class_year": "FR", "height": "6'0\"", "hometown": "Alexandria, VA", "notes": "From Edison HS; son of head coach Tony Skinn"},
+    {"name": "Stas Sivka", "position": "F", "number": "9", "class_year": "SO", "height": "6'10\"", "hometown": "Celje, Slovenia", "notes": "From BC Rogaska; international"},
+    {"name": "Emmanuel Kanga", "position": "F", "number": "10", "class_year": "FR", "height": "6'8\"", "hometown": "Libreville, Gabon", "notes": "From Mt. Zion Prep; international"},
+    {"name": "Devin Booker", "position": "G", "number": "11", "class_year": "FR", "height": "6'4\"", "hometown": "Philadelphia, PA", "notes": "From Cristo Rey Jesuit"},
+    {"name": "Ben Woodward", "position": "G", "number": "12", "class_year": "JR", "height": "6'4\"", "hometown": "Ashburn, VA", "notes": null},
+    {"name": "Malik Presley", "position": "G/F", "number": "13", "class_year": "JR", "height": "6'6\"", "hometown": "San Marcos, TX", "notes": null},
+    {"name": "T.J. Prosise", "position": "G", "number": "14", "class_year": "FR", "height": "6'3\"", "hometown": "Chesterfield, VA", "notes": "From Life Christian Academy"},
+    {"name": "Nick Ellington", "position": "F", "number": "23", "class_year": "GR", "height": "6'8\"", "hometown": "St. Louis, MO", "notes": "Graduate transfer from Murray State"},
+    {"name": "Ryan-Preson Mendy", "position": "F", "number": "31", "class_year": "FR", "height": "6'9\"", "hometown": "Nanterre, France", "notes": "International freshman"},
+    {"name": "Riley Allenspach", "position": "F/C", "number": "35", "class_year": "JR", "height": "6'11\"", "hometown": "Charlotte, NC", "notes": "Transfer from Samford"}
+  ],
+  "recent_games": [
+    {"date": "2026-03", "opponent": "St. Bonaventure", "result": "L 57-63", "venue": "neutral", "tournament": "Atlantic 10 Tournament Second Round"},
+    {"date": "2026-03", "opponent": "Liberty", "result": "L 71-77", "venue": "neutral", "tournament": "NIT First Round"}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify for NCAA Tournament; lost in A-10 Tournament Second Round to St. Bonaventure; lost in NIT First Round to Liberty"
+  },
+  "rivalries": ["VCU", "Richmond", "Old Dominion (historical)"],
+  "sources": [
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_George_Mason_Patriots_men%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
+    {"url": "https://gomason.com/sports/mens-basketball/roster", "scraped_at": "2026-05-21", "notes": "Official roster page"},
+    {"url": "https://gomason.com/staff-directory/tony-skinn/491", "scraped_at": "2026-05-21", "notes": "Head coach bio"},
+    {"url": "https://en.wikipedia.org/wiki/EagleBank_Arena", "scraped_at": "2026-05-21", "notes": "Arena capacity (7,860 basketball) and opened 1985"},
+    {"url": "https://gomason.com/news/2026/4/28/george-mason-inks-butler-transfer-efeosa-oliogu-elabor.aspx", "scraped_at": "2026-05-21", "notes": "Recent transfer activity"}
+  ],
+  "verification_notes": "Tony Skinn completed his 3rd season as head coach. Patriots finished 23-10 (11-7 A-10). Started season 18-1 (6-0 A-10), best start in program history. Lost in A-10 Tournament Second Round to St. Bonaventure; accepted NIT bid and lost First Round to Liberty. Did NOT make NCAA Tournament. Skinn signed a contract extension during/after the 2025-26 season per NBC Sports. Confirmed 2026-27 incoming transfers (per gomason.com): Efeosa Oliogu-Elabor (Butler), Emmett Adair (Loyola MD), Michael Marcus Jr. (Appalachian State). Tony Skinn's career record not separately verified — left null. Athletic director Marvin Lewis confirmed. EagleBank Arena basketball capacity is 7,860 (overall capacity 10,000); new Basketball and Academic Performance Center scheduled to open early 2027. Isaiah Skinn is the head coach's son. Roster shown is 2025-26 season-end. 2026-27 schedule TBD.",
+  "last_updated": "2026-05-21"
+}

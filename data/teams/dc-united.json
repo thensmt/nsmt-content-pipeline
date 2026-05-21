@@ -1,0 +1,93 @@
+{
+  "team_name": "D.C. United",
+  "slug": "dc-united",
+  "league": "MLS",
+  "league_full": "Major League Soccer",
+  "conference": "Eastern",
+  "division": null,
+  "espn_id": "586",
+  "official_url": "https://www.dcunited.com",
+  "founded": "1994-06-15",
+  "current_season": "2026",
+  "current_record": "4W-5L-5D, 17 pts (as of 2026-05-17, 5th in Eastern Conference)",
+  "venue": {
+    "name": "Audi Field",
+    "city": "Washington",
+    "state": "DC",
+    "capacity": 20000,
+    "opened": "2018",
+    "notes": "Shared with Washington Spirit (NWSL); located in Southwest Washington, D.C."
+  },
+  "ownership": {
+    "primary_owner": "Jason Levien (Managing Partner/CEO)",
+    "ownership_group": "Co-Chairman: Stephen Kaplan"
+  },
+  "front_office": {
+    "general_manager": "Erik Sogut",
+    "president": null,
+    "head_of_basketball_ops": null
+  },
+  "head_coach": {
+    "name": "René Weiler",
+    "tenure_start": "2025-07",
+    "background": "Swiss manager (born 1973); previously managed clubs in Switzerland, Germany, Belgium, Egypt, and Japan since 2009; led Servette FC to 2024 Swiss Cup title. Replaced Troy Lesesne in July 2025. 2026 is his first full season at the helm.",
+    "career_record_with_team": null
+  },
+  "coaching_staff": [],
+  "roster": [
+    {"name": "Sean Johnson", "position": "GK", "number": "1", "notes": null},
+    {"name": "Lucas Bartlett", "position": "D", "number": "3", "notes": null},
+    {"name": "Matti Peltola", "position": "M", "number": "4", "notes": null},
+    {"name": "Silvan Hefti", "position": "D", "number": "5", "notes": null},
+    {"name": "Keisuke Kurokawa", "position": "D", "number": "6", "notes": null},
+    {"name": "João Peglow", "position": "M", "number": "7", "notes": null},
+    {"name": "Jared Stroud", "position": "M", "number": "8", "notes": null},
+    {"name": "Tai Baribo", "position": "F", "number": "9", "notes": "Team's leading scorer (6G across all comps as of mid-May 2026)"},
+    {"name": "Gabriel Pirani", "position": "M", "number": "10", "notes": null},
+    {"name": "Louis Munteanu", "position": "F", "number": "11", "notes": null},
+    {"name": "Conner Antley", "position": "D", "number": "12", "notes": null},
+    {"name": "Sean Nealis", "position": "D", "number": "13", "notes": null},
+    {"name": "Gabe Segal", "position": "F", "number": "14", "notes": null},
+    {"name": "Kye Rowles", "position": "D", "number": "15", "notes": null},
+    {"name": "Garrison Tubbs", "position": "D", "number": "16", "notes": "On loan"},
+    {"name": "Jacob Murrell", "position": "F", "number": "17", "notes": "Homegrown player"},
+    {"name": "Richie Aman", "position": "M", "number": "18", "notes": "On loan"},
+    {"name": "Hakim Karamoko", "position": "F", "number": "19", "notes": null},
+    {"name": "Grant Leveille", "position": "GK", "number": "20", "notes": null},
+    {"name": "Aaron Herrera", "position": "D", "number": "22", "notes": null},
+    {"name": "Brandon Servania", "position": "M", "number": "23", "notes": null},
+    {"name": "Jordan Farr", "position": "GK", "number": "24", "notes": null},
+    {"name": "Jackson Hopkins", "position": "M", "number": "25", "notes": "Homegrown player"},
+    {"name": "Alex Bono", "position": "GK", "number": "26", "notes": null},
+    {"name": "Nikola Markovic", "position": "D", "number": "27", "notes": null},
+    {"name": "Caden Clark", "position": "M", "number": "30", "notes": null},
+    {"name": "Oscar Avilez", "position": "M", "number": "32", "notes": null},
+    {"name": "Gavin Turner", "position": "M", "number": "48", "notes": null},
+    {"name": "Hosei Kijima", "position": "M", "number": "77", "notes": null},
+    {"name": "Kim Joon-Hong", "position": "GK", "number": "1", "notes": "On loan"},
+    {"name": "Andre Dozzell", "position": "M", "number": null, "notes": "No number listed on official roster as of 2026-05-21"}
+  ],
+  "recent_games": [
+    {"date": "2026-05-16", "opponent": "St. Louis CITY SC", "result": "D 1-1", "venue": "home", "notes": "Source: https://www.dcunited.com/news/post-match-facts-dcvstl"},
+    {"date": null, "opponent": "Inter Miami CF", "result": "L 1-2", "venue": null, "notes": "Loss to Inter Miami referenced in season summary; exact date not confirmed"},
+    {"date": null, "opponent": "New York City FC", "result": "W 2-0", "venue": "away", "notes": "Dominant win cited in season summary; exact date not confirmed"},
+    {"date": null, "opponent": "FC Dallas", "result": "L 0-4", "venue": "home", "notes": "Biggest loss of the season per Wikipedia"},
+    {"date": null, "opponent": "Orlando City SC", "result": "W 3-2", "venue": "home", "notes": "Recovery win per Wikipedia"}
+  ],
+  "upcoming_games": [],
+  "rivalries": [
+    {"opponent": "New York Red Bulls", "trophy": "Atlantic Cup", "notes": "Primary rival"},
+    {"opponent": "New England Revolution", "trophy": null, "notes": null},
+    {"opponent": "Philadelphia Union", "trophy": null, "notes": null},
+    {"opponent": "Charleston Battery (USL)", "trophy": "Coffee Pot Cup", "notes": "Unique cross-divisional rivalry"}
+  ],
+  "sources": [
+    {"url": "https://www.dcunited.com/roster/", "scraped_at": "2026-05-21", "notes": "Official roster page — full squad with jersey numbers, positions, loan status"},
+    {"url": "https://en.wikipedia.org/wiki/D.C._United", "scraped_at": "2026-05-21", "notes": "Ownership, GM, stadium, founding year, rivalries"},
+    {"url": "https://en.wikipedia.org/wiki/2026_D.C._United_season", "scraped_at": "2026-05-21", "notes": "2026 season record (4-5-5, 17 pts, 5th East) and key results"},
+    {"url": "https://www.espn.com/soccer/story/_/id/45756321/dc-united-rene-weiler-head-coach-troy-lesene", "scraped_at": "2026-05-21", "notes": "Confirms René Weiler hire (July 2025) replacing Troy Lesesne"},
+    {"url": "https://www.mlssoccer.com/news/dc-united-name-rene-weiler-head-coach", "scraped_at": "2026-05-21", "notes": "Official MLS confirmation of Weiler appointment"}
+  ],
+  "verification_notes": "Roster fully verified from official dcunited.com/roster page. Player names with diacritics (João Peglow) preserved. Head coach René Weiler confirmed via multiple sources (ESPN, MLSSoccer.com, Washington Post). Record (4-5-5, 17 pts, 5th East, 13th overall MLS) sourced from Wikipedia 2026 season article through May 17, 2026 — verify before publishing recaps. Assistant coaching staff not available — official roster page omits coaches and Wikipedia did not list assistants; recommend manual verification or contact club. Recent games are inferred from Wikipedia narrative summaries — exact dates were not provided and should be confirmed via mlssoccer.com or ESPN schedule before being cited in published recaps. Upcoming games could not be confirmed (ESPN schedule URL returned 404 in fetch). Note one Wikipedia paragraph conflicts with the 2026 standings: it referenced '15th place and 30th overall' and 'did not qualify for 2025 playoffs' — that appears to be older 2024 season context bleeding through, NOT current 2026 status. Used the 2026 season article numbers as authoritative.",
+  "last_updated": "2026-05-21"
+}

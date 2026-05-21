@@ -1,0 +1,67 @@
+{
+  "team_name": "Maryland Terrapins",
+  "slug": "maryland",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Big Ten",
+  "espn_id": "120",
+  "official_url": "https://umterps.com/sports/mens-basketball",
+  "school_official_url": "https://umterps.com",
+  "school_location": {"city": "College Park", "state": "Maryland"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "12-21 (overall) / 4-16 (Big Ten) — final, season ended March 2026",
+  "venue": {
+    "name": "Xfinity Center",
+    "city": "College Park",
+    "state": "Maryland",
+    "capacity": 17950,
+    "opened": 2002
+  },
+  "athletic_director": "Damon Evans",
+  "head_coach": {
+    "name": "Buzz Williams",
+    "tenure_start": "2025-04-01",
+    "background": "Previously head coach at Texas A&M (2019-2025); also coached at Virginia Tech, Marquette, and New Orleans. Hired April 1, 2025 after Kevin Willard departed for Villanova following a Sweet 16 run.",
+    "career_record": null,
+    "career_record_at_program": "12-21 (1 season)"
+  },
+  "assistant_coaches": [
+    {"name": "Devin Johnson", "role": "Assistant Coach"},
+    {"name": "Lyle Wolf", "role": "Assistant Coach"},
+    {"name": "Steve Roccaforte", "role": "Assistant Coach"},
+    {"name": "Wabissa Bede", "role": "Assistant Coach"},
+    {"name": "Aki Collins", "role": "Assistant Coach"}
+  ],
+  "roster": [
+    {"name": "Darius Adams", "position": "G", "number": "1", "class_year": "FR", "height": "6'5\"", "hometown": "Manchester Township, NJ", "notes": "Entered transfer portal after season"},
+    {"name": "Myles Rice", "position": "G", "number": "2", "class_year": "JR", "height": "6'3\"", "hometown": "Columbia, SC", "notes": "Redshirt junior; transfer from Indiana"},
+    {"name": "Rakease Passmore", "position": "G", "number": "4", "class_year": "SO", "height": "6'5\"", "hometown": "Palatka, FL", "notes": "Transfer from Kansas"},
+    {"name": "David Coit", "position": "G", "number": "8", "class_year": "GR", "height": "5'11\"", "hometown": "Columbus, NJ", "notes": "Graduate transfer from Kansas"},
+    {"name": "Solomon Washington", "position": "F", "number": "9", "class_year": "SR", "height": "6'7\"", "hometown": "New Orleans, LA", "notes": "Followed Buzz Williams from Texas A&M"},
+    {"name": "George Turkson Jr.", "position": "G/F", "number": "11", "class_year": "FR", "height": "6'7\"", "hometown": "Lowell, MA", "notes": "Redshirt freshman; from Texas A&M"},
+    {"name": "Isaiah Watts", "position": "G", "number": "12", "class_year": "JR", "height": "6'3\"", "hometown": "West Seattle, WA", "notes": "Transfer from Washington State"},
+    {"name": "Elijah Saunders", "position": "F", "number": "13", "class_year": "SR", "height": "6'8\"", "hometown": "Phoenix, AZ", "notes": "Transfer from Virginia"},
+    {"name": "Pharrel Payne", "position": "F/C", "number": "21", "class_year": "SR", "height": "6'9\"", "hometown": "Cottage Grove, MN", "notes": "Followed Buzz Williams from Texas A&M"},
+    {"name": "Collin Metcalf", "position": "C", "number": "45", "class_year": "SR", "height": "6'9\"", "hometown": "Nortorf, Germany", "notes": "Transfer from Northeastern"}
+  ],
+  "recent_games": [
+    {"date": "2026-03-13", "opponent": "Iowa", "result": "L 64-75", "venue": "neutral", "tournament": "Big Ten Tournament Second Round"}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify; eliminated in Big Ten Tournament Second Round by Iowa"
+  },
+  "rivalries": ["Duke", "Indiana", "Michigan State", "Georgetown (historical)"],
+  "sources": [
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Maryland_Terrapins_men%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
+    {"url": "https://umterps.com/sports/mens-basketball", "scraped_at": "2026-05-21", "notes": "Official athletics page"},
+    {"url": "https://umterps.com/staff-directory/Damon-Evans/265", "scraped_at": "2026-05-21", "notes": "Athletic director"},
+    {"url": "https://umterps.com/facilities/xfinity-center/8", "scraped_at": "2026-05-21", "notes": "Xfinity Center capacity (17,950)"},
+    {"url": "https://dbknews.com/2026/04/08/maryland-mens-basketball-transfer-portal-tracker-buzz-williams/", "scraped_at": "2026-05-21", "notes": "Post-season transfer portal activity"}
+  ],
+  "verification_notes": "Buzz Williams completed his first season (2025-26) as head coach after being hired April 1, 2025 from Texas A&M to replace Kevin Willard (who left for Villanova). Maryland finished 12-21 (4-16 Big Ten), eliminated in Big Ten Tournament Second Round vs Iowa; did NOT make NCAA Tournament. Roster shown is the 2025-26 season-end roster. Significant offseason turnover: notable departures via transfer portal include Darius Adams; reported incoming 2026-27 transfers include DJ Wagner (Arkansas), Tomislav Buljan (New Mexico), Robert Jennings (Oklahoma State), Bishop Boswell (Tennessee), plus freshman Baba Oladotun. Career head coaching record for Buzz Williams not verified — left null. Xfinity Center opened in 2002 (originally Comcast Center, renamed 2014). 2026-27 schedule TBD; Maryland confirmed return to Players Era Festival.",
+  "last_updated": "2026-05-21"
+}

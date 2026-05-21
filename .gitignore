@@ -5,3 +5,6 @@ __pycache__/
 .env
 drafts/*.md
 !drafts/.gitkeep
+
+# Auto-generated browser preview wrapper for AIWriters.jsx (rebuild from source)
+about/preview.html
