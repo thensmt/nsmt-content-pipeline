@@ -23,9 +23,11 @@ jobs:
 
       - name: Run content pipeline
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          NSMT_USERNAME: ${{ secrets.NSMT_USERNAME }}
-          NSMT_PASSWORD: ${{ secrets.NSMT_PASSWORD }}
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          NSMT_USERNAME:        ${{ secrets.NSMT_USERNAME }}
+          NSMT_PASSWORD:        ${{ secrets.NSMT_PASSWORD }}
+          DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
+          DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
         run: python generate_content.py
 
       - name: Upload draft articles (if any local fallbacks)
