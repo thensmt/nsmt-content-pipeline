@@ -186,6 +186,103 @@ def extract_game_summary(event, team_name):
     }
 
 
+# ── Team knowledge base lookup ────────────────────────────────────────────────
+
+# Map team name (with optional league for ambiguous cases) to the slug used in
+# data/teams/{slug}.json. Single source of truth so we don't add a `slug` field
+# to every team dict.
+_TEAM_SLUG_MAP = {
+    ("Washington Commanders",  None):                            "commanders",
+    ("Washington Wizards",     None):                            "wizards",
+    ("Washington Capitals",    None):                            "capitals",
+    ("Washington Nationals",   None):                            "nationals",
+    ("Washington Mystics",     None):                            "mystics",
+    ("Washington Spirit",      None):                            "spirit",
+    ("DC United",              None):                            "dc-united",
+    ("Capital City Go-Go",     None):                            "go-go",
+    ("Maryland Terrapins",     None):                            "maryland",
+    ("Virginia Cavaliers",     None):                            "virginia",
+    ("Virginia Tech Hokies",   None):                            "virginia-tech",
+    ("Georgetown Hoyas",       None):                            "georgetown",
+    ("George Mason Patriots",  "College Basketball"):            "george-mason",
+    ("George Mason Patriots",  "Women's College Basketball"):    "george-mason-women",
+    ("Mary Washington Eagles", None):                            "mary-washington",
+}
+
+
+def team_slug(team):
+    """Resolve the KB slug for a team dict (handles GMU men's/women's disambiguation)."""
+    name = team.get("name")
+    league = team.get("league")
+    # Try exact (name, league) match first; fall back to (name, None)
+    return _TEAM_SLUG_MAP.get((name, league)) or _TEAM_SLUG_MAP.get((name, None))
+
+
+def load_team_kb(team):
+    """Load the verified knowledge-base JSON for a team. Returns dict or None."""
+    slug = team_slug(team)
+    if not slug:
+        return None
+    path = os.path.join(os.path.dirname(__file__), "data", "teams", f"{slug}.json")
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def kb_context_block(kb):
+    """Format selected KB fields as a context block for the Claude prompt.
+
+    Deliberately narrow: head coach, current record, conference, rivalries,
+    last 3 games. Don't dump the whole roster — wastes tokens and dilutes
+    attention. Game-specific data (the actual recap input) comes from ESPN.
+    """
+    if not kb:
+        return ""
+
+    lines = ["Verified team context (use selectively — only if it adds color or accuracy):"]
+
+    coach = ((kb.get("head_coach") or {}).get("name"))
+    if coach:
+        lines.append(f"- Head coach: {coach}")
+
+    record = kb.get("current_record")
+    if record:
+        lines.append(f"- Current record: {record}")
+
+    conf = kb.get("conference")
+    div = kb.get("division")
+    if conf or div:
+        lines.append(f"- Conference/Division: {' / '.join(filter(None, [conf, div]))}")
+
+    rivalries = kb.get("rivalries") or []
+    if rivalries:
+        # rivalries may be a list of strings OR list of dicts (DC United format)
+        rival_names = []
+        for r in rivalries[:4]:
+            if isinstance(r, str):
+                rival_names.append(r)
+            elif isinstance(r, dict):
+                rival_names.append(r.get("opponent") or "")
+        rival_names = [n for n in rival_names if n]
+        if rival_names:
+            lines.append(f"- Notable rivalries: {', '.join(rival_names)}")
+
+    recent = kb.get("recent_games") or []
+    if recent:
+        recent_lines = []
+        for g in recent[:3]:
+            date = g.get("date") or "recent"
+            opp = g.get("opponent", "?")
+            result = g.get("result", "?")
+            venue_marker = "vs" if g.get("venue") == "home" else "@"
+            recent_lines.append(f"  · {date} {venue_marker} {opp}: {result}")
+        lines.append("- Recent form (last 3):\n" + "\n".join(recent_lines))
+
+    return "\n" + "\n".join(lines) + "\n"
+
+
 # ── Claude API helper ──────────────────────────────────────────────────────────
 
 def generate_article(game_summary, team, article_type="recap"):
@@ -197,9 +294,12 @@ def generate_article(game_summary, team, article_type="recap"):
     persona_name = team.get("persona") or "an NSMT writer"
     persona_voice = team.get("voice") or "professional and engaging"
 
+    kb = load_team_kb(team)
+    kb_block = kb_context_block(kb)
+
     if article_type == "recap":
         prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers know your byline is AI-authored. Your voice: {persona_voice}.
-
+{kb_block}
 Write a professional, engaging game recap article (400-550 words) for the following game:
 
 Team: {team['name']}
@@ -224,7 +324,7 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
 
     elif article_type == "preview":
         prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet. Your voice: {persona_voice}.
-
+{kb_block}
 Write a professional game preview article (350-450 words) for the upcoming game:
 
 Team: {team['name']}
