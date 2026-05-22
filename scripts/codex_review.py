@@ -330,17 +330,19 @@ Do not invent issues. Do not approve a claim just because it sounds plausible. D
 
 
 def extract_verdict(review_text: str) -> str:
+    """Tolerant of leading/trailing markdown decoration (e.g. '**VERDICT: FAIL**')
+    because web-search-enabled outputs often arrive with markdown formatting."""
     for line in review_text.splitlines():
-        s = line.strip().upper()
-        if s.startswith("VERDICT:"):
-            v = s.split(":", 1)[1].strip()
-            if v.startswith("PASS"):
-                return "PASS"
-            if "FAIL" in v:
-                return "FAIL"
-            if "NEEDS_REVISION" in v or "NEEDS REVISION" in v:
-                return "NEEDS_REVISION"
-            break
+        s = line.strip().strip("*").strip().upper()
+        if not s.startswith("VERDICT:"):
+            continue
+        v = s.split(":", 1)[1].strip().strip("*").strip()
+        if v.startswith("PASS"):
+            return "PASS"
+        if "FAIL" in v:
+            return "FAIL"
+        if "NEEDS_REVISION" in v or "NEEDS REVISION" in v:
+            return "NEEDS_REVISION"
     return "UNKNOWN"
 
 

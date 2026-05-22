@@ -834,19 +834,26 @@ Do not invent issues. Do not be lenient on ❌. But ALSO do not mark a claim ❌
         print(f"  Fact-check API error: {e}")
         return ("UNKNOWN", f"(fact-check call failed: {e})")
 
-    verdict = "UNKNOWN"
-    for line in report.splitlines():
-        s = line.strip().upper()
-        if s.startswith("VERDICT:"):
-            v = s.split(":", 1)[1].strip()
-            if v.startswith("PASS"):
-                verdict = "PASS"
-            elif "FAIL" in v:
-                verdict = "FAIL"
-            elif "NEEDS_REVISION" in v or "NEEDS REVISION" in v:
-                verdict = "NEEDS_REVISION"
-            break
+    verdict = _parse_verdict(report)
     return (verdict, report)
+
+
+def _parse_verdict(report):
+    """Extract the article-level verdict from a fact-check report. Tolerant
+    of leading markdown decoration (e.g. '**VERDICT: FAIL**') because the
+    web_search-enabled responses often arrive with markdown formatting."""
+    for line in report.splitlines():
+        s = line.strip().strip("*").strip().upper()
+        if not s.startswith("VERDICT:"):
+            continue
+        v = s.split(":", 1)[1].strip().strip("*").strip()
+        if v.startswith("PASS"):
+            return "PASS"
+        if "FAIL" in v:
+            return "FAIL"
+        if "NEEDS_REVISION" in v or "NEEDS REVISION" in v:
+            return "NEEDS_REVISION"
+    return "UNKNOWN"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
