@@ -58,7 +58,7 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 DISCORD_PROXY_URL = os.environ.get("DISCORD_PROXY_URL")
 DISCORD_PROXY_SECRET = os.environ.get("DISCORD_PROXY_SECRET")
 
-MODEL = "claude-opus-4-7"
+MODEL = "claude-opus-4-6"
 ANTHROPIC_API = "https://api.anthropic.com/v1/messages"
 ADMIN_REVIEW_URL = "https://admin.thensmt.com/#/blogs"
 NSMT_BLUE = 0x0E80FC
