@@ -75,6 +75,23 @@ def _record_summary_hint(kb):
     return "see verified team context above"
 
 
+_BASELINE_GUARDRAILS = (
+    "- ANTI-OVERCLAIM: avoid deterministic causality framings from small samples\n"
+    "  (<10 games). Use 'early pattern', 'possible trend', 'worth monitoring' —\n"
+    "  do not declare team identity from a handful of games.\n"
+    "- ANTI-FABRICATION: every stat, date, opponent, score, and player name must\n"
+    "  come from the Verified team context above. Do not invent numbers.\n"
+    "- NO SOURCE-MIXING: do not blend stats from different sources. Use only what\n"
+    "  the Verified team context provides.\n"
+    "- CAREER-STAGE PRECISION: do not call any player a 'rookie', 'first-year',\n"
+    "  'four games into their career', or similar UNLESS the Verified player\n"
+    "  tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
+    "- ROSTER DISCIPLINE: reference only players named in the Verified roster above.\n"
+    "- HEDGE EARLY-SEASON CLAIMS: for any 'this team is X' framing in the first ~10\n"
+    "  games of a season, hedge openly. Acknowledge sample-size limits."
+)
+
+
 def build_prompt(team, article_type):
     """Compose the Claude prompt for the given team + article_type."""
     persona_name = team.get("persona") or "an NSMT writer"
@@ -107,6 +124,8 @@ def build_prompt(team, article_type):
             f"- Do NOT refer to yourself in first person or call attention to being AI in\n"
             f"  the article body — the byline handles disclosure.\n"
             f"- Format: plain paragraphs only. No headers, no bullet points.\n\n"
+            f"Editorial guardrails (HARD requirements):\n"
+            f"{_BASELINE_GUARDRAILS}\n\n"
             f"End with a single line starting with EXCERPT: a one-sentence teaser (max 160 characters)."
         )
 
@@ -137,6 +156,8 @@ def build_prompt(team, article_type):
             f"- Do NOT refer to yourself in first person or call attention to being AI in\n"
             f"  the article body.\n"
             f"- Format: plain paragraphs only. No headers, no bullet points.\n\n"
+            f"Editorial guardrails (HARD requirements):\n"
+            f"{_BASELINE_GUARDRAILS}\n\n"
             f"End with a single line starting with EXCERPT: a one-sentence teaser (max 160 characters)."
         )
 
@@ -162,7 +183,7 @@ def generate_baseline(team, article_type):
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-opus-4-6",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 2048,  # 700-900 words ≈ ~1400 tokens, plus excerpt
                 "messages": [{"role": "user", "content": prompt}],
             },

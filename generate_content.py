@@ -287,16 +287,75 @@ def load_team_kb(team):
         return None
 
 
+def load_story_packet(team, target_date):
+    """Load the timely story packet JSON for a team on a given date.
+    Returns dict or None. Packets live at data/packets/{slug}_{YYYY-MM-DD}.json
+    and are produced by the ingestion module (currently Mystics-only)."""
+    slug = team_slug(team)
+    if not slug or not target_date:
+        return None
+    path = os.path.join(
+        os.path.dirname(__file__), "data", "packets", f"{slug}_{target_date.isoformat()}.json"
+    )
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _derive_player_tenure(notes, current_season, league):
+    """Derive explicit career-stage framing (e.g. 'in 2nd WNBA season') from a
+    roster note like '2025 No. 4 overall draft pick'. Returns a short string
+    or None.
+
+    The 2026-05-22 demo eval showed that passing the raw draft-pick note alone
+    is NOT enough — the model still framed a 2nd-year player as a rookie.
+    Pre-computing the season number here gives the prompt an unambiguous,
+    non-derivable fact.
+    """
+    if not notes or not current_season:
+        return None
+    m = (
+        re.search(r"(\d{4})\s+No\.\s+\d+\s+overall\s+draft", notes)
+        or re.search(r"drafted\s+(\d{4})", notes, re.IGNORECASE)
+        or re.search(r"(\d{4})\s+draft", notes)
+    )
+    if not m:
+        return None
+    try:
+        draft_year = int(m.group(1))
+        current_year = int(str(current_season)[:4])
+    except (ValueError, TypeError):
+        return None
+    diff = current_year - draft_year
+    if diff < 0 or diff > 30:
+        return None
+    league_label = league or "pro"
+    if diff == 0:
+        return f"{league_label} rookie"
+    ordinals = {1: "2nd", 2: "3rd", 3: "4th", 4: "5th", 5: "6th", 6: "7th",
+                7: "8th", 8: "9th", 9: "10th"}
+    label = ordinals.get(diff, f"{diff + 1}th")
+    return f"in {label} {league_label} season"
+
+
 def kb_context_block(kb):
     """Format selected KB fields as a context block for the Claude prompt.
 
-    Deliberately narrow: head coach, current record, conference, rivalries,
-    last 3 games. Don't dump the whole roster — wastes tokens and dilutes
-    attention. Game-specific data (the actual recap input) comes from ESPN.
+    Renders coach, record, conference, rivalries, recent form, AND — added
+    2026-05-22 after the Mystics demo eval — the verified roster plus
+    pre-computed player tenure ('in 2nd WNBA season'). The roster gives the
+    model a closed-set of names to reference; the tenure block kills the
+    rookie-framing hallucination class we saw in the demo.
+
+    Game-specific data (the actual recap input) still comes from ESPN at
+    call time and from the story packet (see consume_story_packet).
     """
     if not kb:
         return ""
 
+    team_name = kb.get("team_name") or "the team"
     lines = ["Verified team context (use selectively — only if it adds color or accuracy):"]
 
     coach = ((kb.get("head_coach") or {}).get("name"))
@@ -335,6 +394,44 @@ def kb_context_block(kb):
             venue_marker = "vs" if g.get("venue") == "home" else "@"
             recent_lines.append(f"  · {date} {venue_marker} {opp}: {result}")
         lines.append("- Recent form (last 3):\n" + "\n".join(recent_lines))
+
+    roster = kb.get("roster") or []
+    current_season = kb.get("current_season")
+    league = kb.get("league") or ""
+
+    tenured = []
+    for p in roster:
+        notes = p.get("notes") or ""
+        tenure = _derive_player_tenure(notes, current_season, league)
+        if tenure:
+            tenured.append((p.get("name", ""), tenure, notes))
+
+    if tenured:
+        lines.append(
+            "- Verified player tenure (these are FACTS, not inferences — "
+            "do not contradict them; do not describe these players as rookies "
+            "or use 'first-year' / 'N games into their career' framing):"
+        )
+        for name, tenure, notes in tenured:
+            lines.append(f"  · {name} — {tenure} ({notes})")
+
+    if roster:
+        lines.append(
+            f"- Verified {team_name} roster (reference ONLY these names when "
+            "discussing your own team's players; opposing-team names from the "
+            "game data are fine):"
+        )
+        for p in roster:
+            nm = p.get("name", "")
+            pos = p.get("position") or ""
+            num = p.get("number") or ""
+            tag_parts = []
+            if pos:
+                tag_parts.append(pos)
+            if num:
+                tag_parts.append(f"#{num}")
+            tag = f" ({', '.join(tag_parts)})" if tag_parts else ""
+            lines.append(f"  · {nm}{tag}")
 
     return "\n" + "\n".join(lines) + "\n"
 
@@ -458,8 +555,13 @@ def consume_story_packet(packet):
 
 # ── Claude API helper ──────────────────────────────────────────────────────────
 
-def generate_article(game_summary, team, article_type="recap"):
-    """Call Claude to write a sports article based on game data."""
+def generate_article(game_summary, team, article_type="recap", target_date=None):
+    """Call Claude to write a sports article based on game data.
+
+    `target_date` is used to look up a same-date story packet at
+    data/packets/{slug}_{YYYY-MM-DD}.json. If found, packet content is
+    injected into the prompt alongside the timeless KB block.
+    """
     if not ANTHROPIC_API_KEY:
         print("ERROR: ANTHROPIC_API_KEY not set.")
         return None
@@ -470,9 +572,34 @@ def generate_article(game_summary, team, article_type="recap"):
     kb = load_team_kb(team)
     kb_block = kb_context_block(kb)
 
+    packet = load_story_packet(team, target_date) if target_date else None
+    packet_block = consume_story_packet(packet) if packet else ""
+
+    # Shared editorial-guardrails block. Added 2026-05-22 after the Mystics
+    # demo eval flagged overclaiming, source-mixing, and rookie-framing errors.
+    # Keep this in sync across recap/preview/baseline prompts.
+    GUARDRAILS = (
+        "- ANTI-OVERCLAIM: avoid deterministic causality framings from small "
+        "samples (<10 games). Use 'early pattern', 'possible trend', "
+        "'worth monitoring' — do not declare team identity from a handful of games.\n"
+        "- ANTI-FABRICATION: every stat, date, opponent, score, and player name "
+        "must come from the Verified team context, the Story packet, or the game "
+        "data below. If a number isn't in those blocks, do not invent one.\n"
+        "- NO SOURCE-MIXING: if a number appears in two blocks with different "
+        "values, prefer the Story packet; never blend stats from different sources.\n"
+        "- CAREER-STAGE PRECISION: do not call any player a 'rookie', 'first-year', "
+        "'four games into their career', or similar UNLESS the Verified player "
+        "tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
+        "- ROSTER DISCIPLINE: reference only players named in the Verified roster "
+        "or the game data. Do not invent additional teammates.\n"
+        "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
+        "experiments, or any 'this team is X' framing in the first ~10 games of a "
+        "season, hedge openly. Acknowledge sample-size limits."
+    )
+
     if article_type == "recap":
         prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers know your byline is AI-authored. Your voice: {persona_voice}.
-{kb_block}
+{kb_block}{packet_block}
 Write a professional, engaging game recap article (400-550 words) for the following game:
 
 Team: {team['name']}
@@ -489,15 +616,17 @@ Guidelines:
 - Add context about standings or season implications
 - Close with a forward-looking line about the team's next challenge
 - Stay in your voice ({persona_voice}) but keep it professional, written for DC/MD/VA sports fans
-- Do NOT fabricate specific play-by-play details not given above
 - Do NOT refer to yourself in first person or call attention to being AI in the article body — the byline handles disclosure
 - Format: plain paragraphs only, no headers or bullet points
+
+Editorial guardrails (HARD requirements):
+{GUARDRAILS}
 
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters) for the article preview."""
 
     elif article_type == "preview":
         prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet. Your voice: {persona_voice}.
-{kb_block}
+{kb_block}{packet_block}
 Write a professional game preview article (350-450 words) for the upcoming game:
 
 Team: {team['name']}
@@ -513,6 +642,9 @@ Guidelines:
 - Do NOT refer to yourself in first person or call attention to being AI in the body
 - Format: plain paragraphs only, no headers or bullet points
 
+Editorial guardrails (HARD requirements):
+{GUARDRAILS}
+
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters)."""
 
     try:
@@ -524,7 +656,7 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-opus-4-6",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1024,
                 "messages": [{"role": "user", "content": prompt}],
             },
@@ -536,6 +668,105 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
     except Exception as e:
         print(f"  Claude API error: {e}")
         return None
+
+
+# ── Adversarial fact-check pass ───────────────────────────────────────────────
+#
+# Added 2026-05-22 after the Mystics demo eval. Calls Sonnet 4.6 at
+# temperature 0 to extract every factual claim in the article and mark each
+# against the structured source data (KB + story packet). Cheap second opinion
+# that catches the same overclaiming / source-mixing / tenure errors the demo
+# surfaced.
+#
+# Never blocks admin save — verdict is informational, surfaced on the Discord
+# embed for the human reviewer. The external codex_review.py launchd job is
+# the more rigorous independent pass.
+
+FACT_VERDICTS = {"PASS", "NEEDS_REVISION", "FAIL", "UNKNOWN"}
+
+
+def fact_check_article(article_text, kb, packet, team):
+    """Returns (verdict, full_report) where verdict is one of FACT_VERDICTS."""
+    if not ANTHROPIC_API_KEY:
+        return ("UNKNOWN", "(skipped — ANTHROPIC_API_KEY not set)")
+    if not article_text:
+        return ("UNKNOWN", "(skipped — empty article)")
+
+    source_data = json.dumps(
+        {"team": team.get("name"), "kb": kb or {}, "packet": packet or {}},
+        indent=2,
+        default=str,
+    )
+
+    prompt = f"""You are a meticulous sports fact-checker. You are paid to find errors, not approve articles.
+
+Below is the raw structured data the writer was given. Below that is the article they wrote.
+
+Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, runs, win-probability claims, ranking claims, attendance, draft years, career stages). For each claim, mark it:
+
+  ✅ SUPPORTED — exactly matches the source data
+  ⚠️  AMBIGUOUS — partly supported but slightly off
+  ❌ UNSUPPORTED — appears nowhere in source data, or directly contradicts it
+
+Pay particular attention to career-stage / tenure claims (rookie, first-year, "N games into their career") — these MUST match the kb.roster[].notes or the packet, not be inferred.
+
+Source data (JSON):
+```
+{source_data}
+```
+
+Article:
+```
+{article_text}
+```
+
+Output format (strict):
+
+VERDICT: PASS | NEEDS_REVISION | FAIL
+
+CLAIMS:
+1. "[exact quote from article]" → ✅/⚠️/❌  [one-sentence reason; cite source-data field name]
+2. ...
+
+SUMMARY: [2-3 sentences naming the most serious issues, or "no significant issues found"]
+
+Do not invent issues. Do not be lenient. If the article names a player, that player MUST appear in the source data."""
+
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-sonnet-4-6",
+                "max_tokens": 2048,
+                "temperature": 0.0,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=90,
+        )
+        resp.raise_for_status()
+        report = resp.json()["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"  Fact-check API error: {e}")
+        return ("UNKNOWN", f"(fact-check call failed: {e})")
+
+    verdict = "UNKNOWN"
+    for line in report.splitlines():
+        s = line.strip().upper()
+        if s.startswith("VERDICT:"):
+            v = s.split(":", 1)[1].strip()
+            if v.startswith("PASS"):
+                verdict = "PASS"
+            elif "FAIL" in v:
+                verdict = "FAIL"
+            elif "NEEDS_REVISION" in v or "NEEDS REVISION" in v:
+                verdict = "NEEDS_REVISION"
+            break
+    return (verdict, report)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -607,7 +838,22 @@ def save_to_nsmt(title, slug, content, excerpt, team, game_date, token):
         return False
 
 
-def post_recap_to_discord(title, body, team, summary, game_date):
+_VERDICT_COLORS = {
+    "PASS":           0x2ECC71,
+    "NEEDS_REVISION": 0xE67E22,
+    "FAIL":           0xE74C3C,
+    "UNKNOWN":        NSMT_BLUE,
+}
+
+_VERDICT_BADGES = {
+    "PASS":           "✅ PASS",
+    "NEEDS_REVISION": "⚠️ NEEDS_REVISION",
+    "FAIL":           "❌ FAIL",
+    "UNKNOWN":        "❓ UNKNOWN",
+}
+
+
+def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="UNKNOWN", fact_report=None):
     """Best-effort notification to Discord via the Cloudflare Worker proxy.
 
     Routes to the team's own channel if `team["channel_target"]` matches a
@@ -619,7 +865,9 @@ def post_recap_to_discord(title, body, team, summary, game_date):
     Posts the FULL article body in the embed description so reviewers can
     read the whole piece in Discord without clicking through to admin.
     Truncates with an admin link if the body exceeds Discord's 4096-char
-    embed description limit.
+    embed description limit. Fact-check verdict (added 2026-05-22) drives
+    the embed color + a verdict field; full report posted as a follow-up
+    embed when verdict != PASS.
 
     Never raises — Discord failure must not block admin saves.
     """
@@ -636,15 +884,19 @@ def post_recap_to_discord(title, body, team, summary, game_date):
 
     channel_target = team.get("channel_target") or DISCORD_TARGET
     byline = build_byline(team)
+    verdict_badge = _VERDICT_BADGES.get(fact_verdict, _VERDICT_BADGES["UNKNOWN"])
+    embed_color = _VERDICT_COLORS.get(fact_verdict, _VERDICT_COLORS["UNKNOWN"])
 
     embed = {
         "title":       f"📝 New Recap Draft — {team['name']}",
         "description": body_text,
-        "color":       NSMT_BLUE,
+        "color":       embed_color,
         "fields": [
-            {"name": "✍️ Byline",  "value": byline,                                    "inline": False},
-            {"name": "🏆 Game",    "value": summary.get("score", "Score unavailable"), "inline": False},
-            {"name": "✏️ Review",  "value": f"[Open in admin]({ADMIN_REVIEW_URL})",    "inline": False},
+            {"name": "✍️ Byline",      "value": byline,                                    "inline": False},
+            {"name": "🏆 Game",        "value": summary.get("score", "Score unavailable"), "inline": False},
+            {"name": "🔍 Fact-check",  "value": verdict_badge,                             "inline": True},
+            {"name": "🤖 Model",       "value": "claude-sonnet-4-6",                       "inline": True},
+            {"name": "✏️ Review",      "value": f"[Open in admin]({ADMIN_REVIEW_URL})",    "inline": False},
         ],
         "footer":    {"text": f"{team['league']} · status: draft (is_active=0) in admin"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -672,12 +924,48 @@ def post_recap_to_discord(title, body, team, summary, game_date):
         )
         if resp.status_code < 300:
             print(f"  ✓ Discord notification posted to target='{channel_target}' (status {resp.status_code})")
-            return True
-        print(f"  ✗ Discord notification failed (status {resp.status_code}): {resp.text[:200]}")
-        return False
+            ok = True
+        else:
+            print(f"  ✗ Discord notification failed (status {resp.status_code}): {resp.text[:200]}")
+            ok = False
     except Exception as e:
         print(f"  ✗ Discord notification error: {e}")
-        return False
+        ok = False
+
+    # Follow-up: post the full fact-check report when verdict != PASS, so the
+    # reviewer can read the model-by-claim breakdown without leaving Discord.
+    if ok and fact_report and fact_verdict in {"NEEDS_REVISION", "FAIL"}:
+        try:
+            _post_fact_check_followup(team, channel_target, fact_verdict, fact_report)
+        except Exception as e:
+            print(f"  ✗ Fact-check follow-up error: {e}")
+
+    return ok
+
+
+def _post_fact_check_followup(team, channel_target, verdict, report):
+    """Post the full fact-check report as a follow-up embed in the same channel."""
+    MAX_DESC = 3800
+    text = (report or "").strip()
+    if len(text) > MAX_DESC:
+        text = text[:MAX_DESC].rstrip() + "…"
+    embed = {
+        "title":       f"🔍 Fact-check — {team['name']} — {_VERDICT_BADGES.get(verdict, verdict)}",
+        "description": f"```\n{text}\n```"[:MAX_DESC],
+        "color":       _VERDICT_COLORS.get(verdict, NSMT_BLUE),
+        "footer":      {"text": "claude-sonnet-4-6 adversarial pass · independent of codex_review.py"},
+        "timestamp":   datetime.now(timezone.utc).isoformat(),
+    }
+    requests.post(
+        DISCORD_PROXY_URL,
+        headers={
+            "X-NSMT-Auth":   DISCORD_PROXY_SECRET,
+            "X-NSMT-Target": channel_target,
+            "Content-Type":  "application/json",
+        },
+        json={"embeds": [embed]},
+        timeout=15,
+    )
 
 
 def save_local_draft(title, body, team, game_date):
@@ -731,7 +1019,7 @@ def run(target_date=None):
 
         print(f"  {team['name']}: game found — generating article...")
         summary = extract_game_summary(game, team["name"])
-        article_text = generate_article(summary, team, article_type="recap")
+        article_text = generate_article(summary, team, article_type="recap", target_date=target_date)
 
         if not article_text:
             print(f"  {team['name']}: article generation failed, skipping.")
@@ -745,6 +1033,13 @@ def run(target_date=None):
             body_raw = parts[0].strip()
             excerpt  = parts[1].strip()
 
+        # Adversarial fact-check against the same KB+packet the writer saw.
+        # Verdict is informational only — never blocks admin save.
+        kb_for_check = load_team_kb(team)
+        packet_for_check = load_story_packet(team, target_date)
+        fact_verdict, fact_report = fact_check_article(body_raw, kb_for_check, packet_for_check, team)
+        print(f"  Fact-check: {fact_verdict}")
+
         # body_raw goes to Discord (markdown-friendly). body_html goes to admin
         # (wrapped in <p> tags for the rich text editor).
         body_html = "".join(f"<p>{p.strip()}</p>" for p in body_raw.split("\n\n") if p.strip())
@@ -754,9 +1049,12 @@ def run(target_date=None):
 
         saved = save_to_nsmt(title, slug, body_html, excerpt, team, target_date, token)
         if saved:
-            post_recap_to_discord(title, body_raw, team, summary, target_date)
+            post_recap_to_discord(
+                title, body_raw, team, summary, target_date,
+                fact_verdict=fact_verdict, fact_report=fact_report,
+            )
         else:
-            save_local_draft(title, body, team, target_date)
+            save_local_draft(title, body_raw, team, target_date)
 
         articles_generated += 1
 
