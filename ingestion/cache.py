@@ -87,11 +87,32 @@ def _robots_for(url: str) -> urllib.robotparser.RobotFileParser:
         return _ROBOTS_CACHE[base]
 
     robots = urllib.robotparser.RobotFileParser()
-    robots.set_url(urllib.parse.urljoin(base, "/robots.txt"))
+    robots_url = urllib.parse.urljoin(base, "/robots.txt")
+    robots.set_url(robots_url)
+
+    if requests is None:
+        robots.allow_all = True
+        _ROBOTS_CACHE[base] = robots
+        return robots
+
     try:
-        robots.read()
-    except Exception as exc:  # pragma: no cover - depends on source availability
-        logger.warning("robots.txt read failed for %s: %s", base, exc)
+        response = requests.get(
+            robots_url,
+            headers={"User-Agent": USER_AGENT},
+            timeout=3,
+        )
+    except requests.RequestException as exc:
+        logger.info("robots.txt fetch failed for %s, defaulting to allow: %s", base, exc)
+        robots.allow_all = True
+        _ROBOTS_CACHE[base] = robots
+        return robots
+
+    if response.status_code == 200:
+        robots.parse(response.text.splitlines())
+    else:
+        # Non-200 (often 403 from API edge servers). Don't enforce.
+        logger.info("robots.txt at %s returned %s; defaulting to allow", robots_url, response.status_code)
+        robots.allow_all = True
     _ROBOTS_CACHE[base] = robots
     return robots
 
