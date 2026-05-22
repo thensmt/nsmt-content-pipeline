@@ -12,7 +12,7 @@ from ingestion.cache import ESPN_TTL_MIN, SourceFetchError, date_to_utc_iso, get
 logger = logging.getLogger(__name__)
 
 TEAM_NAME = "Washington Mystics"
-ESPN_TEAM_ID = "14"
+ESPN_TEAM_ID = "16"
 SPORT = "basketball"
 LEAGUE_SLUG = "wnba"
 
