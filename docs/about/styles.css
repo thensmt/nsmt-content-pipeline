@@ -250,14 +250,14 @@ body {
 .hero {
   position: relative;
   max-width: 1400px; margin: 0 auto;
-  padding: 72px 56px 80px;
+  padding: 32px 56px 64px;
   border-bottom: 1px solid var(--rule);
 }
 .hero-meta {
   display: flex; justify-content: space-between;
   font-family: var(--ff-mono);
   font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 .kicker { display: inline-flex; align-items: center; gap: 10px; }
 .kicker-square { width: 9px; height: 9px; background: var(--blue); transform: rotate(45deg); }
@@ -267,10 +267,11 @@ body {
   font-family: var(--ff-display);
   font-weight: 900;
   font-variation-settings: "opsz" 144;
-  font-size: clamp(56px, 12vw, 200px);
+  /* Sized so all 4 lines fit in the viewport without scrolling on typical laptop screens. */
+  font-size: clamp(44px, min(9vw, 16vh), 140px);
   line-height: 0.92;
   letter-spacing: -0.045em;
-  margin: 0 0 36px;
+  margin: 0 0 20px;
   text-wrap: balance;
 }
 .t-line { display: block; overflow: hidden; padding-bottom: 0.16em; }
