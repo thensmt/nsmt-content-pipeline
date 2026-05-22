@@ -28,15 +28,19 @@ fake_summary = {
     "venue": "Capital One Arena",
 }
 fake_title = "🧪 Wizards Test Recap — Snap Losing Streak with 112-108 Win"
-fake_excerpt = (
+fake_body = (
     "This is a TEST notification from test_discord.py — confirms the Discord "
-    "notification path works without calling Claude or writing to admin. "
+    "notification path works without calling Claude or writing to admin.\n\n"
+    "The full article body would normally appear here, with multiple "
+    "paragraphs of game recap content. The new embed format renders the "
+    "entire piece directly in Discord so reviewers can read without clicking "
+    "through to admin.\n\n"
     "Delete this thread after verifying."
 )
 
 ok = post_recap_to_discord(
     title=fake_title,
-    excerpt=fake_excerpt,
+    body=fake_body,
     team=fake_team,
     summary=fake_summary,
     game_date=date.today(),

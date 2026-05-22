@@ -472,7 +472,7 @@ def save_to_nsmt(title, slug, content, excerpt, team, game_date, token):
         return False
 
 
-def post_recap_to_discord(title, excerpt, team, summary, game_date):
+def post_recap_to_discord(title, body, team, summary, game_date):
     """Best-effort notification to Discord via the Cloudflare Worker proxy.
 
     Routes to the team's own channel if `team["channel_target"]` matches a
@@ -481,28 +481,34 @@ def post_recap_to_discord(title, excerpt, team, summary, game_date):
     the RECAPS target, which is the default for all teams until you opt them
     into per-team channels).
 
+    Posts the FULL article body in the embed description so reviewers can
+    read the whole piece in Discord without clicking through to admin.
+    Truncates with an admin link if the body exceeds Discord's 4096-char
+    embed description limit.
+
     Never raises — Discord failure must not block admin saves.
     """
     if not DISCORD_PROXY_URL or not DISCORD_PROXY_SECRET:
         print("  Discord notification skipped — DISCORD_PROXY_URL / DISCORD_PROXY_SECRET not set.")
         return False
 
-    safe_excerpt = (excerpt or "").strip() or "(no excerpt provided)"
-    if len(safe_excerpt) > 400:
-        safe_excerpt = safe_excerpt[:399] + "…"
+    # Discord embed description max is 4096 chars; leave buffer for the
+    # truncation footer if we need to cut.
+    MAX_DESC = 3900
+    body_text = (body or "").strip() or "(no body provided)"
+    if len(body_text) > MAX_DESC:
+        body_text = body_text[:MAX_DESC].rstrip() + "…\n\n[Continue reading in admin →](" + ADMIN_REVIEW_URL + ")"
 
     channel_target = team.get("channel_target") or DISCORD_TARGET
     byline = build_byline(team)
 
     embed = {
         "title":       f"📝 New Recap Draft — {team['name']}",
-        "description": safe_excerpt,
+        "description": body_text,
         "color":       NSMT_BLUE,
         "fields": [
             {"name": "✍️ Byline",  "value": byline,                                    "inline": False},
             {"name": "🏆 Game",    "value": summary.get("score", "Score unavailable"), "inline": False},
-            {"name": "📅 Date",    "value": game_date.isoformat(),                      "inline": True},
-            {"name": "🏟️ Venue",  "value": summary.get("venue") or "Unknown",         "inline": True},
             {"name": "✏️ Review",  "value": f"[Open in admin]({ADMIN_REVIEW_URL})",    "inline": False},
         ],
         "footer":    {"text": f"{team['league']} · status: draft (is_active=0) in admin"},
@@ -597,22 +603,23 @@ def run(target_date=None):
             continue
 
         # Split body and excerpt
-        body = article_text
+        body_raw = article_text
         excerpt = ""
         if "EXCERPT:" in article_text:
             parts = article_text.rsplit("EXCERPT:", 1)
-            body    = parts[0].strip()
-            excerpt = parts[1].strip()
+            body_raw = parts[0].strip()
+            excerpt  = parts[1].strip()
 
-        # Wrap paragraphs in HTML <p> tags for the rich text editor
-        body = "".join(f"<p>{p.strip()}</p>" for p in body.split("\n\n") if p.strip())
+        # body_raw goes to Discord (markdown-friendly). body_html goes to admin
+        # (wrapped in <p> tags for the rich text editor).
+        body_html = "".join(f"<p>{p.strip()}</p>" for p in body_raw.split("\n\n") if p.strip())
 
         title = f"{summary['score']} | {team['name']} Recap"
         slug  = slugify(f"{team['name']}-recap-{target_date.isoformat()}")
 
-        saved = save_to_nsmt(title, slug, body, excerpt, team, target_date, token)
+        saved = save_to_nsmt(title, slug, body_html, excerpt, team, target_date, token)
         if saved:
-            post_recap_to_discord(title, excerpt, team, summary, target_date)
+            post_recap_to_discord(title, body_raw, team, summary, target_date)
         else:
             save_local_draft(title, body, team, target_date)
 
