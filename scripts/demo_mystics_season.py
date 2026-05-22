@@ -198,8 +198,9 @@ Length: 650-850 words.
 Hard requirements:
 - Use ONLY facts from the season packet above. If a number isn't in the packet, don't invent one.
 - The KB's "current_record" may be stale; trust the season packet's record over the KB.
-- Centerpiece angle: synthesize the entire season so far (6 games), not just the most recent game. The Dallas blowout (5/19) is ONE data point, not the centerpiece.
-- The home 0-2 / away 3-1 split is a real and unusual pattern — engage with it.
+- Centerpiece angle: synthesize the entire season so far across ALL played games in the packet, not just the most recent game. Any single blowout is one data point, not the centerpiece.
+- The packet's record is the only authoritative record — do not include preseason, exhibition, or KB-listed games. If the home/away split shows a real pattern (and is from a meaningful sample), engage with it; if the sample is too small for confident claims, say so plainly.
+- Acknowledge sample-size limits openly when warranted. Early-season data is real but provisional — write as an analyst who knows the difference.
 - Forward-looking close: mention upcoming opponents from the packet (don't invent dates or opponents).
 - DO write as a serious analyst: focus on patterns, tendencies, and what the games are revealing about this roster.
 - DO NOT write as a generic recap. DO NOT lead with "the Mystics played" or "yesterday."

@@ -53,8 +53,10 @@ def fetch_season(
         }
 
     events = schedule.get("events", []) if isinstance(schedule, dict) else []
-    played_events = [e for e in events if _is_final(e)]
-    upcoming_events = [e for e in events if _is_upcoming(e)]
+    # Exclude preseason — only regular-season (type 2) and postseason (type 3) count.
+    countable = [e for e in events if _season_type(e) in (2, 3)]
+    played_events = [e for e in countable if _is_final(e)]
+    upcoming_events = [e for e in countable if _is_upcoming(e)]
 
     played_games: list[dict[str, Any]] = []
     for event in played_events:
@@ -107,6 +109,17 @@ def _fetch_summary(game_id: str, sport: str, league_slug: str) -> tuple[dict[str
         logger.warning("Season aggregator: summary %s fetch failed: %s", game_id, exc)
         return None, f"ESPN summary unavailable for game {game_id}: {exc}"
     return (payload if isinstance(payload, dict) else None), ""
+
+
+def _season_type(event: dict[str, Any]) -> int:
+    """ESPN season type: 1=preseason, 2=regular, 3=postseason. 0 if unknown."""
+    st = event.get("seasonType")
+    if isinstance(st, dict):
+        try:
+            return int(st.get("type") or 0)
+        except (TypeError, ValueError):
+            return 0
+    return 0
 
 
 def _is_final(event: dict[str, Any]) -> bool:
