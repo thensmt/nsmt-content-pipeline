@@ -836,8 +836,10 @@ body {
 .flow-node.active .label {
   fill: #fff;
 }
-.flow-node { cursor: pointer; transition: transform 200ms; }
-.flow-node:hover { transform: translateY(-2px); }
+.flow-node { cursor: pointer; }
+/* No hover transform — the 2px translate caused the click target to dodge
+   the cursor on small SVG nodes (wobble loop). Hover affordance comes from
+   the circle/label color change above. */
 .flow .data-dot {
   fill: var(--blue);
   animation: dotTravel 5.4s linear infinite;
