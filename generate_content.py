@@ -339,6 +339,123 @@ def kb_context_block(kb):
     return "\n" + "\n".join(lines) + "\n"
 
 
+# ── Story packet (ingestion layer — not yet wired into run()) ────────────────
+#
+# Story packets are produced by the ingestion module (see ingestion/) and live
+# at data/packets/{slug}_{YYYY-MM-DD}.json. They carry TIMELY enrichment
+# (yesterday's game, top performers, news, injuries, standings) — distinct
+# from KB files which carry TIMELESS team context.
+#
+# This function defines the contract for how a packet flattens into the
+# Claude prompt. It is intentionally NOT called from run() yet; that wiring
+# happens in a follow-up PR once the ingestion module ships and we've
+# validated packet output for one team end-to-end.
+#
+# Slot-in pattern (future):
+#     kb_block     = kb_context_block(load_team_kb(team))
+#     packet       = load_story_packet(team_slug(team), game_date)   # future
+#     packet_block = consume_story_packet(packet)
+#     # prepend both blocks to the user-prompt body inside generate_article()
+
+def consume_story_packet(packet):
+    """Flatten a story packet dict into a prompt-ready context block.
+
+    Mirrors the shape and conventions of kb_context_block(): returns a single
+    string (with leading + trailing newlines) ready for concatenation into
+    the Claude user prompt. Empty string when the packet is None or empty.
+
+    Tolerates missing keys and silently skips empty sections. List fields may
+    contain strings OR dicts; dict items are best-effort stringified.
+
+    Expected packet shape (per ingestion contract):
+        event_type:                  game | news | injury | transaction |
+                                     standings_update | off_day
+        retrieved_at:                ISO 8601 UTC
+        kb_slug:                     pointer to data/teams/{slug}.json
+        game_summary:                str or dict
+        top_performers:              list[str|dict]
+        recent_team_context:         str
+        key_players:                 list[str|dict]
+        injuries_or_availability:    list[str|dict]
+        standings_context:           str
+        recent_news_items:           list[dict] with title/url/published_at
+        editorial_angle_candidates:  list[str]   — suggestions, not requirements
+        confidence_notes:            list[str]   — gaps the writer must NOT fabricate around
+        source_links:                list[dict] with source_name/source_url/confidence
+    """
+    if not packet:
+        return ""
+
+    out = [f"Story packet (event_type: {packet.get('event_type', 'unknown')}):"]
+    if retrieved := packet.get("retrieved_at"):
+        out.append(f"- Retrieved: {retrieved}")
+
+    def _bullets(items):
+        lines = []
+        for it in items:
+            if isinstance(it, str):
+                lines.append(f"  · {it}")
+            elif isinstance(it, dict):
+                # news items: prefer title + url; otherwise compact key:value
+                if "title" in it:
+                    title = it.get("title", "")
+                    url = it.get("url") or it.get("source_url") or ""
+                    lines.append(f"  · {title}" + (f" ({url})" if url else ""))
+                else:
+                    lines.append("  · " + ", ".join(f"{k}: {v}" for k, v in it.items()))
+        return lines
+
+    def _section(label, body):
+        if not body:
+            return
+        if isinstance(body, (list, tuple)):
+            rows = _bullets(body)
+            if not rows:
+                return
+            out.append(f"- {label}:")
+            out.extend(rows)
+        elif isinstance(body, dict):
+            out.append(f"- {label}:")
+            for k, v in body.items():
+                out.append(f"  · {k}: {v}")
+        else:
+            out.append(f"- {label}: {body}")
+
+    _section("Game summary",          packet.get("game_summary"))
+    _section("Top performers",        packet.get("top_performers"))
+    _section("Recent team context",   packet.get("recent_team_context"))
+    _section("Key players",           packet.get("key_players"))
+    _section("Injuries/availability", packet.get("injuries_or_availability"))
+    _section("Standings context",     packet.get("standings_context"))
+    _section("Recent news",           packet.get("recent_news_items"))
+
+    if angles := packet.get("editorial_angle_candidates"):
+        out.append("- Editorial angle candidates (pick ONE or synthesize — these are suggestions, not requirements):")
+        for a in angles:
+            out.append(f"  · {a}")
+
+    if notes := packet.get("confidence_notes"):
+        out.append("- Confidence notes — DO NOT FABRICATE around these gaps:")
+        if isinstance(notes, list):
+            for n in notes:
+                out.append(f"  · {n}")
+        else:
+            out.append(f"  · {notes}")
+
+    if sources := packet.get("source_links"):
+        out.append("- Sources cited in this packet:")
+        for s in sources:
+            if isinstance(s, dict):
+                name = s.get("source_name", "?")
+                url  = s.get("source_url", "")
+                conf = s.get("confidence", "?")
+                out.append(f"  · {name} ({url}) — confidence {conf}")
+            else:
+                out.append(f"  · {s}")
+
+    return "\n" + "\n".join(out) + "\n"
+
+
 # ── Claude API helper ──────────────────────────────────────────────────────────
 
 def generate_article(game_summary, team, article_type="recap"):
