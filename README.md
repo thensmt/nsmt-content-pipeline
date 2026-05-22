@@ -26,6 +26,34 @@ Fetches DC/MD/VA game results → generates drafts via Claude → saves to Conte
 
 ---
 
+## Story Packet Ingestion (MVP)
+
+The ingestion layer builds a validated, public-source JSON story packet that can
+later be added to the Claude prompt. It is additive: it does not publish,
+does not call Claude, and is not wired into `generate_content.py` yet.
+
+Run it for the Mystics:
+```bash
+python -m ingestion.generate_story_packet --team mystics
+python -m ingestion.generate_story_packet --team mystics --dry-run
+python -m ingestion.generate_story_packet --team mystics --date 2026-05-21
+```
+
+Default output is `data/packets/mystics_<YYYY-MM-DD>.json`. `--dry-run`
+prints validated JSON and does not write a file. Source responses are cached
+under `cache/` with short per-source TTLs.
+
+To extend this to another team, add the team metadata and KB slug mapping in
+the ingestion builder, add source-specific fetcher support for that team's
+public endpoints, and add tests that prove both game-day and off-day packets
+validate and are consumable by `consume_story_packet()`.
+
+Status: Mystics only. Consumer hookup is deferred; a later change should load
+`data/packets/{slug}_{date}.json`, call `consume_story_packet(packet)`, and add
+that block to the article prompt beside the existing KB context.
+
+---
+
 ## Setup (One-Time)
 
 ### 1. Add GitHub Secrets
