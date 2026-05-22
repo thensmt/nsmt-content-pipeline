@@ -273,7 +273,7 @@ body {
   margin: 0 0 36px;
   text-wrap: balance;
 }
-.t-line { display: block; overflow: hidden; }
+.t-line { display: block; overflow: hidden; padding-bottom: 0.16em; }
 .t-line--indent { padding-left: clamp(40px, 14vw, 260px); }
 .t-line span.letter {
   display: inline-block;
