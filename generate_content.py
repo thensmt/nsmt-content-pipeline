@@ -304,6 +304,10 @@ def load_story_packet(team, target_date):
         return None
 
 
+_TENURE_ORDINALS = {1: "2nd", 2: "3rd", 3: "4th", 4: "5th", 5: "6th", 6: "7th",
+                    7: "8th", 8: "9th", 9: "10th"}
+
+
 def _derive_player_tenure(notes, current_season, league):
     """Derive explicit career-stage framing (e.g. 'in 2nd WNBA season') from a
     roster note like '2025 No. 4 overall draft pick'. Returns a short string
@@ -334,10 +338,31 @@ def _derive_player_tenure(notes, current_season, league):
     league_label = league or "pro"
     if diff == 0:
         return f"{league_label} rookie"
-    ordinals = {1: "2nd", 2: "3rd", 3: "4th", 4: "5th", 5: "6th", 6: "7th",
-                7: "8th", 8: "9th", 9: "10th"}
-    label = ordinals.get(diff, f"{diff + 1}th")
+    label = _TENURE_ORDINALS.get(diff, f"{diff + 1}th")
     return f"in {label} {league_label} season"
+
+
+def _derive_coach_tenure(coach, current_season):
+    """Derive 'in Nth year as head coach' from coach.tenure_start vs current_season.
+    Returns a short string or None. Same motivation as player tenure: prevents
+    the writer from inferring a coach's tenure incorrectly."""
+    if not coach or not current_season:
+        return None
+    start = coach.get("tenure_start")
+    if not start:
+        return None
+    try:
+        start_year = int(str(start)[:4])
+        current_year = int(str(current_season)[:4])
+    except (ValueError, TypeError):
+        return None
+    diff = current_year - start_year
+    if diff < 0 or diff > 50:
+        return None
+    if diff == 0:
+        return "in 1st year as head coach"
+    label = _TENURE_ORDINALS.get(diff, f"{diff + 1}th")
+    return f"in {label} year as head coach"
 
 
 def kb_context_block(kb):
@@ -358,9 +383,14 @@ def kb_context_block(kb):
     team_name = kb.get("team_name") or "the team"
     lines = ["Verified team context (use selectively — only if it adds color or accuracy):"]
 
-    coach = ((kb.get("head_coach") or {}).get("name"))
+    coach_dict = kb.get("head_coach") or {}
+    coach = coach_dict.get("name")
     if coach:
-        lines.append(f"- Head coach: {coach}")
+        coach_tenure = _derive_coach_tenure(coach_dict, kb.get("current_season"))
+        if coach_tenure:
+            lines.append(f"- Head coach: {coach} ({coach_tenure})")
+        else:
+            lines.append(f"- Head coach: {coach}")
 
     record = kb.get("current_record")
     if record:
@@ -592,6 +622,12 @@ def generate_article(game_summary, team, article_type="recap", target_date=None)
         "tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
         "- ROSTER DISCIPLINE: reference only players named in the Verified roster "
         "or the game data. Do not invent additional teammates.\n"
+        "- BIOGRAPHICAL LOCKDOWN: do not state biographical or contextual facts "
+        "about any player or coach (college history, hometown, prior teams, awards, "
+        "age, family, draft round/pick beyond what the tenure block provides) "
+        "unless that exact fact appears in the Verified team context above. Even "
+        "if you 'know' something from elsewhere — omit it. Player tenure and "
+        "coach tenure are the only career-stage claims allowed.\n"
         "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
         "experiments, or any 'this team is X' framing in the first ~10 games of a "
         "season, hedge openly. Acknowledge sample-size limits."

@@ -87,6 +87,12 @@ _BASELINE_GUARDRAILS = (
     "  'four games into their career', or similar UNLESS the Verified player\n"
     "  tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
     "- ROSTER DISCIPLINE: reference only players named in the Verified roster above.\n"
+    "- BIOGRAPHICAL LOCKDOWN: do not state biographical or contextual facts about\n"
+    "  any player or coach (college history, hometown, prior teams, awards, age,\n"
+    "  family, draft round/pick beyond the tenure block) unless that exact fact\n"
+    "  appears in the Verified team context above. Even if you 'know' something\n"
+    "  from elsewhere — omit it. Player tenure and coach tenure are the only\n"
+    "  career-stage claims allowed.\n"
     "- HEDGE EARLY-SEASON CLAIMS: for any 'this team is X' framing in the first ~10\n"
     "  games of a season, hedge openly. Acknowledge sample-size limits."
 )
