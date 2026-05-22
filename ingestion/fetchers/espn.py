@@ -1,4 +1,4 @@
-"""ESPN WNBA scoreboard fetcher for Washington Mystics packets."""
+"""ESPN WNBA fetcher: scoreboard + summary endpoints for Mystics packets."""
 
 from __future__ import annotations
 
@@ -16,57 +16,89 @@ ESPN_TEAM_ID = "14"
 SPORT = "basketball"
 LEAGUE_SLUG = "wnba"
 
+SCOREBOARD_URL = f"https://site.api.espn.com/apis/site/v2/sports/{SPORT}/{LEAGUE_SLUG}/scoreboard"
+SUMMARY_URL = f"https://site.api.espn.com/apis/site/v2/sports/{SPORT}/{LEAGUE_SLUG}/summary"
+
 
 def fetch(target_date: date, retrieved_at: str) -> dict[str, Any]:
     date_key = target_date.strftime("%Y%m%d")
-    url = (
-        "https://site.api.espn.com/apis/site/v2/sports/"
-        f"{SPORT}/{LEAGUE_SLUG}/scoreboard?dates={date_key}"
-    )
+    scoreboard_url = f"{SCOREBOARD_URL}?dates={date_key}"
 
     try:
         payload = get_cached_json(
             "espn",
             f"wnba_scoreboard_{date_key}",
             ESPN_TTL_MIN,
-            lambda: request_json(url),
+            lambda: request_json(scoreboard_url),
         )
     except (SourceFetchError, ValueError) as exc:
-        logger.warning("ESPN fetch failed: %s", exc)
+        logger.warning("ESPN scoreboard fetch failed: %s", exc)
         return {
             "game_summary": None,
             "top_performers": [],
             "recent_team_context": "",
+            "editorial_angle_candidates": [],
             "source_links": [],
             "confidence_notes": [f"ESPN WNBA scoreboard unavailable: {exc}"],
         }
 
     events = payload.get("events", []) if isinstance(payload, dict) else []
     event = _find_team_game(events)
-    source_link = {
-        "source_name": "ESPN WNBA scoreboard",
-        "source_url": url,
-        "published_at": date_to_utc_iso(target_date.isoformat()),
-        "retrieved_at": retrieved_at,
-        "confidence": 0.9,
-    }
+    sources = [_source("ESPN WNBA scoreboard", scoreboard_url, target_date, retrieved_at, 0.9)]
 
     if not event:
         return {
             "game_summary": None,
             "top_performers": [],
             "recent_team_context": "",
-            "source_links": [source_link],
+            "editorial_angle_candidates": [],
+            "source_links": sources,
             "confidence_notes": [],
         }
 
+    game_id = str(event.get("id") or "")
+    summary, summary_note = _fetch_summary(game_id) if game_id else (None, "ESPN summary skipped: no game_id")
+    notes: list[str] = []
+    if summary is None and summary_note:
+        notes.append(summary_note)
+    if summary is not None:
+        sources.append(_source("ESPN WNBA summary", f"{SUMMARY_URL}?event={game_id}", target_date, retrieved_at, 0.92))
+
     return {
-        "game_summary": _extract_game_summary(event, target_date),
-        "top_performers": _extract_top_performers(event),
-        "recent_team_context": _extract_context(event),
-        "source_links": [source_link],
-        "confidence_notes": [],
+        "game_summary": _extract_game_summary(event, summary, target_date),
+        "top_performers": _extract_top_performers(event, summary),
+        "recent_team_context": _extract_context(event, summary, target_date),
+        "editorial_angle_candidates": _narrative_angles(event, summary),
+        "source_links": sources,
+        "confidence_notes": notes,
     }
+
+
+def _source(source_name: str, url: str, target_date: date, retrieved_at: str, confidence: float) -> dict[str, Any]:
+    return {
+        "source_name": source_name,
+        "source_url": url,
+        "published_at": date_to_utc_iso(target_date.isoformat()),
+        "retrieved_at": retrieved_at,
+        "confidence": confidence,
+    }
+
+
+def _fetch_summary(game_id: str) -> tuple[dict[str, Any] | None, str]:
+    url = f"{SUMMARY_URL}?event={game_id}"
+    try:
+        payload = get_cached_json(
+            "espn",
+            f"wnba_summary_{game_id}",
+            ESPN_TTL_MIN,
+            lambda: request_json(url),
+        )
+    except (SourceFetchError, ValueError) as exc:
+        logger.warning("ESPN summary fetch failed: %s", exc)
+        return None, f"ESPN WNBA summary unavailable: {exc}"
+    if not isinstance(payload, dict):
+        return None, "ESPN WNBA summary returned non-dict payload"
+    return payload, ""
 
 
 def _find_team_game(events: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -86,7 +118,15 @@ def _find_team_game(events: list[dict[str, Any]]) -> dict[str, Any] | None:
     return None
 
 
-def _extract_game_summary(event: dict[str, Any], target_date: date) -> dict[str, str]:
+def _team_competitor(competitors: list[dict[str, Any]]) -> dict[str, Any]:
+    for competitor in competitors:
+        team = competitor.get("team", {})
+        if str(team.get("id")) == ESPN_TEAM_ID or team.get("displayName") == TEAM_NAME:
+            return competitor
+    return {}
+
+
+def _extract_game_summary(event: dict[str, Any], summary: dict[str, Any] | None, target_date: date) -> dict[str, Any]:
     competition = event.get("competitions", [{}])[0]
     competitors = competition.get("competitors", [])
     mystics = _team_competitor(competitors)
@@ -100,7 +140,7 @@ def _extract_game_summary(event: dict[str, Any], target_date: date) -> dict[str,
     if home_away == "away":
         score = f"{opponent_name} {opponent_score}, {TEAM_NAME} {mystics_score}"
 
-    return {
+    out: dict[str, Any] = {
         "score": score,
         "venue": competition.get("venue", {}).get("fullName", ""),
         "opponent": opponent_name,
@@ -109,13 +149,15 @@ def _extract_game_summary(event: dict[str, Any], target_date: date) -> dict[str,
         "home_away": home_away,
     }
 
+    linescore_line = _linescore_line(summary)
+    if linescore_line:
+        out["linescore"] = linescore_line
 
-def _team_competitor(competitors: list[dict[str, Any]]) -> dict[str, Any]:
-    for competitor in competitors:
-        team = competitor.get("team", {})
-        if str(team.get("id")) == ESPN_TEAM_ID or team.get("displayName") == TEAM_NAME:
-            return competitor
-    return {}
+    attendance = _attendance(summary)
+    if attendance:
+        out["attendance"] = attendance
+
+    return out
 
 
 def _event_date(event: dict[str, Any], target_date: date) -> str:
@@ -125,7 +167,13 @@ def _event_date(event: dict[str, Any], target_date: date) -> str:
     return date_to_utc_iso(target_date.isoformat())
 
 
-def _extract_top_performers(event: dict[str, Any]) -> list[dict[str, str]]:
+def _extract_top_performers(event: dict[str, Any], summary: dict[str, Any] | None) -> list[dict[str, str]]:
+    """Prefer real boxscore stats from the summary endpoint; fall back to scoreboard leaders."""
+    boxscore_performers = _top_performers_from_boxscore(summary) if summary else []
+    if boxscore_performers:
+        return boxscore_performers
+
+    # Fallback: scoreboard `leaders` (top 3-4 by stat category) — still Mystics-only
     competitors = event.get("competitions", [{}])[0].get("competitors", [])
     mystics = _team_competitor(competitors)
     if not mystics:
@@ -148,14 +196,124 @@ def _extract_top_performers(event: dict[str, Any]) -> list[dict[str, str]]:
     return performers[:6]
 
 
-def _extract_context(event: dict[str, Any]) -> str:
-    status = event.get("status", {}).get("type", {}).get("description")
-    summary = _safe_summary(event)
-    if summary and status:
-        return f"ESPN listed the Mystics game as {status}. {summary}"
+def _top_performers_from_boxscore(summary: dict[str, Any]) -> list[dict[str, str]]:
+    """Return top Mystics performers sorted by composite (PTS + 0.5*REB + AST), filtering DNPs."""
+    block = _mystics_boxscore_block(summary)
+    if not block:
+        return []
+    stats_block = (block.get("statistics") or [{}])[0]
+    labels = stats_block.get("labels") or []
+    athletes = stats_block.get("athletes") or []
+    if not labels or not athletes:
+        return []
+
+    idx = {label: labels.index(label) for label in labels}
+
+    def _stat(stats: list[Any], label: str) -> str:
+        i = idx.get(label)
+        if i is None or i >= len(stats):
+            return ""
+        return str(stats[i] or "")
+
+    def _int(value: str) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+    scored = []
+    for entry in athletes:
+        if not entry.get("active", True) and not entry.get("stats"):
+            continue
+        stats = entry.get("stats") or []
+        if not stats:
+            continue
+        name = (entry.get("athlete") or {}).get("displayName") or ""
+        if not name:
+            continue
+        pts = _int(_stat(stats, "PTS"))
+        reb = _int(_stat(stats, "REB"))
+        ast = _int(_stat(stats, "AST"))
+        composite = pts + 0.5 * reb + ast
+        fg = _stat(stats, "FG")
+        stat_line_parts = [f"{pts} PTS", f"{reb} REB", f"{ast} AST"]
+        if fg and fg != "0-0":
+            stat_line_parts.append(f"{fg} FG")
+        scored.append(
+            {
+                "player": name,
+                "stat_line": ", ".join(stat_line_parts),
+                "note": "ESPN boxscore (Mystics)",
+                "_composite": composite,
+            }
+        )
+
+    scored.sort(key=lambda r: r["_composite"], reverse=True)
+    return [{k: v for k, v in r.items() if k != "_composite"} for r in scored[:5]]
+
+
+def _mystics_boxscore_block(summary: dict[str, Any]) -> dict[str, Any]:
+    for block in (summary.get("boxscore") or {}).get("players") or []:
+        team = block.get("team") or {}
+        if str(team.get("id")) == ESPN_TEAM_ID or team.get("displayName") == TEAM_NAME:
+            return block
+    return {}
+
+
+def _linescore_line(summary: dict[str, Any] | None) -> str:
+    if not summary:
+        return ""
+    competitors = (summary.get("header") or {}).get("competitions", [{}])[0].get("competitors", [])
+    if len(competitors) != 2:
+        return ""
+    parts = []
+    for c in competitors:
+        abbr = (c.get("team") or {}).get("abbreviation", "")
+        scores = [str(ls.get("displayValue", "")) for ls in (c.get("linescores") or [])]
+        if abbr and scores:
+            parts.append(f"{abbr}: {'-'.join(scores)}")
+    return " | ".join(parts)
+
+
+def _attendance(summary: dict[str, Any] | None) -> int:
+    if not summary:
+        return 0
+    val = (summary.get("gameInfo") or {}).get("attendance")
+    if isinstance(val, int) and val > 0:
+        return val
+    return 0
+
+
+def _extract_context(event: dict[str, Any], summary: dict[str, Any] | None, target_date: date) -> str:
+    """Stitch a 2-4 sentence narrative context from event status + summary plays + win prob."""
+    competitors = event.get("competitions", [{}])[0].get("competitors", [])
+    mystics = _team_competitor(competitors)
+    opponent = next((item for item in competitors if item is not mystics), {})
+    opponent_name = opponent.get("team", {}).get("displayName", "the opponent")
+    status = event.get("status", {}).get("type", {}).get("description", "")
+
+    sentences: list[str] = []
     if status:
-        return f"ESPN listed the Mystics game as {status}."
-    return summary
+        sentences.append(f"ESPN listed the Mystics game as {status}.")
+
+    headline = _safe_summary(event)
+    if headline:
+        sentences.append(headline)
+
+    if summary:
+        linescore = _linescore_line(summary)
+        if linescore:
+            sentences.append(f"Quarter scores — {linescore}.")
+
+        run = _biggest_run(summary)
+        if run:
+            sentences.append(run)
+
+        swing = _win_prob_arc(summary)
+        if swing:
+            sentences.append(swing)
+
+    return " ".join(sentences).strip()
 
 
 def _safe_summary(event: dict[str, Any]) -> str:
@@ -166,3 +324,109 @@ def _safe_summary(event: dict[str, Any]) -> str:
             return str(text)
     return ""
 
+
+def _biggest_run(summary: dict[str, Any]) -> str:
+    """Find the biggest unanswered scoring run by either team. Return a prose sentence."""
+    plays = summary.get("plays") or []
+    if not plays:
+        return ""
+
+    teams = _team_ids_from_summary(summary)
+    team_name = {teams.get("mystics_id", ""): "Mystics", teams.get("opponent_id", ""): teams.get("opponent_name", "Opponent")}
+
+    best = {"team_id": None, "points": 0, "start_q": None, "start_clock": None}
+    current = {"team_id": None, "points": 0, "start_q": None, "start_clock": None}
+
+    for play in plays:
+        if not play.get("scoringPlay"):
+            continue
+        team_id = str((play.get("team") or {}).get("id", ""))
+        pts = int(play.get("scoreValue") or 0)
+        if team_id == current["team_id"]:
+            current["points"] += pts
+        else:
+            if current["points"] >= best["points"]:
+                best = dict(current)
+            current = {
+                "team_id": team_id,
+                "points": pts,
+                "start_q": (play.get("period") or {}).get("number"),
+                "start_clock": (play.get("clock") or {}).get("displayValue"),
+            }
+    if current["points"] >= best["points"]:
+        best = dict(current)
+
+    if best["points"] < 6:
+        return ""
+    label = team_name.get(best["team_id"]) or "An unidentified team"
+    return (
+        f"Biggest scoring run of the game: {label} scored {best['points']} unanswered "
+        f"starting at {best['start_clock']} of Q{best['start_q']}."
+    )
+
+
+def _win_prob_arc(summary: dict[str, Any]) -> str:
+    """Describe the Mystics' best and worst win-probability moments in one sentence."""
+    wp = summary.get("winprobability") or []
+    if not wp:
+        return ""
+
+    teams = _team_ids_from_summary(summary)
+    mystics_home = teams.get("mystics_home_away") == "home"
+
+    def mystics_pct(sample: dict[str, Any]) -> float:
+        home = float(sample.get("homeWinPercentage") or 0.0)
+        return home if mystics_home else (1.0 - home)
+
+    pcts = [mystics_pct(s) for s in wp]
+    if not pcts:
+        return ""
+    best = max(pcts)
+    worst = min(pcts)
+    if best - worst < 0.15:
+        return f"Win-probability stayed flat ({worst:.0%}–{best:.0%} for the Mystics)."
+    return (
+        f"Mystics' win-probability range: peaked at {best:.0%} and bottomed at {worst:.0%} across the game."
+    )
+
+
+def _team_ids_from_summary(summary: dict[str, Any]) -> dict[str, str]:
+    """Map Mystics + opponent team IDs and home/away from the summary header."""
+    competitors = (summary.get("header") or {}).get("competitions", [{}])[0].get("competitors", [])
+    info: dict[str, str] = {}
+    for c in competitors:
+        team = c.get("team") or {}
+        tid = str(team.get("id") or "")
+        if tid == ESPN_TEAM_ID or team.get("displayName") == TEAM_NAME:
+            info["mystics_id"] = tid
+            info["mystics_home_away"] = c.get("homeAway", "")
+        else:
+            info["opponent_id"] = tid
+            info["opponent_name"] = team.get("displayName", "Opponent")
+    return info
+
+
+def _narrative_angles(event: dict[str, Any], summary: dict[str, Any] | None) -> list[str]:
+    """Suggested editorial angles based on what the summary data revealed. NOT mandates."""
+    if not summary:
+        return []
+
+    competitors = event.get("competitions", [{}])[0].get("competitors", [])
+    mystics = _team_competitor(competitors)
+    opponent = next((item for item in competitors if item is not mystics), {})
+    opponent_name = opponent.get("team", {}).get("displayName", "the opponent")
+
+    angles: list[str] = []
+    run = _biggest_run(summary)
+    if run:
+        angles.append(f"Frame the result around the biggest scoring run of the game ({run.split(': ', 1)[-1].rstrip('.')}).")
+
+    swing = _win_prob_arc(summary)
+    if swing and "stayed flat" in swing:
+        angles.append(f"Acknowledge that this was never a competitive game in win-probability terms vs {opponent_name}.")
+
+    block = _mystics_boxscore_block(summary)
+    if block and (block.get("statistics") or [{}])[0].get("athletes"):
+        angles.append("Anchor the recap on the Mystics' boxscore leaders rather than aggregate team stats.")
+
+    return angles[:3]

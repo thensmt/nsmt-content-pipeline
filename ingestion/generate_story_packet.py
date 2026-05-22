@@ -92,7 +92,9 @@ def build_story_packet(
         "injuries_or_availability": injuries,
         "standings_context": standings_context,
         "recent_news_items": recent_news,
-        "editorial_angle_candidates": _angle_candidates(event_type, game_summary, standings_context, recent_news),
+        "editorial_angle_candidates": _angle_candidates(
+            event_type, game_summary, standings_context, recent_news, espn_data
+        ),
         "confidence_notes": confidence_notes,
         "source_links": source_links,
     }
@@ -263,14 +265,23 @@ def _angle_candidates(
     game_summary: dict[str, str] | None,
     standings_context: str,
     news: list[dict[str, Any]],
+    espn_data: dict[str, Any] | None = None,
 ) -> list[str]:
     if event_type == "game" and game_summary:
-        opponent = game_summary.get("opponent", "the opponent")
-        return [
-            f"Frame the result around what changed against {opponent}.",
+        espn_angles = list((espn_data or {}).get("editorial_angle_candidates") or [])
+        generic = [
+            f"Frame the result around what changed against {game_summary.get('opponent', 'the opponent')}.",
             "Use the listed top performers as the spine of the recap.",
             "Tie the result to the standings context without overstating playoff stakes.",
         ]
+        # Prefer data-driven ESPN angles; fall back to generic if ESPN provided none.
+        merged: list[str] = []
+        for angle in espn_angles + generic:
+            if angle and angle not in merged:
+                merged.append(angle)
+            if len(merged) >= 4:
+                break
+        return merged
 
     angles = [
         "Use the off day for a standings check and short-term schedule reset.",

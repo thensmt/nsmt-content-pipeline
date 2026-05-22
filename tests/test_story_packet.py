@@ -36,11 +36,16 @@ def _game_fetcher(target_date: date, retrieved_at: str) -> dict[str, object]:
             "opponent": "Test Opponent",
             "date": "2026-05-21T23:30:00Z",
             "status": "Final",
+            "attendance": 8400,
+            "linescore": "WSH: 22-18-21-21 | OPP: 19-19-18-19",
         },
         "top_performers": [
-            {"player": "Shakira Austin", "stat_line": "20 pts, 8 reb", "note": "fixture leader"}
+            {"player": "Shakira Austin", "stat_line": "20 PTS, 8 REB, 3 AST, 8-12 FG", "note": "ESPN boxscore (Mystics)"}
         ],
         "recent_team_context": "Fixture ESPN context.",
+        "editorial_angle_candidates": [
+            "Frame the result around the biggest scoring run of the game (Mystics scored 10 unanswered in Q3)."
+        ],
         "source_links": [_source("ESPN WNBA scoreboard", "https://example.test/espn")],
         "confidence_notes": [],
     }
@@ -113,6 +118,14 @@ class StoryPacketTests(unittest.TestCase):
         self.assertIsInstance(rendered, str)
         self.assertIn("Story packet", rendered)
         self.assertIn("Mystics Fixture News Item", rendered)
+        # ESPN-supplied editorial angle is preferred over the generic fallback
+        self.assertIn(
+            "Frame the result around the biggest scoring run of the game (Mystics scored 10 unanswered in Q3).",
+            packet["editorial_angle_candidates"],
+        )
+        # game_summary keeps the new structured fields (linescore + attendance)
+        self.assertEqual(packet["game_summary"]["linescore"], "WSH: 22-18-21-21 | OPP: 19-19-18-19")
+        self.assertEqual(packet["game_summary"]["attendance"], 8400)
 
     def test_off_day_fallback_keeps_news_and_standings(self) -> None:
         packet = build_story_packet(
