@@ -1,0 +1,62 @@
+{
+  "team_name": "Marymount University Saints",
+  "slug": "marymount",
+  "program": "men's basketball",
+  "league_full": "NCAA Division III",
+  "conference": "Atlantic East Conference",
+  "espn_id": null,
+  "official_url": "https://marymountsaints.com/sports/mens-basketball",
+  "school_official_url": "https://marymountsaints.com",
+  "school_location": {"city": "Arlington", "state": "Virginia"},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "16-9 (overall) / 13-1 (Atlantic East, 1st place) — regular season finished February 2026",
+  "venue": {
+    "name": "Converse Family Fieldhouse",
+    "city": "Arlington",
+    "state": "Virginia",
+    "capacity": null,
+    "opened": null,
+    "notes": "Marymount's primary on-campus athletics venue; the Rose Benté Lee Center also houses two gyms used by Saints programs"
+  },
+  "athletic_director": null,
+  "head_coach": {
+    "name": "Chris Rogers",
+    "tenure_start": "2009",
+    "background": "Entered his 17th season as Marymount's head men's basketball coach in 2025-26. Longest-tenured head coach on the Saints' current athletic staff.",
+    "career_record": null,
+    "career_record_at_program": null
+  },
+  "assistant_coaches": [
+    {"name": "Antonio Rouse", "role": "Assistant Coach"},
+    {"name": "Myles Jones", "role": "Assistant Coach"},
+    {"name": "John Hunter", "role": "Assistant Coach"},
+    {"name": "Ted Bardach", "role": "Volunteer Assistant Coach"},
+    {"name": "Jason Finberg", "role": "Graduate Assistant Coach"}
+  ],
+  "roster": [],
+  "recent_games": [
+    {"date": "2026-02-26", "opponent": "Neumann", "result": "L 68-75", "venue": "home", "tournament": null},
+    {"date": "2026-02-21", "opponent": "Marywood", "result": "W 67-65", "venue": "away", "tournament": null},
+    {"date": "2026-02-18", "opponent": "Immaculata", "result": "W 97-52", "venue": "away", "tournament": null},
+    {"date": "2026-02-14", "opponent": "Pratt", "result": "W 81-48", "venue": "home", "tournament": null},
+    {"date": "2026-02-11", "opponent": "Gwynedd Mercy", "result": "L 61-57", "venue": "home", "tournament": null}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": null,
+    "seed": null,
+    "result": "Finished 1st in the Atlantic East Conference regular season at 13-1. Postseason result not fully verified — d3hoops.com schedule listing ended at the Feb 26 Neumann loss and the available content did not confirm the AEC Tournament outcome."
+  },
+  "rivalries": ["Gwynedd Mercy Griffins", "Neumann Knights", "Marywood Pacers"],
+  "sources": [
+    {"url": "https://marymountsaints.com/sports/mens-basketball", "scraped_at": "2026-05-22", "notes": "Official program page"},
+    {"url": "https://marymountsaints.com/sports/mens-basketball/coaches", "scraped_at": "2026-05-22", "notes": "Coaching staff including head coach Chris Rogers and assistants"},
+    {"url": "https://marymountsaints.com/staff-directory/chris-rogers/20", "scraped_at": "2026-05-22", "notes": "Chris Rogers staff directory entry"},
+    {"url": "https://marymountsaints.com/news/2025/10/9/mens-basketball-mbb-saints-announce-2025-26-season.aspx", "scraped_at": "2026-05-22", "notes": "2025-26 season announcement, AEC affiliation, Converse Family Fieldhouse, Chris Rogers 17th season"},
+    {"url": "https://www.d3hoops.com/teams/Marymount/Men/2025-26/index", "scraped_at": "2026-05-22", "notes": "Full 2025-26 schedule and results, final regular season record 16-9 (13-1 AEC, 1st)"},
+    {"url": "https://en.wikipedia.org/wiki/Marymount_Saints", "scraped_at": "2026-05-22", "notes": "Atlantic East Conference founding member, NCAA Division III, Arlington VA"}
+  ],
+  "verification_notes": "ESPN does NOT publish a men's basketball team page for Marymount — D-III coverage is sparse, and the school is not listed in the ESPN mens-college-basketball/teams endpoint. espn_id is set to null and the daily cron will skip ESPN score fetches for this team (the `find_team_game` lookup will simply return None against the D1 scoreboard, which is the correct fail-safe). Primary recap data for Marymount will need to come from d3hoops.com or marymountsaints.com — a future enhancement may add a D3 fetcher; for now the team is listed so the persona/byline/KB infrastructure is in place. Chris Rogers's 17th season was confirmed via the official October 2025 season announcement; exact start year inferred as 2009 from that count but not directly cited in source content. Career record left null. Athletic director left null — not surfaced on the coaches page or Wikipedia stub. Roster left empty. Postseason 2025-26 outcome unverified: regular season ended Feb 26 at home vs Neumann (L 68-75), the AEC Tournament would have followed, and Marymount entered as the 1 seed; final tournament result not confirmed from authoritative source content available at scrape time. Conference name 'Atlantic East Conference' confirmed; rivalries chosen from top-of-table AEC peers (Gwynedd Mercy was 2nd at 11-3).",
+  "last_updated": "2026-05-22"
+}

@@ -1,0 +1,60 @@
+{
+  "team_name": "George Washington Revolutionaries",
+  "slug": "george-washington",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Atlantic 10",
+  "espn_id": "45",
+  "official_url": "https://gwsports.com/sports/mens-basketball",
+  "school_official_url": "https://gwsports.com",
+  "school_location": {"city": "Washington", "state": "D.C."},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "19-16 (overall) / 8-10 (Atlantic 10, T-8th) — final, season ended March 2026",
+  "venue": {
+    "name": "Charles E. Smith Center",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": null,
+    "opened": null
+  },
+  "athletic_director": "Michael Lipitz",
+  "head_coach": {
+    "name": "Chris Caputo",
+    "tenure_start": "2022-04",
+    "background": "Hired April 1, 2022 to replace Jamion Christian. Career record 71-62 (.534) across four seasons at GW. Previously an assistant under Jim Larrañaga at George Mason (2005-2011, including the 2006 Final Four run) and at Miami (2011-2022), where he was associate head coach during Miami's 2022 Elite Eight run. Played college basketball at Westfield State (1999-2002) as team captain.",
+    "career_record": "71-62 (.534) at George Washington",
+    "career_record_at_program": "71-62 (.534) across four seasons (2022-2026)"
+  },
+  "assistant_coaches": [],
+  "roster": [],
+  "recent_games": [
+    {"date": "2026-03-22", "opponent": "New Mexico", "result": "L 61-86", "venue": "neutral", "tournament": "NIT Second Round"},
+    {"date": "2026-03-13", "opponent": "Saint Louis", "result": "L 81-88", "venue": "neutral", "tournament": "Atlantic 10 Tournament Quarterfinal"},
+    {"date": "2026-03-12", "opponent": "Fordham", "result": "W 66-62", "venue": "neutral", "tournament": "Atlantic 10 Tournament Second Round"},
+    {"date": "2026-03-07", "opponent": "Loyola Chicago", "result": "L 62-68", "venue": "away", "tournament": null},
+    {"date": "2026-03-04", "opponent": "St. Bonaventure", "result": "W 91-82 (OT)", "venue": "home", "tournament": null}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Earned NIT bid after losing to Saint Louis in A-10 Tournament Quarterfinals. Beat Utah Valley in NIT first round, lost to New Mexico 61-86 in second round on March 22, 2026"
+  },
+  "rivalries": [
+    {"opponent": "George Mason Patriots", "notes": "Revolutionary Rivalry; split 1-1 in 2025-26 regular season"},
+    {"opponent": "VCU Rams", "notes": "Atlantic 10 conference rival"},
+    {"opponent": "Dayton Flyers", "notes": "Atlantic 10 conference rival"},
+    {"opponent": "Saint Louis Billikens", "notes": "Atlantic 10 conference rival"}
+  ],
+  "sources": [
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/45", "scraped_at": "2026-05-22", "notes": "ESPN team ID 45 confirmed, displayName 'George Washington Revolutionaries', record 19-16"},
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/45/schedule", "scraped_at": "2026-05-22", "notes": "Full 2025-26 schedule with scores"},
+    {"url": "https://gwsports.com/staff-directory/chris-caputo/396", "scraped_at": "2026-05-22", "notes": "Chris Caputo official bio"},
+    {"url": "https://en.wikipedia.org/wiki/Chris_Caputo", "scraped_at": "2026-05-22", "notes": "Career record 71-62, hire date April 1 2022, prior Miami and George Mason stints"},
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_George_Washington_Revolutionaries_men%27s_basketball_team", "scraped_at": "2026-05-22", "notes": "Season summary, NIT exit, Revolutionary Rivalry vs Mason"},
+    {"url": "https://en.wikipedia.org/wiki/George_Washington_Revolutionaries", "scraped_at": "2026-05-22", "notes": "AD Michael Lipitz, Charles E. Smith Center, Colonials-to-Revolutionaries rename May 24 2023"}
+  ],
+  "verification_notes": "ESPN team ID 45 confirmed — ESPN already uses the 'Revolutionaries' name (rebrand was announced May 24, 2023, replacing 'Colonials'). 2025-26 final record: 19-16 overall, 8-10 Atlantic 10 (T-8th). Made NIT (not NCAA), lost in NIT second round to New Mexico 61-86 on March 22. Chris Caputo completed his 4th season; career record at GW is 71-62 per his Wikipedia bio. Charles E. Smith Center capacity left null — published figure is ~5,000 but the fetched source did not return it explicitly. Roster and assistants left as empty arrays — not needed for daily game-recap prompts and the values surface elsewhere on gwsports.com when needed. Rivalries captured in dict form (matching DC United format) because the Revolutionary Rivalry with George Mason carries enough context to warrant the note field. 2026-27 schedule and staff TBD.",
+  "last_updated": "2026-05-22"
+}

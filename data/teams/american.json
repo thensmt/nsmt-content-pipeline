@@ -1,0 +1,59 @@
+{
+  "team_name": "American University Eagles",
+  "slug": "american",
+  "program": "men's basketball",
+  "league_full": "NCAA Division I",
+  "conference": "Patriot League",
+  "espn_id": "44",
+  "official_url": "https://aueagles.com/sports/mens-basketball",
+  "school_official_url": "https://aueagles.com",
+  "school_location": {"city": "Washington", "state": "D.C."},
+  "founded_program": null,
+  "current_season": "2025-26",
+  "current_record": "16-16 (overall) / 9-9 (Patriot League, T-5th) — final, season ended March 2026",
+  "venue": {
+    "name": "Bender Arena",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": null,
+    "opened": null
+  },
+  "athletic_director": "JM Caparro",
+  "head_coach": {
+    "name": "Duane Simpkins",
+    "tenure_start": "2023-04",
+    "background": "Named American's 18th head men's basketball coach on April 1, 2023. Previously an assistant at George Mason for 8 seasons (Atlantic 10), with prior stops at UNC Greensboro and Towson. McDonald's All-American at DeMatha Catholic (DC area), three-time All-ACC Honorable Mention at Maryland (8th all-time in assists with 483). Led the Eagles to the 2024-25 Patriot League title and the program's first NCAA Tournament since 2014.",
+    "career_record": null,
+    "career_record_at_program": "54-45 across three seasons at American (2023-24: 16-16; 2024-25: 22-13; 2025-26: 16-16)"
+  },
+  "assistant_coaches": [
+    {"name": "Nate Bollinger", "role": "Associate Head Coach", "notes": "Promoted September 2025"},
+    {"name": "Jackie Manuel", "role": "Associate Head Coach", "notes": "Promoted September 2025"}
+  ],
+  "roster": [],
+  "recent_games": [
+    {"date": "2026-03-05", "opponent": "Boston University", "result": "L 73-75", "venue": "away", "tournament": "Patriot League Tournament Quarterfinal"},
+    {"date": "2026-02-27", "opponent": "Boston University", "result": "L 65-68", "venue": "home", "tournament": null},
+    {"date": "2026-02-25", "opponent": "Lehigh", "result": "L 73-78", "venue": "away", "tournament": null},
+    {"date": "2026-02-22", "opponent": "Lafayette", "result": "W 75-61", "venue": "away", "tournament": null},
+    {"date": "2026-02-18", "opponent": "Bucknell", "result": "W 75-57", "venue": "away", "tournament": null}
+  ],
+  "upcoming_games": [],
+  "postseason_2025_26": {
+    "made_ncaa_tournament": false,
+    "seed": null,
+    "result": "Did not qualify; lost to Boston University 73-75 in Patriot League Tournament Quarterfinal as the 5 seed"
+  },
+  "rivalries": ["Navy Midshipmen", "Bucknell Bison", "Lehigh Mountain Hawks", "Boston University Terriers"],
+  "sources": [
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44", "scraped_at": "2026-05-22", "notes": "ESPN team ID 44 confirmed, record 16-16"},
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44/schedule", "scraped_at": "2026-05-22", "notes": "Full 2025-26 schedule with scores"},
+    {"url": "https://aueagles.com/sports/mens-basketball", "scraped_at": "2026-05-22", "notes": "Official AU men's basketball page"},
+    {"url": "https://aueagles.com/sports/mens-basketball/roster/coaches/duane-simpkins/950", "scraped_at": "2026-05-22", "notes": "Head coach bio and tenure"},
+    {"url": "https://aueagles.com/news/2025/9/29/mens-basketballs-nate-bollinger-and-jackie-manuel-promoted-to-associate-head-coaches.aspx", "scraped_at": "2026-05-22", "notes": "Associate head coach promotions"},
+    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_American_Eagles_men%27s_basketball_team", "scraped_at": "2026-05-22", "notes": "Season summary, final record, postseason exit"},
+    {"url": "https://en.wikipedia.org/wiki/American_Eagles", "scraped_at": "2026-05-22", "notes": "Athletic director JM Caparro, Bender Arena, Patriot League"}
+  ],
+  "verification_notes": "ESPN team ID 44 confirmed via mens-college-basketball/teams listing — displayName 'American University Eagles', abbreviation 'AMER'. 2025-26 was Duane Simpkins's third season; Eagles finished 16-16 (9-9 Patriot League), eliminated in the Patriot League Tournament Quarterfinal by Boston University 73-75. A step back from the 2024-25 NCAA Tournament season. Bender Arena capacity not in returned source content and left null per 'never fabricate' rule. Roster left empty for now — daily recap prompt does not lean on it; can be backfilled if a specific feature requires player names. Conference rivalries (Navy, Bucknell, Lehigh, BU) captured based on Patriot League beat coverage. 2026-27 staff and schedule not yet announced; season-end snapshot only.",
+  "last_updated": "2026-05-22"
+}

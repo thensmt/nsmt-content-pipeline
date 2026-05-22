@@ -1,0 +1,62 @@
+{
+  "team_name": "DC Defenders",
+  "slug": "dc-defenders",
+  "league": "UFL",
+  "league_full": "United Football League",
+  "conference": null,
+  "division": null,
+  "espn_id": "112646",
+  "official_url": "https://www.theufl.com/teams/dc",
+  "founded": "2018",
+  "current_season": "2026",
+  "current_record": "5-3 (2nd in UFL as of 2026-05-21; UFL operates as a single 8-team league with no conferences/divisions for 2026)",
+  "venue": {
+    "name": "Audi Field",
+    "city": "Washington",
+    "state": "D.C.",
+    "capacity": null,
+    "opened": "2018",
+    "notes": "Shared with D.C. United (MLS) and the Washington Spirit (NWSL)"
+  },
+  "ownership": {
+    "primary_owner": "Dwayne Johnson and Dany Garcia (Alpha Acquico) / Fox Corporation",
+    "ownership_group": "UFL is jointly owned by Dwayne Johnson's Alpha Acquico, Dany Garcia, RedBird Capital Partners, and Fox Corporation following the 2024 XFL-USFL merger"
+  },
+  "front_office": {
+    "general_manager": "Von Hutchins",
+    "president": null,
+    "head_of_football_ops": null,
+    "notes": null
+  },
+  "head_coach": {
+    "name": "Shannon Harris",
+    "tenure_start": "2025",
+    "background": "Promoted from interim to permanent head coach after the 2025 season. Took over one week before 2025 kickoff when Reggie Barlow left for Tennessee State; went 6-4 in the regular season and 2-0 in the playoffs, winning the 2025 UFL Championship and earning Buddy Teevens UFL Coach of the Year. Previously served as Tennessee State's offensive coordinator under Barlow.",
+    "career_record_with_team": "13-7 (regular season + playoffs through 2026-05-16)"
+  },
+  "coaching_staff": [],
+  "roster": [],
+  "recent_games": [
+    {"date": "2026-05-16", "opponent": "Louisville Kings", "result": "L 30-33", "venue": "away", "notes": null},
+    {"date": "2026-05-09", "opponent": "Louisville Kings", "result": "L 13-30", "venue": "home", "notes": null},
+    {"date": "2026-05-02", "opponent": "Dallas Renegades", "result": "W 24-6", "venue": "home", "notes": null},
+    {"date": "2026-04-24", "opponent": "Birmingham Stallions", "result": "W 45-28", "venue": "away", "notes": null},
+    {"date": "2026-04-18", "opponent": "St. Louis Battlehawks", "result": "W 28-22", "venue": "home", "notes": null}
+  ],
+  "upcoming_games": [
+    {"date": "2026-05-22", "opponent": "Orlando Storm", "venue": "away", "kickoff_et": "8:00 PM"},
+    {"date": "2026-05-31", "opponent": "Orlando Storm", "venue": "home", "kickoff_et": "12:00 PM"}
+  ],
+  "rivalries": ["St. Louis Battlehawks", "Dallas Renegades", "Orlando Storm"],
+  "sources": [
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/football/ufl/teams/112646", "scraped_at": "2026-05-22", "notes": "ESPN team ID 112646, record 5-3, color #c8102e"},
+    {"url": "https://site.api.espn.com/apis/site/v2/sports/football/ufl/teams/112646/schedule", "scraped_at": "2026-05-22", "notes": "Full 2026 schedule with scores through week 8"},
+    {"url": "https://www.theufl.com/teams/dc", "scraped_at": "2026-05-22", "notes": "Official team page"},
+    {"url": "https://en.wikipedia.org/wiki/2026_DC_Defenders_season", "scraped_at": "2026-05-22", "notes": "2026 season overview, GM Von Hutchins, head coach Shannon Harris"},
+    {"url": "https://en.wikipedia.org/wiki/DC_Defenders", "scraped_at": "2026-05-22", "notes": "Franchise history, venue (Audi Field), ownership, 2025 UFL Championship"},
+    {"url": "https://www.theufl.com/news/reggie-barlow-steps-down-as-head-coach-of-dc-defenders-to-become-head-coach-at-tennessee-state-university", "scraped_at": "2026-05-22", "notes": "Reggie Barlow departure to Tennessee State (March 2025)"},
+    {"url": "https://www.espn.com/united-football-league/story/_/id/48234600/ufl-2026-season-preview-shannon-harris-dc-defenders", "scraped_at": "2026-05-22", "notes": "ESPN 2026 UFL preview confirming Shannon Harris as returning head coach"}
+  ],
+  "verification_notes": "ESPN team ID 112646 confirmed via UFL teams API (https://site.api.espn.com/apis/site/v2/sports/football/ufl/teams) — endpoint returned all 8 UFL franchises and DC Defenders matched location='DC', abbreviation='DC'. The DC Defenders did not appear in any scoreboard?dates=YYYYMMDD probe in mid-April 2026 because they had bye weeks on those exact dates; using teams/{id}/schedule is the more reliable route for verification. UFL eliminated conferences/divisions for the 2026 season — left conference and division fields null per source. Record 5-3 mid-season as of 2026-05-21; Defenders sit 2nd behind Orlando Storm (6-2). Coaching staff and roster left as empty arrays — UFL roster data is not surfaced cleanly by ESPN team endpoints and the daily recap prompt does not lean on rosters. Stadium capacity left null; Audi Field's published capacity for MLS is ~20,000 but UFL configurations may differ and no authoritative UFL-specific figure was located. Next game May 22 vs Orlando (today's date) — record could change.",
+  "last_updated": "2026-05-22"
+}
