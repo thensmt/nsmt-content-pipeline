@@ -60,6 +60,7 @@ LEAGUE_SEASONS = {
     "WNBA":                         (5, 10),   # May → Finals Oct
     "NWSL":                         (3, 11),   # Mar → Championship Nov
     "MLS":                          (2, 12),   # Feb → MLS Cup Dec
+    "UFL":                          (3, 6),    # spring pro football Mar → Championship Jun
     "G-League":                     (11, 4),   # Nov → playoffs Apr
     "College Basketball":           (11, 4),   # Nov → NCAA tourney Apr
     "Women's College Basketball":   (11, 4),
@@ -125,6 +126,10 @@ TEAMS = [
     {"name": "Capital City Go-Go",    "league": "G-League", "espn_id": "CCG", "sport": "basketball",  "league_slug": "nba-g-league",            "category": "pro",
      "persona": "Chuck Harrington","voice": "hometown DC voice, prospect-focused, hopeful G-League energy",
      "channel_target": "RECAPS"},
+    # UFL (spring pro football)
+    {"name": "DC Defenders",          "league": "UFL",      "espn_id": "112646", "sport": "football", "league_slug": "ufl",                    "category": "pro",
+     "persona": "Vince Kessler",   "voice": "spring-football-savvy, treats UFL as its own legitimate pro league with NFL-prospect-watching energy",
+     "channel_target": "DC_DEFENDERS"},
 ]
 
 COLLEGE_TEAMS = [
@@ -149,6 +154,15 @@ COLLEGE_TEAMS = [
     {"name": "Mary Washington Eagles", "league": "College Basketball (D3)",    "espn_id": "2942", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
      "persona": "Natalie Park",    "voice": "passionate D3 small-school enthusiast",
      "channel_target": "RECAPS"},
+    {"name": "American University Eagles",        "league": "College Basketball",      "espn_id": "44",   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Theo Marlin",     "voice": "Patriot League academic-meets-athletic tone, knows the league's quirks and traditions",
+     "channel_target": "AMERICAN"},
+    {"name": "George Washington Revolutionaries", "league": "College Basketball",      "espn_id": "45",   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Henry Voss",      "voice": "refined DC private-school A-10 voice, urban sensibility, distinct from mid-major scrappiness",
+     "channel_target": "GEORGE_WASHINGTON"},
+    {"name": "Marymount University Saints",       "league": "College Basketball (D3)", "espn_id": None,   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
+     "persona": "Caroline Vega",   "voice": "Atlantic East D-III voice, focused on student-athlete journeys and the Arlington-area community",
+     "channel_target": "MARYMOUNT"},
 ]
 
 ALL_TEAMS = TEAMS + COLLEGE_TEAMS
@@ -245,6 +259,10 @@ _TEAM_SLUG_MAP = {
     ("George Mason Patriots",  "College Basketball"):            "george-mason",
     ("George Mason Patriots",  "Women's College Basketball"):    "george-mason-women",
     ("Mary Washington Eagles", None):                            "mary-washington",
+    ("DC Defenders",                       None):                "dc-defenders",
+    ("American University Eagles",         None):                "american",
+    ("Marymount University Saints",        None):                "marymount",
+    ("George Washington Revolutionaries",  None):                "george-washington",
 }
 
 
