@@ -42,6 +42,44 @@ CATEGORY_IDS = {
     "high_school":  16,
 }
 
+# ── League season windows ────────────────────────────────────────────────────
+#
+# (start_month, end_month) per league name. Months are inclusive. If start > end
+# the season wraps the calendar year (e.g., NBA: Oct → Jun). Windows are
+# intentionally generous to include preseason and full playoffs.
+#
+# Teams whose league is out-of-season on the target_date are skipped before any
+# ESPN fetch — saves API calls, keeps logs scannable, and avoids spurious
+# errors from ESPN endpoints that change between seasons.
+
+LEAGUE_SEASONS = {
+    "NFL":                          (8, 2),    # preseason Aug → Super Bowl Feb
+    "NBA":                          (10, 6),   # regular season Oct → Finals Jun
+    "NHL":                          (10, 6),   # regular season Oct → Cup Final Jun
+    "MLB":                          (3, 11),   # spring Mar → World Series Oct/Nov
+    "WNBA":                         (5, 10),   # May → Finals Oct
+    "NWSL":                         (3, 11),   # Mar → Championship Nov
+    "MLS":                          (2, 12),   # Feb → MLS Cup Dec
+    "G-League":                     (11, 4),   # Nov → playoffs Apr
+    "College Basketball":           (11, 4),   # Nov → NCAA tourney Apr
+    "Women's College Basketball":   (11, 4),
+    "College Basketball (D3)":      (11, 4),
+}
+
+
+def in_season(team, when):
+    """Return True if `team` is in season on the date `when`. If the league
+    has no window configured, returns True (safe default)."""
+    window = LEAGUE_SEASONS.get(team.get("league"))
+    if not window:
+        return True
+    start, end = window
+    m = when.month
+    if start <= end:
+        return start <= m <= end
+    # wraps year boundary, e.g. NBA Oct-Jun
+    return m >= start or m <= end
+
 # ── DC/MD/VA Teams to track ───────────────────────────────────────────────────
 #
 # Each team has:
@@ -532,7 +570,12 @@ def run(target_date=None):
     articles_generated = 0
     fetched = {}
 
+    skipped_offseason = []
     for team in ALL_TEAMS:
+        if not in_season(team, target_date):
+            skipped_offseason.append(team["name"])
+            continue
+
         key = (team["sport"], team["league_slug"])
         if key not in fetched:
             print(f"\nFetching {team['league']} scores...")
@@ -574,6 +617,9 @@ def run(target_date=None):
             save_local_draft(title, body, team, target_date)
 
         articles_generated += 1
+
+    if skipped_offseason:
+        print(f"\nSkipped (out of season): {', '.join(skipped_offseason)}")
 
     print(f"\nDone. {articles_generated} article(s) generated for {target_date.isoformat()}.")
     print("Review drafts at: https://admin.thensmt.com/#/blogs")
