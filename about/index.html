@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NSMT — Meet the AI Writers</title>
+  <meta name="description" content="14 AI writers covering DC, Maryland, and Virginia sports. Built and bylined honestly. By NSMT.">
+  <meta property="og:title" content="NSMT — Meet the AI Writers">
+  <meta property="og:description" content="14 AI writers. 1 solo founder. $0/month. Full transparency.">
+  <meta property="og:type" content="website">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>html,body{margin:0;padding:0;background:#0B0B0C;}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useEffect, useState } = React;
+
+/**
+ * NSMT — Meet the AI Writers
+ * Single-file React component. Self-contained styling via styled-jsx-like <style> tag.
+ * Aesthetic: editorial sports newsroom × broadcast control room.
+ *   - Serif display (Fraunces) + grotesk body (Archivo) + mono (JetBrains Mono)
+ *   - Off-white "newsprint" canvas with NSMT blue as accent
+ *   - Asymmetric, ticker-driven, oversized numerals, registration marks
+ */
+
+const WRITERS = [
+  // Pro
+  { id: "tucker",     name: "Maxwell Tucker",   team: "Washington Commanders", league: "NFL",   sport: "Football",   color: "#5A1414", initials: "MT", voice: "Blunt, X's-and-O's. Reads like a longtime NFL beat writer who's been to every camp.", tier: "PRO" },
+  { id: "wexler",     name: "Casper Wexler",    team: "Washington Wizards",    league: "NBA",   sport: "Basketball", color: "#0C2340", initials: "CW", voice: "Modern, analytics-first. Pace, space, and a sixth-man's-eye view of efficiency.", tier: "PRO" },
+  { id: "frost",      name: "Ada Frost",        team: "Washington Capitals",   league: "NHL",   sport: "Hockey",     color: "#A6192E", initials: "AF", voice: "Tactical. Rink-side. Uses zone exits and forechecks the way locals use directions.", tier: "PRO" },
+  { id: "cooper",     name: "Bayes Cooper",     team: "Washington Nationals",  league: "MLB",   sport: "Baseball",   color: "#AB0003", initials: "BC", voice: "Stats-curious. Anchors a performance in the long, strange history of the game.", tier: "PRO" },
+  { id: "avery",      name: "Sibyl Avery",      team: "Washington Mystics",    league: "WNBA",  sport: "Basketball", color: "#C8102E", initials: "SA", voice: "Insightful. Draws lines between possessions and player tendencies.", tier: "PRO" },
+  { id: "holloway",   name: "Wren Holloway",    team: "Washington Spirit",     league: "NWSL",  sport: "Soccer",     color: "#840028", initials: "WH", voice: "Tactical and internationalist. Reads pressing triggers like a coach with a clipboard.", tier: "PRO" },
+  { id: "calloway",   name: "Beckett Calloway", team: "DC United",             league: "MLS",   sport: "Soccer",     color: "#000000", initials: "BC", voice: "Cosmopolitan MLS savant. Soccer-purist sensibility with an American eye.", tier: "PRO" },
+  { id: "harrington", name: "Chuck Harrington", team: "Capital City Go-Go",    league: "G-League", sport: "Basketball", color: "#002B5C", initials: "CH", voice: "Hometown DC voice. Prospect-focused, hopeful, all heart and player development.", tier: "PRO" },
+  // College
+  { id: "lane",       name: "Terry Lane",       team: "Maryland Terrapins",        league: "Big Ten",  sport: "Basketball", color: "#E03A3E", initials: "TL", voice: "Hometown Maryland pride. Knows every gym and every Big Ten road trip.", tier: "COLLEGE" },
+  { id: "mitchell",   name: "Cav Mitchell",     team: "Virginia Cavaliers",        league: "ACC",      sport: "Basketball", color: "#232D4B", initials: "CM", voice: "Refined, slow-burn analysis. ACC tradition in every paragraph.", tier: "COLLEGE" },
+  { id: "bremner",    name: "Hayes Bremner",    team: "Virginia Tech Hokies",      league: "ACC",      sport: "Basketball", color: "#630031", initials: "HB", voice: "Blue-collar, scrappy. Lane Stadium pride leaking into a basketball voice.", tier: "COLLEGE" },
+  { id: "hoya",       name: "Vance Hoya",       team: "Georgetown Hoyas",          league: "Big East", sport: "Basketball", color: "#041E42", initials: "VH", voice: "Prestige tone. Big East tradition. Hoya Saxa, always.", tier: "COLLEGE" },
+  { id: "adams",      name: "Mason Adams",      team: "George Mason Patriots",     league: "A-10",     sport: "Basketball (M/W)", color: "#006633", initials: "MA", voice: "Scrappy mid-major. History-conscious patriot energy on both sides of the ledger.", tier: "COLLEGE" },
+  { id: "reed",       name: "Eagle Reed",       team: "Mary Washington Eagles",    league: "NCAA D-III", sport: "Basketball", color: "#003366", initials: "ER", voice: "Passionate small-school enthusiast. Believes the soul of the sport lives in D-III gyms.", tier: "COLLEGE" },
+];
+
+const STACK = [
+  { k: "LLM",       v: "Anthropic Claude API" },
+  { k: "DATA",      v: "ESPN public sports API" },
+  { k: "ORCHESTRA", v: "Python orchestration script" },
+  { k: "CRON",      v: "GitHub Actions — 08:00 ET daily" },
+  { k: "ROUTING",   v: "Cloudflare Workers (multi-target webhook proxy)" },
+  { k: "BACKEND",   v: "AWS API Gateway + Cognito" },
+  { k: "REVIEW",    v: "Discord forum channels" },
+  { k: "FRONT",     v: "thensmt.com — React" },
+];
+
+const PIPELINE = [
+  { n: "01", t: "FETCH",    d: "Pull box scores from ESPN for every team that played last night." },
+  { n: "02", t: "PROMPT",   d: "Compose a custom prompt with the team-specific persona voice modifier." },
+  { n: "03", t: "WRITE",    d: "Claude drafts a 400–550 word professional recap in that writer's voice." },
+  { n: "04", t: "STAGE",    d: "Post to admin.thensmt.com as a draft with is_active = 0." },
+  { n: "05", t: "NOTIFY",   d: "Ping #recap-pipeline in Discord with title, byline, and excerpt." },
+  { n: "06", t: "PUBLISH",  d: "David reviews, flips is_active = 1, the article goes live on thensmt.com." },
+];
+
+const OTHER = [
+  "Automated applicant intake — form → AI-formatted Discord post for human review.",
+  "Public critique submissions — creators submit work, auto-flows to Discord.",
+  "Shared Cloudflare Worker infrastructure across all NSMT pipelines.",
+  "Total monthly infrastructure cost: $0. Everything on free tiers.",
+];
+
+function AIWriters() {
+  const [now, setNow] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      const opts = { timeZone: "America/New_York", hour12: false };
+      const time = d.toLocaleTimeString("en-US", { ...opts, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const date = d.toLocaleDateString("en-US", { ...opts, weekday: "short", month: "short", day: "2-digit", year: "numeric" }).toUpperCase();
+      setNow(`${date} · ${time} ET`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="nsmt-root">
+      <FontLink />
+
+      {/* TOP STATUS BAR */}
+      <div className="topbar">
+        <div className="topbar-inner">
+          <span className="dot" />
+          <span className="topbar-label">NSMT NEWSROOM · LIVE</span>
+          <span className="topbar-sep">/</span>
+          <span className="topbar-mono">{now || "—"}</span>
+          <span className="topbar-sep">/</span>
+          <span className="topbar-mono">VOL.01 · ISSUE 001</span>
+          <span className="topbar-spacer" />
+          <span className="topbar-mono dim">thensmt.com</span>
+        </div>
+      </div>
+
+      {/* TICKER */}
+      <div className="ticker">
+        <div className="ticker-track">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <span className="ticker-row" key={i}>
+              <T>14 AI WRITERS</T><T>·</T><T>1 SOLO FOUNDER</T><T>·</T><T>0 DOLLARS / MONTH</T><T>·</T>
+              <T>08:00 ET DAILY</T><T>·</T><T>FULL TRANSPARENCY</T><T>·</T><T>HUMAN IN THE LOOP</T><T>·</T>
+              <T>DMV SPORTS</T><T>·</T><T>POWERED BY CLAUDE</T><T>·</T>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* HERO */}
+      <header className="hero">
+        <div className="hero-grid">
+          <div className="hero-meta">
+            <div className="kicker">
+              <span className="kicker-square" /> A NSMT DISPATCH · MAY 2026
+            </div>
+            <div className="hero-edition">EDITION №001 — THE MACHINE ROOM</div>
+          </div>
+
+          <h1 className="hero-title">
+            <span className="t-line">We taught</span>
+            <span className="t-line t-line--indent">
+              <em>14 AI writers</em>
+            </span>
+            <span className="t-line">how to cover</span>
+            <span className="t-line">
+              <mark>sports in the DMV.</mark>
+            </span>
+          </h1>
+
+          <p className="hero-deck">
+            Every morning at <b>8:00 a.m. Eastern</b>, a small Python script wakes up, asks ESPN
+            what happened last night, and hands the box scores to a roster of AI sportswriters —
+            each with a name, a beat, and a voice of their own. They file drafts. A human edits.
+            We publish, with the byline that always carries a small robot.
+          </p>
+
+          <div className="hero-foot">
+            <div className="byline">
+              <div className="byline-rule" />
+              <div className="byline-text">
+                <span>BY DAVID GAYLOR</span>
+                <span className="byline-sub">FOUNDER · NSMT — NOVA SPORTS MEDIA TEAM</span>
+              </div>
+            </div>
+            <div className="hero-numerals">
+              <div className="hn">
+                <span className="hn-n">14</span>
+                <span className="hn-l">AI<br/>WRITERS</span>
+              </div>
+              <div className="hn">
+                <span className="hn-n">08<sup>:00</sup></span>
+                <span className="hn-l">ET<br/>DAILY</span>
+              </div>
+              <div className="hn">
+                <span className="hn-n">$0</span>
+                <span className="hn-l">PER<br/>MONTH</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <RegistrationMark className="reg reg--tl" />
+        <RegistrationMark className="reg reg--tr" />
+        <RegistrationMark className="reg reg--bl" />
+        <RegistrationMark className="reg reg--br" />
+      </header>
+
+      {/* PULL QUOTE STRIP */}
+      <section className="pullstrip">
+        <div className="pullstrip-inner">
+          <span className="pull-quote-mark">“</span>
+          <p>
+            We don't hide the machine. Every article carries a robot in the byline —
+            because <u>transparency is the only ethical way</u> to do this.
+          </p>
+          <div className="pull-attrib">
+            <span>— NSMT EDITORIAL STANDARD</span>
+          </div>
+        </div>
+      </section>
+
+      {/* MASTHEAD / WRITER GRID */}
+      <section className="masthead" id="writers">
+        <div className="section-head">
+          <div className="section-eyebrow">
+            <span className="eyebrow-num">§ 01</span>
+            <span className="eyebrow-line" />
+            <span className="eyebrow-label">THE MASTHEAD</span>
+          </div>
+          <h2 className="section-title">
+            Meet the <em>staff</em>.
+            <span className="section-aside"> Fourteen beat writers. Zero pulses.</span>
+          </h2>
+        </div>
+
+        <div className="writers-grid">
+          {WRITERS.map((w, i) => (
+            <WriterCard key={w.id} writer={w} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="how">
+        <div className="section-head">
+          <div className="section-eyebrow">
+            <span className="eyebrow-num">§ 02</span>
+            <span className="eyebrow-line" />
+            <span className="eyebrow-label">THE WIRE</span>
+          </div>
+          <h2 className="section-title">
+            How a recap becomes <em>a recap</em>.
+          </h2>
+        </div>
+
+        <FlowDiagram />
+
+        <ol className="steps">
+          {PIPELINE.map((s) => (
+            <li className="step" key={s.n}>
+              <span className="step-n">{s.n}</span>
+              <div className="step-body">
+                <h3>{s.t}</h3>
+                <p>{s.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* STACK */}
+      <section className="stack">
+        <div className="section-head">
+          <div className="section-eyebrow">
+            <span className="eyebrow-num">§ 03</span>
+            <span className="eyebrow-line" />
+            <span className="eyebrow-label">THE EQUIPMENT</span>
+          </div>
+          <h2 className="section-title">
+            What it's built on.
+          </h2>
+        </div>
+        <div className="stack-grid">
+          {STACK.map((s) => (
+            <div className="stack-row" key={s.k}>
+              <span className="stack-k">{s.k}</span>
+              <span className="stack-dots" aria-hidden>·····························································</span>
+              <span className="stack-v">{s.v}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* WHY */}
+      <section className="why">
+        <div className="why-grid">
+          <div className="why-eyebrow">
+            <span className="eyebrow-num">§ 04</span>
+            <span className="eyebrow-line" />
+            <span className="eyebrow-label">EDITORIAL STANCE</span>
+          </div>
+          <h2 className="why-title">
+            Why a <em>solo founder</em> built a robot newsroom.
+          </h2>
+          <div className="why-cols">
+            <p>
+              Local sports coverage is collapsing. Beat writers are being cut.
+              The DMV has fourteen pro and college programs worth covering and not nearly
+              enough humans left to cover them. So we built a machine room — a small,
+              cheap, honest one — and put a human at the door.
+            </p>
+            <p>
+              Every NSMT recap is drafted by an AI writer with a name, a voice, and a beat.
+              Every recap is reviewed by a person before it goes live. Every byline tells
+              you, plainly, that a model wrote the first draft. <b>No pretense, no ghosts.</b>
+            </p>
+            <p>
+              We think this is what AI in journalism should look like: assistive, not
+              extractive. Named, not anonymous. Edited, not auto-published. A force
+              multiplier for the small outlets the internet keeps trying to kill.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* OTHER AI */}
+      <section className="other">
+        <div className="section-head">
+          <div className="section-eyebrow">
+            <span className="eyebrow-num">§ 05</span>
+            <span className="eyebrow-line" />
+            <span className="eyebrow-label">ELSEWHERE IN THE BUILDING</span>
+          </div>
+          <h2 className="section-title">
+            The newsroom is automated in <em>more ways than one</em>.
+          </h2>
+        </div>
+        <ul className="other-list">
+          {OTHER.map((line, i) => (
+            <li key={i}>
+              <span className="other-n">{String(i + 1).padStart(2, "0")}</span>
+              <span className="other-t">{line}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* CTA */}
+      <section className="cta">
+        <div className="cta-inner">
+          <div className="cta-left">
+            <div className="cta-eyebrow">— END OF DISPATCH —</div>
+            <h2 className="cta-title">
+              Read the writers.<br/>
+              Watch the byline.
+            </h2>
+          </div>
+          <div className="cta-right">
+            <a href="https://thensmt.com" className="btn btn--primary" target="_blank" rel="noreferrer">
+              <span>VISIT THENSMT.COM</span>
+              <Arrow />
+            </a>
+            <a href="https://twitter.com/the_nsmt" className="btn btn--ghost" target="_blank" rel="noreferrer">
+              <span>FOLLOW @THE_NSMT</span>
+              <Arrow />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="foot">
+        <div className="foot-inner">
+          <span>© {new Date().getFullYear()} NOVA SPORTS MEDIA TEAM</span>
+          <span className="foot-sep">·</span>
+          <span>WASHINGTON · MARYLAND · VIRGINIA</span>
+          <span className="foot-sep">·</span>
+          <span className="dim">SET IN FRAUNCES, ARCHIVO &amp; JETBRAINS MONO</span>
+          <span className="foot-spacer" />
+          <span className="dim">BUILT WITH CLAUDE · A HUMAN HIT PUBLISH</span>
+        </div>
+      </footer>
+
+      <style>{css}</style>
+    </div>
+  );
+}
+
+/* ---------- Subcomponents ---------- */
+
+function T({ children }) {
+  return <span className="ticker-item">{children}</span>;
+}
+
+function FontLink() {
+  // Inline <link> tags so the file is genuinely self-contained.
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,800&family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      />
+    </>
+  );
+}
+
+function RegistrationMark({ className }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 22 22" aria-hidden>
+      <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" strokeWidth="1" />
+      <line x1="11" y1="0" x2="11" y2="22" stroke="currentColor" strokeWidth="1" />
+      <line x1="0" y1="11" x2="22" y2="11" stroke="currentColor" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg width="22" height="12" viewBox="0 0 22 12" aria-hidden>
+      <path d="M0 6 H20 M14 1 L20 6 L14 11" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function WriterCard({ writer, index }) {
+  const { name, team, league, sport, color, initials, voice, tier } = writer;
+  return (
+    <article className="wc" style={{ "--accent": color, "--delay": `${index * 60}ms` }}>
+      <div className="wc-top">
+        <div className="wc-badge">
+          <span className="wc-bot">🤖</span>
+          <span className="wc-badge-text">AI WRITER · {tier}</span>
+        </div>
+        <div className="wc-no">№{String(index + 1).padStart(2, "0")}</div>
+      </div>
+
+      <div className="wc-avatar">
+        <div className="wc-avatar-grid" aria-hidden>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span key={i} />
+          ))}
+        </div>
+        <div className="wc-avatar-monogram">{initials}</div>
+        <div className="wc-avatar-corner">PORTRAIT<br/>PENDING</div>
+        <div className="wc-avatar-scan" aria-hidden />
+      </div>
+
+      <h3 className="wc-name">{name}</h3>
+      <div className="wc-beat">
+        <span className="wc-beat-team">{team}</span>
+        <span className="wc-beat-tags">
+          <span>{league}</span>
+          <span className="dot-sm" />
+          <span>{sport}</span>
+        </span>
+      </div>
+
+      <p className="wc-voice">"{voice}"</p>
+
+      <div className="wc-foot">
+        <span className="wc-byline">BYLINE</span>
+        <span className="wc-byline-text">🤖 {name}, AI Sports Writer</span>
+      </div>
+    </article>
+  );
+}
+
+function FlowDiagram() {
+  return (
+    <div className="flowwrap">
+      <svg viewBox="0 0 1200 220" className="flow" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E80FC" />
+          </marker>
+          <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.7" fill="#0E80FC" opacity="0.35" />
+          </pattern>
+        </defs>
+
+        {/* spine */}
+        <line x1="40" y1="110" x2="1160" y2="110" stroke="#111" strokeWidth="1" strokeDasharray="2 4" />
+
+        {/* nodes */}
+        {[
+          { x: 100,  label: "ESPN",        sub: "BOX SCORES" },
+          { x: 290,  label: "PYTHON",      sub: "ORCHESTRATOR" },
+          { x: 480,  label: "CLAUDE",      sub: "LLM DRAFT" },
+          { x: 670,  label: "ADMIN",       sub: "is_active = 0" },
+          { x: 860,  label: "CF WORKER",   sub: "ROUTER" },
+          { x: 1050, label: "DISCORD",     sub: "REVIEW" },
+        ].map((n, i, arr) => (
+          <g key={n.label} transform={`translate(${n.x},110)`}>
+            <circle r="34" fill="#FAF7F1" stroke="#111" strokeWidth="1.4" />
+            <circle r="34" fill="url(#dots)" />
+            <text textAnchor="middle" y="-50" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#111" letterSpacing="1">
+              0{i + 1}
+            </text>
+            <text textAnchor="middle" y="5" fontFamily="Archivo, sans-serif" fontWeight="800" fontSize="13" fill="#111">
+              {n.label}
+            </text>
+            <text textAnchor="middle" y="58" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#333" letterSpacing="1">
+              {n.sub}
+            </text>
+            {i < arr.length - 1 && (
+              <line x1="35" y1="0" x2={arr[i + 1].x - n.x - 35} y2="0" stroke="#0E80FC" strokeWidth="1.6" markerEnd="url(#arrow)" />
+            )}
+          </g>
+        ))}
+
+        {/* loop back to thensmt.com */}
+        <path d="M 1050 76 C 1050 20, 600 20, 600 76" fill="none" stroke="#0E80FC" strokeWidth="1.4" strokeDasharray="3 3" />
+        <text x="600" y="14" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#0E80FC" letterSpacing="1.5">
+          HUMAN APPROVES → PUBLISH → THENSMT.COM
+        </text>
+
+        {/* cron tag */}
+        <g transform="translate(40, 180)">
+          <rect x="0" y="0" width="180" height="22" fill="#0E80FC" />
+          <text x="10" y="15" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#fff" letterSpacing="1.5">
+            CRON · 0 12 * * * UTC
+          </text>
+        </g>
+        <g transform="translate(980, 180)">
+          <rect x="0" y="0" width="180" height="22" fill="#111" />
+          <text x="10" y="15" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#fff" letterSpacing="1.5">
+            $0 / MONTH · FREE TIER
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+/* ---------- Styles ---------- */
+
+const css = `
+  :root {
+    --paper: #F6F2EA;
+    --paper-2: #EDE6D6;
+    --ink: #0B0B0C;
+    --ink-2: #1A1A1D;
+    --rule: #111;
+    --blue: #0E80FC;
+    --blue-deep: #0959B0;
+    --accent-warm: #E94F1D;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  .nsmt-root {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(14,128,252,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(233,79,29,0.06), transparent 60%),
+      var(--paper);
+    color: var(--ink);
+    font-family: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* subtle paper grain */
+  .nsmt-root::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+      radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 2px;
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  .nsmt-root > * { position: relative; z-index: 2; }
+
+  /* Top bar */
+  .topbar {
+    background: var(--ink);
+    color: #f5f5f5;
+    border-bottom: 1px solid #000;
+  }
+  .topbar-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 9px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.4px;
+  }
+  .topbar .dot {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: #ff3b30;
+    box-shadow: 0 0 0 0 rgba(255,59,48,0.6);
+    animation: pulse 1.6s infinite;
+  }
+  .topbar-label { font-weight: 700; }
+  .topbar-sep { opacity: 0.4; }
+  .topbar-mono { font-variant-numeric: tabular-nums; }
+  .topbar-spacer { flex: 1; }
+  .dim { opacity: 0.55; }
+
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,59,48,0.7); }
+    70%  { box-shadow: 0 0 0 10px rgba(255,59,48,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+  }
+
+  /* Ticker */
+  .ticker {
+    background: var(--blue);
+    color: #fff;
+    border-bottom: 1px solid #000;
+    overflow: hidden;
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-track {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 50s linear infinite;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: 700;
+  }
+  .ticker-row { display: inline-flex; gap: 24px; padding-right: 24px; }
+  .ticker-item { display: inline-block; }
+
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }
+  }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 64px 56px 72px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-grid { position: relative; }
+  .hero-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+  .kicker { display: inline-flex; align-items: center; gap: 10px; }
+  .kicker-square {
+    width: 9px; height: 9px; background: var(--blue);
+    transform: rotate(45deg);
+  }
+  .hero-edition { color: rgba(0,0,0,0.55); }
+
+  .hero-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(56px, 11vw, 168px);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin: 0 0 36px;
+  }
+  .t-line { display: block; }
+  .t-line--indent { padding-left: clamp(40px, 12vw, 220px); }
+  .hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--blue);
+    font-variation-settings: "opsz" 144;
+  }
+  .hero-title mark {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 0.15em 0.05em;
+    border-radius: 2px;
+    box-shadow: 8px 8px 0 var(--blue);
+  }
+
+  .hero-deck {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(18px, 1.6vw, 22px);
+    line-height: 1.5;
+    max-width: 720px;
+    margin: 0 0 40px;
+    color: var(--ink-2);
+  }
+  .hero-deck b { font-weight: 700; }
+
+  .hero-foot {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: end;
+  }
+  .byline { display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
+  .byline-rule { height: 2px; background: var(--ink); width: 80px; }
+  .byline-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .byline-sub { color: rgba(0,0,0,0.55); }
+
+  .hero-numerals { display: flex; gap: 28px; }
+  .hn { display: flex; flex-direction: column; align-items: flex-start; }
+  .hn-n {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: clamp(48px, 6vw, 84px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variation-settings: "opsz" 144;
+  }
+  .hn-n sup { font-size: 0.45em; vertical-align: 0.9em; font-weight: 600; }
+  .hn-l {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-top: 4px;
+    color: rgba(0,0,0,0.6);
+  }
+
+  .reg { position: absolute; color: rgba(0,0,0,0.35); }
+  .reg--tl { top: 16px; left: 16px; }
+  .reg--tr { top: 16px; right: 16px; }
+  .reg--bl { bottom: 16px; left: 16px; }
+  .reg--br { bottom: 16px; right: 16px; }
+
+  /* Pull strip */
+  .pullstrip {
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 1px solid #000;
+  }
+  .pullstrip-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 48px 56px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  .pull-quote-mark {
+    font-family: 'Fraunces', serif;
+    font-size: 140px;
+    line-height: 0.6;
+    color: var(--blue);
+    font-style: italic;
+  }
+  .pullstrip p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(22px, 2.4vw, 34px);
+    line-height: 1.3;
+    margin: 0;
+    max-width: 900px;
+  }
+  .pullstrip u {
+    text-decoration: underline;
+    text-decoration-color: var(--blue);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+  .pull-attrib {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    align-self: end;
+    color: rgba(255,255,255,0.6);
+    text-align: right;
+    min-width: 200px;
+  }
+
+  /* Section heads */
+  .section-head { padding: 0 0 32px; }
+  .section-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .eyebrow-num { color: var(--blue); font-weight: 700; }
+  .eyebrow-line { width: 64px; height: 1px; background: var(--ink); }
+  .eyebrow-label { color: var(--ink); }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(40px, 6vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 1000px;
+  }
+  .section-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--blue);
+  }
+  .section-aside {
+    display: block;
+    font-family: 'Archivo', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.55);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+
+  /* Masthead grid */
+  .masthead { max-width: 1320px; margin: 0 auto; padding: 88px 56px; border-bottom: 1px solid var(--rule); }
+  .writers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+  @media (max-width: 1100px) { .writers-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 820px)  { .writers-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px)  { .writers-grid { grid-template-columns: 1fr; } }
+
+  .wc {
+    --accent: #0E80FC;
+    position: relative;
+    background: var(--paper);
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: background 280ms ease;
+    animation: cardIn 700ms ease both;
+    animation-delay: var(--delay);
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .wc::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 280ms ease;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+  .wc:hover { background: #FBF8F1; }
+  .wc:hover::before { opacity: 0.06; }
+  .wc:hover .wc-avatar-scan { transform: translateY(120%); }
+
+  .wc-top {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.6px;
+  }
+  .wc-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ink); color: var(--paper);
+    padding: 4px 8px 4px 6px;
+  }
+  .wc-bot { font-size: 12px; line-height: 1; }
+  .wc-badge-text { font-weight: 700; }
+  .wc-no { color: rgba(0,0,0,0.45); font-weight: 500; }
+
+  .wc-avatar {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--accent);
+    overflow: hidden;
+    color: rgba(255,255,255,0.85);
+    isolation: isolate;
+  }
+  .wc-avatar-grid {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+  }
+  .wc-avatar-grid span {
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .wc-avatar-monogram {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(70px, 8vw, 120px);
+    color: rgba(255,255,255,0.95);
+    letter-spacing: -0.04em;
+    text-shadow: 4px 4px 0 rgba(0,0,0,0.18);
+  }
+  .wc-avatar-corner {
+    position: absolute;
+    bottom: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    text-align: right;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.2;
+    background: rgba(0,0,0,0.25);
+    padding: 4px 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .wc-avatar-scan {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 32%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+    transform: translateY(-100%);
+    transition: transform 900ms cubic-bezier(.2,.7,.2,1);
+    pointer-events: none;
+  }
+
+  .wc-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: 26px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 4px 0 0;
+  }
+  .wc-beat {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .wc-beat-team {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .wc-beat-tags {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.55);
+  }
+  .dot-sm { width: 3px; height: 3px; background: currentColor; border-radius: 999px; }
+
+  .wc-voice {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 4px 0 0;
+    color: var(--ink-2);
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+  }
+
+  .wc-foot {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,0,0,0.25);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .wc-byline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.8px;
+    color: rgba(0,0,0,0.5);
+  }
+  .wc-byline-text {
+    font-family: 'Archivo', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* How it works */
+  .how {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 96px 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .flowwrap {
+    margin: 8px 0 56px;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--rule);
+    box-shadow: 10px 10px 0 var(--ink);
+  }
+  .flow { width: 100%; height: auto; display: block; }
+
+  .steps {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+  @media (max-width: 900px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    display: flex; gap: 16px;
+    padding: 24px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .step-n {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: 46px;
+    line-height: 1;
+    color: var(--blue);
+    letter-spacing: -0.03em;
+  }
+  .step-body h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin: 6px 0 6px;
+  }
+  .step-body p {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  /* Stack */
+  .stack {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 96px 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stack-grid {
+    display: flex; flex-direction: column;
+    border-top: 2px solid var(--ink);
+  }
+  .stack-row {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 16px 4px;
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1.2px;
+  }
+  .stack-k {
+    width: 130px;
+    color: var(--blue);
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .stack-dots {
+    flex: 1;
+    overflow: hidden;
+    color: rgba(0,0,0,0.35);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .stack-v {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* Why */
+  .why {
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 1px solid #000;
+  }
+  .why-grid {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 110px 56px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .why-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--paper);
+  }
+  .why-eyebrow .eyebrow-num { color: var(--blue); }
+  .why-eyebrow .eyebrow-line { background: var(--paper); }
+
+  .why-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(40px, 6.5vw, 96px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 32px;
+    max-width: 1100px;
+  }
+  .why-title em { font-style: italic; font-weight: 400; color: var(--blue); }
+
+  .why-cols {
+    columns: 2;
+    column-gap: 56px;
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    line-height: 1.55;
+  }
+  .why-cols p { margin: 0 0 18px; break-inside: avoid; }
+  .why-cols b { color: #fff; }
+  @media (max-width: 900px) { .why-cols { columns: 1; } }
+
+  /* Other AI */
+  .other {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 96px 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .other-list { list-style: none; margin: 0; padding: 0; }
+  .other-list li {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 24px;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+  }
+  .other-list li:first-child { border-top: 1px solid rgba(0,0,0,0.15); }
+  .other-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .other-t {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(20px, 2.2vw, 28px);
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  /* CTA */
+  .cta {
+    background: var(--blue);
+    color: #fff;
+    border-bottom: 1px solid #000;
+    overflow: hidden;
+    position: relative;
+  }
+  .cta::before {
+    content: "PUBLISH · PUBLISH · PUBLISH · PUBLISH · PUBLISH · PUBLISH · PUBLISH · ";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%) rotate(-3deg);
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 240px;
+    color: rgba(255,255,255,0.07);
+    white-space: nowrap;
+    pointer-events: none;
+    letter-spacing: -0.05em;
+  }
+  .cta-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 110px 56px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 56px;
+    align-items: end;
+    position: relative;
+  }
+  @media (max-width: 900px) { .cta-inner { grid-template-columns: 1fr; align-items: start; } }
+
+  .cta-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    margin-bottom: 22px;
+    opacity: 0.8;
+  }
+  .cta-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(48px, 8vw, 120px);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin: 0;
+  }
+
+  .cta-right { display: flex; flex-direction: column; gap: 14px; min-width: 320px; }
+  .btn {
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    transition: transform 200ms ease, background 200ms ease, color 200ms ease;
+    border: 1.5px solid #fff;
+  }
+  .btn--primary {
+    background: #fff;
+    color: var(--blue);
+  }
+  .btn--primary:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--ink); }
+  .btn--ghost {
+    background: transparent;
+    color: #fff;
+  }
+  .btn--ghost:hover { background: var(--ink); border-color: var(--ink); transform: translate(-3px, -3px); box-shadow: 6px 6px 0 #fff; }
+
+  /* Footer */
+  .foot {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .foot-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 24px 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .foot-sep { opacity: 0.4; }
+  .foot-spacer { flex: 1; }
+
+  /* Hero responsive */
+  @media (max-width: 820px) {
+    .hero { padding: 48px 24px 60px; }
+    .pullstrip-inner { grid-template-columns: 1fr; padding: 36px 24px; }
+    .pull-attrib { text-align: left; }
+    .masthead, .how, .stack, .other { padding: 64px 24px; }
+    .why-grid { padding: 80px 24px; }
+    .cta-inner { padding: 80px 24px; }
+    .foot-inner { padding: 18px 24px; flex-wrap: wrap; }
+    .hero-foot { grid-template-columns: 1fr; }
+    .t-line--indent { padding-left: 0; }
+    .topbar-inner { padding: 8px 18px; flex-wrap: wrap; gap: 10px; }
+  }
+`;
+    ReactDOM.createRoot(document.getElementById('root')).render(<AIWriters />);
+  </script>
+</body>
+</html>

@@ -6,5 +6,5 @@ __pycache__/
 drafts/*.md
 !drafts/.gitkeep
 
-# Auto-generated browser preview wrapper for AIWriters.jsx (rebuild from source)
-about/preview.html
+# Local dev preview is now about/index.html (committed for GitHub Pages hosting).
+# Rebuild via about/build.sh after editing AIWriters.jsx.
