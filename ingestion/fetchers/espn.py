@@ -126,23 +126,25 @@ def _event_date(event: dict[str, Any], target_date: date) -> str:
 
 
 def _extract_top_performers(event: dict[str, Any]) -> list[dict[str, str]]:
-    performers: list[dict[str, str]] = []
     competitors = event.get("competitions", [{}])[0].get("competitors", [])
-    for competitor in competitors:
-        team_name = competitor.get("team", {}).get("displayName", "")
-        for leader_category in competitor.get("leaders", []) or []:
-            stat_name = leader_category.get("shortDisplayName") or leader_category.get("displayName") or "stat"
-            for leader in leader_category.get("leaders", []) or []:
-                athlete = leader.get("athlete", {}).get("displayName")
-                value = leader.get("displayValue") or str(leader.get("value", ""))
-                if athlete and value:
-                    performers.append(
-                        {
-                            "player": athlete,
-                            "stat_line": f"{stat_name}: {value}",
-                            "note": f"ESPN listed leader for {team_name}".strip(),
-                        }
-                    )
+    mystics = _team_competitor(competitors)
+    if not mystics:
+        return []
+    team_name = mystics.get("team", {}).get("displayName", "") or TEAM_NAME
+    performers: list[dict[str, str]] = []
+    for leader_category in mystics.get("leaders", []) or []:
+        stat_name = leader_category.get("shortDisplayName") or leader_category.get("displayName") or "stat"
+        for leader in leader_category.get("leaders", []) or []:
+            athlete = leader.get("athlete", {}).get("displayName")
+            value = leader.get("displayValue") or str(leader.get("value", ""))
+            if athlete and value:
+                performers.append(
+                    {
+                        "player": athlete,
+                        "stat_line": f"{stat_name}: {value}",
+                        "note": f"ESPN listed leader for {team_name}".strip(),
+                    }
+                )
     return performers[:6]
 
 

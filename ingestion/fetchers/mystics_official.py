@@ -30,6 +30,7 @@ SKIP_TITLES = {
     "wnba",
     "privacy policy",
     "terms of use",
+    "washington mystics",
 }
 
 
@@ -49,7 +50,7 @@ def fetch(target_date: date, retrieved_at: str) -> dict[str, Any]:
             "confidence_notes": [f"Washington Mystics official news unavailable: {exc}"],
         }
 
-    items = _parse_news(html_text, retrieved_at)
+    items = _parse_news(html_text)
     source = {
         "source_name": SOURCE_NAME,
         "source_url": NEWS_URL,
@@ -90,7 +91,7 @@ class _LinkParser(HTMLParser):
         self._parts = []
 
 
-def _parse_news(html_text: str, retrieved_at: str) -> list[dict[str, Any]]:
+def _parse_news(html_text: str) -> list[dict[str, Any]]:
     parser = _LinkParser()
     parser.feed(html_text)
     visible = _visible_text(html_text)
@@ -112,7 +113,7 @@ def _parse_news(html_text: str, retrieved_at: str) -> list[dict[str, Any]]:
             {
                 "title": title,
                 "url": href,
-                "published_at": _published_at_for_title(visible, title) or retrieved_at,
+                "published_at": _published_at_for_title(visible, title),
                 "source_name": SOURCE_NAME,
                 "confidence": 0.82,
             }

@@ -50,7 +50,7 @@ class Availability(TypedDict):
 class NewsItem(TypedDict):
     title: str
     url: str
-    published_at: str
+    published_at: str | None
     source_name: str
     confidence: float
 

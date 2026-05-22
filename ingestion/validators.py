@@ -116,8 +116,10 @@ def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
             ("title", "url", "published_at", "source_name", "confidence"),
             errors,
         )
-        if "published_at" in item and not _is_utc_iso(item.get("published_at")):
-            errors.append(f"recent_news_items[{i}].published_at must be ISO 8601 UTC")
+        if "published_at" in item:
+            value = item.get("published_at")
+            if value is not None and not _is_utc_iso(value):
+                errors.append(f"recent_news_items[{i}].published_at must be ISO 8601 UTC or null")
         if "confidence" in item:
             _validate_confidence(item.get("confidence"), f"recent_news_items[{i}].confidence", errors)
 

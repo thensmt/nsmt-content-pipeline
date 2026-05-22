@@ -133,6 +133,36 @@ class StoryPacketTests(unittest.TestCase):
         self.assertIn("Washington at 2-2", packet["standings_context"])
         self.assertIn("no game played on 2026-05-21", packet["confidence_notes"])
 
+    def test_news_item_accepts_null_published_at(self) -> None:
+        def _undated_official(target_date: date, retrieved_at: str) -> dict[str, object]:
+            return {
+                "recent_news_items": [
+                    {
+                        "title": "Undated Fixture News",
+                        "url": "https://example.test/news/undated",
+                        "published_at": None,
+                        "source_name": "Washington Mystics official site",
+                        "confidence": 0.6,
+                    }
+                ],
+                "source_links": [_source("Washington Mystics official site", "https://example.test/news")],
+                "confidence_notes": [],
+            }
+
+        packet = build_story_packet(
+            "mystics",
+            date(2026, 5, 21),
+            retrieved_at=RETRIEVED_AT,
+            fetchers={
+                "espn": _off_day_fetcher,
+                "wnba_com": _wnba_fetcher,
+                "mystics_official": _undated_official,
+                "reddit": _reddit_stub,
+            },
+        )
+
+        self.assertIsNone(packet["recent_news_items"][0]["published_at"])
+
 
 if __name__ == "__main__":
     unittest.main()
