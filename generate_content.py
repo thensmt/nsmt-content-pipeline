@@ -69,7 +69,7 @@ TEAMS = [
      "channel_target": "RECAPS"},
     # MLB
     {"name": "Washington Nationals",  "league": "MLB",      "espn_id": "21",  "sport": "baseball",    "league_slug": "mlb",                     "category": "pro",
-     "persona": "Bayes Cooper",    "voice": "stats-curious, contextualizes performances with historical baseball perspective",
+     "persona": "Marcus Bell",     "voice": "stats-curious, contextualizes performances with historical baseball perspective",
      "channel_target": "RECAPS"},
     # WNBA
     {"name": "Washington Mystics",    "league": "WNBA",     "espn_id": "14",  "sport": "basketball",  "league_slug": "wnba",                    "category": "pro",
@@ -94,13 +94,13 @@ COLLEGE_TEAMS = [
      "persona": "Terry Lane",      "voice": "hometown Maryland pride, knows the Big Ten landscape",
      "channel_target": "RECAPS"},
     {"name": "Virginia Cavaliers",     "league": "College Basketball",         "espn_id": "258",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
-     "persona": "Cav Mitchell",    "voice": "refined, slow-burn analysis, ACC tradition",
+     "persona": "Graham Ellis",    "voice": "refined, slow-burn analysis, ACC tradition",
      "channel_target": "RECAPS"},
     {"name": "Virginia Tech Hokies",   "league": "College Basketball",         "espn_id": "259",  "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
      "persona": "Hayes Bremner",   "voice": "blue-collar, scrappy underdog energy, Lane Stadium pride",
      "channel_target": "RECAPS"},
     {"name": "Georgetown Hoyas",       "league": "College Basketball",         "espn_id": "46",   "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
-     "persona": "Vance Hoya",      "voice": "prestige tone, Big East tradition, Hoya Saxa",
+     "persona": "Patrick Keane",   "voice": "prestige tone, Big East tradition, Hoya Saxa",
      "channel_target": "RECAPS"},
     {"name": "George Mason Patriots",  "league": "College Basketball",         "espn_id": "2244", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
      "persona": "Mason Adams",     "voice": "scrappy mid-major, history-conscious patriot energy",
@@ -109,7 +109,7 @@ COLLEGE_TEAMS = [
      "persona": "Mason Adams",     "voice": "scrappy mid-major, history-conscious patriot energy",
      "channel_target": "RECAPS"},
     {"name": "Mary Washington Eagles", "league": "College Basketball (D3)",    "espn_id": "2942", "sport": "basketball", "league_slug": "mens-college-basketball",   "category": "college",
-     "persona": "Eagle Reed",      "voice": "passionate D3 small-school enthusiast",
+     "persona": "Natalie Park",    "voice": "passionate D3 small-school enthusiast",
      "channel_target": "RECAPS"},
 ]
 
