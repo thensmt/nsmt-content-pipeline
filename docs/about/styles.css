@@ -268,12 +268,12 @@ body {
   font-weight: 900;
   font-variation-settings: "opsz" 144;
   font-size: clamp(56px, 12vw, 200px);
-  line-height: 0.88;
+  line-height: 1.0;
   letter-spacing: -0.045em;
   margin: 0 0 36px;
   text-wrap: balance;
 }
-.t-line { display: block; overflow: hidden; padding-bottom: 0.26em; }
+.t-line { display: block; overflow: hidden; padding-bottom: 0.3em; }
 .t-line--indent { padding-left: clamp(40px, 14vw, 260px); }
 .t-line span.letter {
   display: inline-block;
