@@ -583,6 +583,40 @@ def consume_story_packet(packet):
     return "\n" + "\n".join(out) + "\n"
 
 
+# Shared editorial-guardrails block. Added 2026-05-22 after the Mystics demo
+# eval flagged overclaiming, source-mixing, and rookie-framing errors; bio-
+# claim lockdown added the same day. Module-level so one-off scripts
+# (scripts/demo_citron_feature.py and any future demos) can import + reuse
+# without duplicating. KEEP THE SINGLE SOURCE OF TRUTH — do not copy into
+# other files. The baselines path uses generate_baselines._BASELINE_GUARDRAILS
+# (paraphrased for season-feature framing); changes here should be reflected
+# there manually when relevant.
+GUARDRAILS = (
+    "- ANTI-OVERCLAIM: avoid deterministic causality framings from small "
+    "samples (<10 games). Use 'early pattern', 'possible trend', "
+    "'worth monitoring' — do not declare team identity from a handful of games.\n"
+    "- ANTI-FABRICATION: every stat, date, opponent, score, and player name "
+    "must come from the Verified team context, the Story packet, or the game "
+    "data below. If a number isn't in those blocks, do not invent one.\n"
+    "- NO SOURCE-MIXING: if a number appears in two blocks with different "
+    "values, prefer the Story packet; never blend stats from different sources.\n"
+    "- CAREER-STAGE PRECISION: do not call any player a 'rookie', 'first-year', "
+    "'four games into their career', or similar UNLESS the Verified player "
+    "tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
+    "- ROSTER DISCIPLINE: reference only players named in the Verified roster "
+    "or the game data. Do not invent additional teammates.\n"
+    "- BIOGRAPHICAL LOCKDOWN: do not state biographical or contextual facts "
+    "about any player or coach (college history, hometown, prior teams, awards, "
+    "age, family, draft round/pick beyond what the tenure block provides) "
+    "unless that exact fact appears in the Verified team context above. Even "
+    "if you 'know' something from elsewhere — omit it. Player tenure and "
+    "coach tenure are the only career-stage claims allowed.\n"
+    "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
+    "experiments, or any 'this team is X' framing in the first ~10 games of a "
+    "season, hedge openly. Acknowledge sample-size limits."
+)
+
+
 # ── Claude API helper ──────────────────────────────────────────────────────────
 
 def generate_article(game_summary, team, article_type="recap", target_date=None):
@@ -604,34 +638,6 @@ def generate_article(game_summary, team, article_type="recap", target_date=None)
 
     packet = load_story_packet(team, target_date) if target_date else None
     packet_block = consume_story_packet(packet) if packet else ""
-
-    # Shared editorial-guardrails block. Added 2026-05-22 after the Mystics
-    # demo eval flagged overclaiming, source-mixing, and rookie-framing errors.
-    # Keep this in sync across recap/preview/baseline prompts.
-    GUARDRAILS = (
-        "- ANTI-OVERCLAIM: avoid deterministic causality framings from small "
-        "samples (<10 games). Use 'early pattern', 'possible trend', "
-        "'worth monitoring' — do not declare team identity from a handful of games.\n"
-        "- ANTI-FABRICATION: every stat, date, opponent, score, and player name "
-        "must come from the Verified team context, the Story packet, or the game "
-        "data below. If a number isn't in those blocks, do not invent one.\n"
-        "- NO SOURCE-MIXING: if a number appears in two blocks with different "
-        "values, prefer the Story packet; never blend stats from different sources.\n"
-        "- CAREER-STAGE PRECISION: do not call any player a 'rookie', 'first-year', "
-        "'four games into their career', or similar UNLESS the Verified player "
-        "tenure section explicitly says so. When in doubt, omit career-stage framing.\n"
-        "- ROSTER DISCIPLINE: reference only players named in the Verified roster "
-        "or the game data. Do not invent additional teammates.\n"
-        "- BIOGRAPHICAL LOCKDOWN: do not state biographical or contextual facts "
-        "about any player or coach (college history, hometown, prior teams, awards, "
-        "age, family, draft round/pick beyond what the tenure block provides) "
-        "unless that exact fact appears in the Verified team context above. Even "
-        "if you 'know' something from elsewhere — omit it. Player tenure and "
-        "coach tenure are the only career-stage claims allowed.\n"
-        "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
-        "experiments, or any 'this team is X' framing in the first ~10 games of a "
-        "season, hedge openly. Acknowledge sample-size limits."
-    )
 
     if article_type == "recap":
         prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers know your byline is AI-authored. Your voice: {persona_voice}.

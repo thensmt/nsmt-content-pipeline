@@ -1,0 +1,46 @@
+name: Citron Player Feature Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      no_fact_check:
+        description: 'Skip the in-line Sonnet fact-check pass'
+        required: false
+        default: 'false'
+
+jobs:
+  citron-feature:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Citron feature demo
+        env:
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
+          DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
+          INPUT_NO_FACT_CHECK:  ${{ github.event.inputs.no_fact_check }}
+        run: |
+          if [ "$INPUT_NO_FACT_CHECK" = "true" ]; then
+            python scripts/demo_citron_feature.py --no-fact-check
+          else
+            python scripts/demo_citron_feature.py
+          fi
+
+      - name: Upload draft
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: citron-feature-${{ github.run_id }}
+          path: drafts/
+          if-no-files-found: warn
