@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -65,6 +66,7 @@ from generate_content import (  # noqa: E402
     GUARDRAILS,
     NSMT_BLUE,
     build_byline,
+    build_fact_check_embed,
     fact_check_article,
     kb_context_block,
     load_story_packet,
@@ -155,6 +157,10 @@ def split_title_body_excerpt(text: str, default_title: str) -> tuple[str, str, s
 
 def post_feature_to_discord(team: dict, title: str, body: str, excerpt: str,
                             verdict: str, report: str | None) -> bool:
+    """Post the article + (when verdict != PASS) the fact-check report as two
+    embeds in a single webhook call. Forum channels reject follow-up webhook
+    posts that don't reference an existing thread, so we batch both embeds
+    into the initial message instead."""
     if not DISCORD_PROXY_URL or not DISCORD_PROXY_SECRET:
         print("  Discord post skipped — DISCORD_PROXY_URL / DISCORD_PROXY_SECRET not set.")
         return False
@@ -165,7 +171,7 @@ def post_feature_to_discord(team: dict, title: str, body: str, excerpt: str,
     byline = build_byline(team)
     badge = _VERDICT_BADGES.get(verdict, _VERDICT_BADGES["UNKNOWN"])
     color = _VERDICT_COLORS.get(verdict, NSMT_BLUE)
-    embed = {
+    article_embed = {
         "title":       f"🎯 Player Feature — {title}",
         "description": body_text,
         "color":       color,
@@ -179,8 +185,12 @@ def post_feature_to_discord(team: dict, title: str, body: str, excerpt: str,
         "footer":    {"text": f"{team['league']} · one-off Citron feature demo · Codex second-opinion will reply"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    embeds = [article_embed]
+    if report and verdict in {"NEEDS_REVISION", "FAIL"}:
+        embeds.append(build_fact_check_embed(team, verdict, report))
+
     thread_name = f"Player Feature — Sonia Citron — {date.today().isoformat()}"[:99]
-    payload = {"thread_name": thread_name, "embeds": [embed]}
+    payload = {"thread_name": thread_name, "embeds": embeds}
     resp = requests.post(
         DISCORD_PROXY_URL,
         headers={
@@ -194,45 +204,48 @@ def post_feature_to_discord(team: dict, title: str, body: str, excerpt: str,
     if resp.status_code >= 300:
         print(f"  ✗ Discord post failed (status {resp.status_code}): {resp.text[:200]}")
         return False
-    print(f"  ✓ Discord post created (status {resp.status_code})")
-    # Post fact-check follow-up when verdict != PASS, matching generate_content.py behavior
-    if report and verdict in {"NEEDS_REVISION", "FAIL"}:
-        text = report.strip()
-        if len(text) > 3800:
-            text = text[:3800].rstrip() + "…"
-        followup = {
-            "title":       f"🔍 In-line fact-check — {title[:160]} — {badge}",
-            "description": f"```\n{text}\n```",
-            "color":       color,
-            "footer":      {"text": "claude-sonnet-4-6 adversarial pass · independent of codex_review.py"},
-            "timestamp":   datetime.now(timezone.utc).isoformat(),
-        }
-        r2 = requests.post(
-            DISCORD_PROXY_URL,
-            headers={
-                "X-NSMT-Auth":   DISCORD_PROXY_SECRET,
-                "X-NSMT-Target": team.get("channel_target") or "RECAPS",
-                "Content-Type":  "application/json",
-            },
-            json={"embeds": [followup]},
-            timeout=15,
-        )
-        if r2.status_code >= 300:
-            print(f"  ✗ Fact-check follow-up failed (status {r2.status_code}): {r2.text[:200]}")
-        else:
-            print(f"  ✓ Fact-check follow-up posted (status {r2.status_code})")
+    print(f"  ✓ Discord post created (status {resp.status_code}, {len(embeds)} embed(s))")
     return True
+
+
+def load_draft(path: Path) -> tuple[str, str, str]:
+    """Parse a saved drafts/*.md file. Returns (title, body, excerpt).
+
+    Expected file format (produced by this script in a prior run):
+
+        # {title}
+        **Persona:** ...
+        **Model:** ...
+        **Verdict:** ...
+        **Excerpt:** {excerpt}
+        ---
+        {body}
+        ---
+        ## In-line fact-check
+        ```
+        {old report}
+        ```
+    """
+    text = path.read_text()
+    title_match = re.search(r"^# (.+)$", text, re.MULTILINE)
+    title = title_match.group(1).strip() if title_match else "(no title)"
+    excerpt_match = re.search(r"^\*\*Excerpt:\*\* (.+)$", text, re.MULTILINE)
+    excerpt = excerpt_match.group(1).strip() if excerpt_match else ""
+    # Body sits between the first `---` and the next `---` (or `## In-line fact-check`)
+    parts = text.split("\n---\n")
+    body = parts[1].strip() if len(parts) >= 2 else ""
+    return title, body, excerpt
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-discord", action="store_true")
     ap.add_argument("--no-fact-check", action="store_true")
+    ap.add_argument("--from-draft", default=None,
+                    help="Path to a previously-saved drafts/*.md file. Skips Sonnet generation entirely "
+                         "and runs the (new) fact-check + Discord post against the existing article. "
+                         "Use this to validate fact-check changes without spending writer credits.")
     args = ap.parse_args()
-
-    if not ANTHROPIC_API_KEY:
-        print("ERROR: ANTHROPIC_API_KEY not set.", file=sys.stderr)
-        return 2
 
     team = get_mystics()
     today = date.today()
@@ -242,20 +255,45 @@ def main() -> int:
     packet = load_story_packet(team, today)
     print(f"[demo] KB loaded: {bool(kb)}  ·  story packet loaded: {bool(packet)}")
 
-    print("[demo] writing Citron feature via Sonnet 4.6…")
-    raw = write_citron_feature(team, kb, packet)
-    title, body, excerpt = split_title_body_excerpt(raw, "Sonia Citron Has Been Mystics' Most Reliable Scoring Engine")
-    print(f"[demo] draft: {len(body)} chars, title: {title!r}")
+    if args.from_draft:
+        draft_path = Path(args.from_draft)
+        if not draft_path.is_absolute():
+            draft_path = PROJECT_ROOT / draft_path
+        if not draft_path.exists():
+            print(f"ERROR: --from-draft path not found: {draft_path}", file=sys.stderr)
+            return 2
+        title, body, excerpt = load_draft(draft_path)
+        print(f"[demo] loaded existing draft: {draft_path.relative_to(PROJECT_ROOT) if draft_path.is_relative_to(PROJECT_ROOT) else draft_path}")
+        print(f"[demo]   title:  {title!r}")
+        print(f"[demo]   body:   {len(body)} chars")
+        print(f"[demo]   skipped Sonnet generation — no writer credits spent")
+    else:
+        if not ANTHROPIC_API_KEY:
+            print("ERROR: ANTHROPIC_API_KEY not set.", file=sys.stderr)
+            return 2
+        print("[demo] writing Citron feature via Sonnet 4.6…")
+        raw = write_citron_feature(team, kb, packet)
+        title, body, excerpt = split_title_body_excerpt(raw, "Sonia Citron Has Been Mystics' Most Reliable Scoring Engine")
+        print(f"[demo] draft: {len(body)} chars, title: {title!r}")
 
     verdict, report = "UNKNOWN", None
     if not args.no_fact_check:
-        print("[demo] running in-line Sonnet fact-check pass…")
+        if not ANTHROPIC_API_KEY:
+            print("ERROR: ANTHROPIC_API_KEY not set (needed for fact-check).", file=sys.stderr)
+            return 2
+        print("[demo] running in-line Sonnet fact-check pass (with web_search)…")
         verdict, report = fact_check_article(body, kb, packet, team)
         print(f"[demo] fact-check verdict: {verdict}")
 
     drafts = PROJECT_ROOT / "drafts"
     drafts.mkdir(exist_ok=True)
-    path = drafts / f"citron-feature-{today.isoformat()}.md"
+    # When re-running from an existing draft, append a fresh verdict run rather
+    # than overwriting the original draft file.
+    out_name = f"citron-feature-{today.isoformat()}.md"
+    if args.from_draft:
+        stamp = datetime.now().strftime("%H%M%S")
+        out_name = f"citron-feature-{today.isoformat()}-rerun-{stamp}.md"
+    path = drafts / out_name
     path.write_text(
         f"# {title}\n\n"
         f"**Persona:** {team['persona']}  \n"

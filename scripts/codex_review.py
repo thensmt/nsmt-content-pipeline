@@ -233,17 +233,26 @@ def parse_date_from_thread_name(name: str) -> date | None:
 
 
 def review_with_codex(article: dict, team: dict, kb: dict | None, packet: dict | None) -> str:
-    """Codex pass that mirrors fact_check_article's contract in generate_content.py."""
+    """Codex pass that web-verifies each factual claim in the article.
+
+    Unlike the in-line Sonnet pass, this one uses Codex CLI's GPT-5 with web
+    search to verify against authoritative sources (ESPN, league-official,
+    team-official sites). Same 4-tier claim grading as fact_check_article.
+    """
     source_data = json.dumps(
         {"team": team.get("name"), "kb": kb or {}, "packet": packet or {}},
         indent=2,
         default=str,
     )
-    prompt = f"""You are a meticulous sports fact-checker. You are paid to find errors, not approve articles.
+    prompt = f"""You are a meticulous sports fact-checker. You are paid to find errors, not approve articles. You have web access — USE IT to verify claims, don't just check whether they appear in the source data block.
 
 This is an independent second-opinion pass — the in-line Sonnet 4.6 fact-check has already run and its verdict is on the original Discord embed. Run a fresh, fully independent review; do not anchor to or against the prior verdict.
 
-Source data the writer was given (JSON — this is the FULL source set: the timeless team KB plus any timely story packet for the game date):
+You have TWO sources of truth:
+1. Structured source data (JSON below) — the team KB + any story packet the writer was handed. This is the data the writer was supposed to draw from.
+2. The open internet. Authoritative sources for sports facts in priority order: ESPN.com, the league's official site (WNBA.com / NBA.com / NHL.com / NFL.com / MLB.com / MLS / NWSL / UFL), the team's official site, Basketball-Reference / Pro-Football-Reference / Baseball-Reference. Avoid social media / unsourced wikis as primary sources.
+
+Structured source data (JSON):
 ```
 {source_data}
 ```
@@ -255,29 +264,38 @@ Article:
 {article["body"]}
 ```
 
-Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, venue names). For each claim, mark it:
+Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details). For each claim:
 
-  ✅ SUPPORTED — exactly matches the source data (KB roster, coach, packet game data, etc.)
-  ⚠️ AMBIGUOUS — partly supported but slightly off (rounding, paraphrase, partial match)
-  ❌ UNSUPPORTED — appears nowhere in source data, or directly contradicts it
+A. Check the structured source data first.
+B. If not in source, WEB-SEARCH it. Cite the URL you used.
+C. Grade the claim:
+   ✅ SUPPORTED                   — verified true (appears in source data OR confirmed via web; cite source)
+   ⚠️ OUT_OF_SOURCE_BUT_VERIFIED  — true, but writer pulled from outside the source set we handed them (process note, not a factual error)
+   ❓ UNVERIFIED                  — couldn't be confirmed via web search (uncertain, needs human eye)
+   ❌ FALSE                       — contradicted by web or source data; demonstrably wrong
+
+A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, the claim is ❓ UNVERIFIED — do NOT mark it ❌ just because it's missing from the structured source data.
 
 Pay particular attention to:
-- Career-stage / tenure claims (rookie, first-year, "N games into their career") — MUST match kb.roster[].notes or packet, not be inferred.
-- Coach / front-office names — MUST match kb.head_coach or kb.coaching_staff.
-- Roster discipline — every player named in the article MUST appear in kb.roster or the packet's player blocks.
-- Linescore / quarter splits — when the article cites quarter scores, those MUST match the packet's linescore string. Don't accept paraphrased deltas.
+- Career-stage / tenure claims (rookie, first-year, "N games into their career") — verify against team KB notes AND public sources.
+- Coach / front-office names — verify against the team's official site.
+- Roster discipline — every player named MUST exist on the current roster (cross-check ESPN team page).
+- Linescore / quarter splits — verify against ESPN box score for that specific game.
+- Per-player stat lines — verify against ESPN box score; do not approve based on plausibility.
 
-Output format (strict):
+Output format (strict — keep this format even after web searches):
 
 VERDICT: PASS | NEEDS_REVISION | FAIL
 
+(PASS = every claim is ✅ or ⚠️. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
+
 CLAIMS:
-1. "[exact quote from article]" → ✅/⚠️/❌  [one-sentence reason; cite source-data field name]
+1. "[exact quote from article]" → ✅/⚠️/❓/❌  [reason + citation, e.g. "ESPN box score confirms 26 pts on 9-15 FG: espn.com/wnba/boxscore/_/gameId/..." or "not found on ESPN, WNBA.com, or mystics.wnba.com"]
 2. ...
 
-SUMMARY: 2-3 sentences naming the most serious issues, or "no significant issues found"
+SUMMARY: 2-3 sentences naming the most serious factual issues, or "no factual issues found" — note ⚠️ process flags separately if relevant.
 
-Do not invent issues. Do not be lenient. Do not approve a claim just because it sounds plausible — the only test is whether it appears in the source data above.
+Do not invent issues. Do not approve a claim just because it sounds plausible. Do not ❌ a claim just because it isn't in the structured source data — if the web confirms it, it's ⚠️ at worst.
 """
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as outf:
         out_path = outf.name

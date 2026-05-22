@@ -7,6 +7,10 @@ on:
         description: 'Skip the in-line Sonnet fact-check pass'
         required: false
         default: 'false'
+      from_draft:
+        description: 'Path to an existing drafts/*.md file to re-fact-check instead of generating a new article (e.g. drafts/citron-feature-2026-05-22.md)'
+        required: false
+        default: ''
 
 jobs:
   citron-feature:
@@ -30,12 +34,16 @@ jobs:
           DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
           DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
           INPUT_NO_FACT_CHECK:  ${{ github.event.inputs.no_fact_check }}
+          INPUT_FROM_DRAFT:     ${{ github.event.inputs.from_draft }}
         run: |
+          ARGS=()
           if [ "$INPUT_NO_FACT_CHECK" = "true" ]; then
-            python scripts/demo_citron_feature.py --no-fact-check
-          else
-            python scripts/demo_citron_feature.py
+            ARGS+=(--no-fact-check)
           fi
+          if [ -n "$INPUT_FROM_DRAFT" ]; then
+            ARGS+=(--from-draft "$INPUT_FROM_DRAFT")
+          fi
+          python scripts/demo_citron_feature.py "${ARGS[@]}"
 
       - name: Upload draft
         uses: actions/upload-artifact@v4

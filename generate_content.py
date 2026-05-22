@@ -714,11 +714,22 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
 
 # ── Adversarial fact-check pass ───────────────────────────────────────────────
 #
-# Added 2026-05-22 after the Mystics demo eval. Calls Sonnet 4.6 at
-# temperature 0 to extract every factual claim in the article and mark each
-# against the structured source data (KB + story packet). Cheap second opinion
-# that catches the same overclaiming / source-mixing / tenure errors the demo
-# surfaced.
+# Added 2026-05-22 after the Mystics demo eval, rebuilt 2026-05-22 (later) to
+# actually verify claims against the open internet rather than just check
+# source-consistency. Calls Sonnet 4.6 with Anthropic's web_search server tool
+# enabled and a 4-tier claim grade:
+#
+#   ✅ SUPPORTED                   — true (verified via source OR web)
+#   ⚠️  OUT_OF_SOURCE_BUT_VERIFIED — true, but writer pulled from outside
+#                                    the source set we handed them (process
+#                                    note, not a factual error)
+#   ❓ UNVERIFIED                  — couldn't be confirmed by web search
+#   ❌ FALSE                       — contradicted by web or source
+#
+# Article-level verdict from claim mix:
+#   PASS              — all ✅ (or ✅ + ⚠️ only)
+#   NEEDS_REVISION    — any ❓
+#   FAIL              — any ❌
 #
 # Never blocks admin save — verdict is informational, surfaced on the Discord
 # embed for the human reviewer. The external codex_review.py launchd job is
@@ -726,9 +737,19 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
 
 FACT_VERDICTS = {"PASS", "NEEDS_REVISION", "FAIL", "UNKNOWN"}
 
+# Cap web searches per fact-check call. Anthropic web_search is metered at
+# ~$10 / 1K searches, and one fact-check shouldn't need many — most claims
+# resolve from a single ESPN/WNBA.com hit.
+FACT_CHECK_MAX_WEB_SEARCHES = 10
+
 
 def fact_check_article(article_text, kb, packet, team):
-    """Returns (verdict, full_report) where verdict is one of FACT_VERDICTS."""
+    """Returns (verdict, full_report) where verdict is one of FACT_VERDICTS.
+
+    Calls Sonnet 4.6 with web_search enabled so the checker can actually
+    verify claims against ESPN/WNBA.com/team-official sources, not just
+    check whether claims appear in the in-prompt source data.
+    """
     if not ANTHROPIC_API_KEY:
         return ("UNKNOWN", "(skipped — ANTHROPIC_API_KEY not set)")
     if not article_text:
@@ -740,19 +761,25 @@ def fact_check_article(article_text, kb, packet, team):
         default=str,
     )
 
-    prompt = f"""You are a meticulous sports fact-checker. You are paid to find errors, not approve articles.
+    prompt = f"""You are a meticulous sports fact-checker. You are paid to find errors, not approve articles. You have web search available — USE IT to verify factual claims against authoritative sources.
 
-Below is the raw structured data the writer was given. Below that is the article they wrote.
+You have TWO sources of truth:
+1. The structured source data block below (the team KB + any story packet the writer was given). This is the data the writer was supposed to draw from.
+2. The open internet. Authoritative sources for sports facts in priority order: ESPN.com, the league's official site (WNBA.com / NBA.com / NHL.com / NFL.com / MLB.com / MLS / NWSL / UFL), the team's official site, Basketball-Reference / Pro-Football-Reference / Baseball-Reference. Avoid social media / fan blogs / unsourced wikis as primary sources.
 
-Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, runs, win-probability claims, ranking claims, attendance, draft years, career stages). For each claim, mark it:
+Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details). For each claim, do this:
 
-  ✅ SUPPORTED — exactly matches the source data
-  ⚠️  AMBIGUOUS — partly supported but slightly off
-  ❌ UNSUPPORTED — appears nowhere in source data, or directly contradicts it
+A. Check the structured source data block.
+B. If it's not in the source block, search the web. Use ESPN/league/team-official sites preferentially. Cite the URL(s) you used.
+C. Grade the claim:
+   ✅ SUPPORTED                   — verified true (appears in source data OR confirmed via web; cite source)
+   ⚠️  OUT_OF_SOURCE_BUT_VERIFIED — true, but not in the structured source data we handed the writer (process note: writer pulled from outside source)
+   ❓ UNVERIFIED                  — couldn't be confirmed by web search (uncertain, needs human eye)
+   ❌ FALSE                       — contradicted by web or source data; demonstrably wrong
 
-Pay particular attention to career-stage / tenure claims (rookie, first-year, "N games into their career") — these MUST match the kb.roster[].notes or the packet, not be inferred.
+Be precise about which web sources you used. A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, the claim is ❓ UNVERIFIED — do NOT mark it ❌ just because it's missing from the structured source data.
 
-Source data (JSON):
+Structured source data (JSON):
 ```
 {source_data}
 ```
@@ -762,17 +789,19 @@ Article:
 {article_text}
 ```
 
-Output format (strict):
+Output format (strict — keep this format even after using web search):
 
 VERDICT: PASS | NEEDS_REVISION | FAIL
 
+(PASS = every claim is ✅ or ⚠️. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
+
 CLAIMS:
-1. "[exact quote from article]" → ✅/⚠️/❌  [one-sentence reason; cite source-data field name]
+1. "[exact quote from article]" → ✅/⚠️/❓/❌  [reason + citation, e.g. "ESPN box score confirms 26 pts on 9-15 FG (espn.com/...)" or "not found on ESPN, WNBA.com, or mystics.wnba.com"]
 2. ...
 
-SUMMARY: [2-3 sentences naming the most serious issues, or "no significant issues found"]
+SUMMARY: [2-3 sentences naming the most serious factual issues, or "no factual issues found" — note ⚠️ process flags separately if relevant]
 
-Do not invent issues. Do not be lenient. If the article names a player, that player MUST appear in the source data."""
+Do not invent issues. Do not be lenient on ❌. But ALSO do not mark a claim ❌ when web search confirms it — those go in the ⚠️ bucket instead."""
 
     try:
         resp = requests.post(
@@ -784,14 +813,23 @@ Do not invent issues. Do not be lenient. If the article names a player, that pla
             },
             json={
                 "model": "claude-sonnet-4-6",
-                "max_tokens": 2048,
+                "max_tokens": 4096,
                 "temperature": 0.0,
                 "messages": [{"role": "user", "content": prompt}],
+                "tools": [{
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": FACT_CHECK_MAX_WEB_SEARCHES,
+                }],
             },
-            timeout=90,
+            timeout=180,
         )
         resp.raise_for_status()
-        report = resp.json()["content"][0]["text"].strip()
+        # Web-search-enabled responses contain interleaved text + tool_use
+        # + tool_result blocks. Concatenate all text blocks for the report.
+        content_blocks = resp.json().get("content", [])
+        text_chunks = [b["text"] for b in content_blocks if b.get("type") == "text"]
+        report = "\n\n".join(text_chunks).strip() or "(empty response)"
     except Exception as e:
         print(f"  Fact-check API error: {e}")
         return ("UNKNOWN", f"(fact-check call failed: {e})")
@@ -895,21 +933,38 @@ _VERDICT_BADGES = {
 }
 
 
+def build_fact_check_embed(team, verdict, report):
+    """Build a fact-check embed dict (does not post). Returned dict slots
+    into the same webhook payload as the article embed — forum-channel posts
+    can carry up to 10 embeds in one message, and we send the article +
+    fact-check report together so the reviewer sees both at once and we
+    sidestep the "follow-up needs thread_id" problem."""
+    MAX_DESC = 3800
+    text = (report or "").strip() or "(no report)"
+    if len(text) > MAX_DESC:
+        text = text[:MAX_DESC].rstrip() + "…"
+    return {
+        "title":       f"🔍 Fact-check — {team['name']} — {_VERDICT_BADGES.get(verdict, verdict)}",
+        "description": f"```\n{text}\n```"[:MAX_DESC],
+        "color":       _VERDICT_COLORS.get(verdict, NSMT_BLUE),
+        "footer":      {"text": "claude-sonnet-4-6 with web_search · independent of codex_review.py"},
+        "timestamp":   datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="UNKNOWN", fact_report=None):
     """Best-effort notification to Discord via the Cloudflare Worker proxy.
 
     Routes to the team's own channel if `team["channel_target"]` matches a
     configured `DISCORD_WEBHOOK_URL_<X>` secret on the worker. Otherwise the
     worker falls back to the default webhook (currently #recap-pipeline via
-    the RECAPS target, which is the default for all teams until you opt them
-    into per-team channels).
+    the RECAPS target).
 
-    Posts the FULL article body in the embed description so reviewers can
-    read the whole piece in Discord without clicking through to admin.
-    Truncates with an admin link if the body exceeds Discord's 4096-char
-    embed description limit. Fact-check verdict (added 2026-05-22) drives
-    the embed color + a verdict field; full report posted as a follow-up
-    embed when verdict != PASS.
+    Posts the article body + (when verdict != PASS) the fact-check report
+    as two embeds in a single webhook call. Forum channels reject follow-up
+    posts that don't reference an existing thread, so we batch instead of
+    chasing the thread_id roundtrip — Discord supports up to 10 embeds per
+    message and the article + fact-check fits comfortably in two.
 
     Never raises — Discord failure must not block admin saves.
     """
@@ -917,8 +972,6 @@ def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="U
         print("  Discord notification skipped — DISCORD_PROXY_URL / DISCORD_PROXY_SECRET not set.")
         return False
 
-    # Discord embed description max is 4096 chars; leave buffer for the
-    # truncation footer if we need to cut.
     MAX_DESC = 3900
     body_text = (body or "").strip() or "(no body provided)"
     if len(body_text) > MAX_DESC:
@@ -929,7 +982,7 @@ def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="U
     verdict_badge = _VERDICT_BADGES.get(fact_verdict, _VERDICT_BADGES["UNKNOWN"])
     embed_color = _VERDICT_COLORS.get(fact_verdict, _VERDICT_COLORS["UNKNOWN"])
 
-    embed = {
+    article_embed = {
         "title":       f"📝 New Recap Draft — {team['name']}",
         "description": body_text,
         "color":       embed_color,
@@ -944,14 +997,15 @@ def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="U
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
+    embeds = [article_embed]
+    if fact_report and fact_verdict in {"NEEDS_REVISION", "FAIL"}:
+        embeds.append(build_fact_check_embed(team, fact_verdict, fact_report))
+
     thread_name = f"{team['name']} — {game_date.isoformat()}"
     if len(thread_name) > 100:
         thread_name = thread_name[:99] + "…"
 
-    payload = {
-        "thread_name": thread_name,
-        "embeds":      [embed],
-    }
+    payload = {"thread_name": thread_name, "embeds": embeds}
 
     try:
         resp = requests.post(
@@ -965,49 +1019,13 @@ def post_recap_to_discord(title, body, team, summary, game_date, fact_verdict="U
             timeout=15,
         )
         if resp.status_code < 300:
-            print(f"  ✓ Discord notification posted to target='{channel_target}' (status {resp.status_code})")
-            ok = True
-        else:
-            print(f"  ✗ Discord notification failed (status {resp.status_code}): {resp.text[:200]}")
-            ok = False
+            print(f"  ✓ Discord notification posted to target='{channel_target}' (status {resp.status_code}, {len(embeds)} embed(s))")
+            return True
+        print(f"  ✗ Discord notification failed (status {resp.status_code}): {resp.text[:200]}")
+        return False
     except Exception as e:
         print(f"  ✗ Discord notification error: {e}")
-        ok = False
-
-    # Follow-up: post the full fact-check report when verdict != PASS, so the
-    # reviewer can read the model-by-claim breakdown without leaving Discord.
-    if ok and fact_report and fact_verdict in {"NEEDS_REVISION", "FAIL"}:
-        try:
-            _post_fact_check_followup(team, channel_target, fact_verdict, fact_report)
-        except Exception as e:
-            print(f"  ✗ Fact-check follow-up error: {e}")
-
-    return ok
-
-
-def _post_fact_check_followup(team, channel_target, verdict, report):
-    """Post the full fact-check report as a follow-up embed in the same channel."""
-    MAX_DESC = 3800
-    text = (report or "").strip()
-    if len(text) > MAX_DESC:
-        text = text[:MAX_DESC].rstrip() + "…"
-    embed = {
-        "title":       f"🔍 Fact-check — {team['name']} — {_VERDICT_BADGES.get(verdict, verdict)}",
-        "description": f"```\n{text}\n```"[:MAX_DESC],
-        "color":       _VERDICT_COLORS.get(verdict, NSMT_BLUE),
-        "footer":      {"text": "claude-sonnet-4-6 adversarial pass · independent of codex_review.py"},
-        "timestamp":   datetime.now(timezone.utc).isoformat(),
-    }
-    requests.post(
-        DISCORD_PROXY_URL,
-        headers={
-            "X-NSMT-Auth":   DISCORD_PROXY_SECRET,
-            "X-NSMT-Target": channel_target,
-            "Content-Type":  "application/json",
-        },
-        json={"embeds": [embed]},
-        timeout=15,
-    )
+        return False
 
 
 def save_local_draft(title, body, team, game_date):
