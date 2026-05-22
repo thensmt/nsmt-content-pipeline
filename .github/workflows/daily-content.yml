@@ -2,7 +2,12 @@ name: NSMT Daily Content Generation
 
 on:
   schedule:
-    - cron: '0 13 * * *'  # 8am ET every day (13:00 UTC)
+    # Target: articles ready in Discord by 8 AM Eastern.
+    # GH Actions free-tier scheduled workflows are typically delayed 1-3 hours
+    # past the cron time, so we schedule ~3 hours early to land near 8 AM ET.
+    # 10:00 UTC = 6 AM EDT (Mar-Nov) / 5 AM EST (Nov-Mar)
+    # With typical 1-3 hr delay → actual run lands 7-9 AM ET year-round.
+    - cron: '0 10 * * *'
   workflow_dispatch:        # allows manual trigger from GitHub Actions tab
 
 jobs:
