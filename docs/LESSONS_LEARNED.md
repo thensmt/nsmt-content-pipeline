@@ -246,6 +246,69 @@ article (Harmon, Amoore, Olsen, Iriafen) was on the verified roster.
 
 ---
 
+### 9. Sport-specific terminology — Mystics-era assumptions don't generalize
+
+**Failure mode (caught during Nationals KB audit, before any test run).**
+With the platform built against the Mystics (basketball), several assumptions
+were hardcoded that don't generalize:
+
+- The KB block rendered "Head coach: Blake Butera (in 1st year as head
+  coach)" for the Nationals. MLB calls them MANAGERS.
+- `_derive_player_tenure` assumed draft year = pro debut year. True for
+  WNBA / NBA / NFL (drafted players typically join the pro roster
+  immediately). FALSE for MLB and NHL — 1-5 years of minor-league or
+  junior development between draft and pro debut. Dylan Crews was drafted
+  in 2023 but his MLB debut was 2024, so naive derivation would output
+  "in 4th MLB season" when it's actually his 3rd.
+- The BOXSCORE DISCIPLINE rule in the writer prompt enumerated stats by
+  basketball name ("points, FG/3P/FT splits, rebounds, assists, +/-,
+  minutes"). Reads oddly for any other sport.
+
+**Fixes:**
+
+- **Coach title** is now KB-driven via an optional `head_coach.title`
+  field. Default "Head coach" preserves rendering for all existing teams
+  (basketball / hockey / football / soccer). MLB KBs set
+  `head_coach.title = "Manager"`. The derived tenure string picks up the
+  same title — "in 1st year as manager" for a brand-new MLB skipper.
+- **Player tenure derivation** is now gated by an explicit
+  `_TENURE_DRAFT_DIRECT_LEAGUES` set. Currently WNBA / NBA / NFL /
+  G-League / UFL / MLS / NWSL are in. MLB and NHL are explicitly out —
+  the function returns None and the "Verified player tenure" KB section
+  doesn't render. BIOGRAPHICAL LOCKDOWN remains the safety net.
+- **BOXSCORE DISCIPLINE language** generalized to "whatever stats the
+  sport tracks" with examples drawn across sports (points/runs/goals,
+  shooting/batting/pitching splits, time played).
+
+**Where in code:**
+- `generate_content.py` — `_coach_title(coach)` helper (title lookup
+  with "Head coach" default), `_derive_coach_tenure` uses it in the
+  output string, `kb_context_block` uses it in the prefix line.
+- `generate_content.py` — `_TENURE_DRAFT_DIRECT_LEAGUES` set; the
+  comment block above it documents WHY MLB / NHL are excluded.
+- `generate_content.py` — `_SOURCE_HIERARCHY_RULE` carries the
+  generalized BOXSCORE DISCIPLINE language.
+- `data/teams/nationals.json` — `head_coach.title` set to "Manager".
+
+**Pattern for future sports:**
+
+- When adding a team whose sport uses a non-standard coach title
+  (Manager for baseball, potentially others for international leagues),
+  set `head_coach.title` in the KB. Don't try to fix this in code per
+  league — KBs already carry team-specific data, this is just another
+  field.
+- When adding a league with a significant draft-to-debut gap, leave
+  it OUT of `_TENURE_DRAFT_DIRECT_LEAGUES` and rely on BIOGRAPHICAL
+  LOCKDOWN. Don't fudge the regex to "kind of" work — wrong tenure
+  numbers are worse than no tenure block at all.
+- The boxscore renderer (`_format_boxscore_rows`) is still basketball-
+  shaped (PTS/REB/AST/FG/3P/FT/+/-). For sports with fundamentally
+  different per-player stats (MLB batting+pitching, NFL by-position,
+  NHL skaters+goalies), it'll need generalization or sport-specific
+  renderers. See `docs/NEW_TEAM_CHECKLIST.md` Phase 2.
+
+---
+
 ## Patterns to reuse when extending
 
 - Any factual claim the writer might make where the inference is non-obvious

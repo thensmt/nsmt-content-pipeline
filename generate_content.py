@@ -307,11 +307,39 @@ def load_story_packet(team, target_date):
 _TENURE_ORDINALS = {1: "2nd", 2: "3rd", 3: "4th", 4: "5th", 5: "6th", 6: "7th",
                     7: "8th", 8: "9th", 9: "10th"}
 
+# Leagues where draft year ≈ pro debut year, so "current_year - draft_year + 1"
+# gives the correct season number for tenure derivation. Drafted players in
+# these leagues typically go straight to the pro roster.
+#
+# DELIBERATELY EXCLUDES:
+#   - MLB: drafted players spend 1-5 years in the minors before debut. A 2023
+#     draftee might not have made MLB until 2024 or later, so "2026 - 2023 + 1
+#     = 4th MLB season" is wrong (it'd be their 3rd or even 2nd).
+#   - NHL: same problem. AHL/junior development time between draft and NHL
+#     debut.
+#   - College leagues: there's no "draft" in the college sense.
+#
+# For excluded leagues, tenure derivation skips. BIOGRAPHICAL LOCKDOWN in the
+# writer prompt is the safety net — the writer must not invent career-stage
+# claims that aren't supported by the source.
+_TENURE_DRAFT_DIRECT_LEAGUES = {
+    "WNBA",
+    "NBA",
+    "NFL",
+    "G-League",
+    "UFL",
+    "MLS",
+    "NWSL",
+}
+
 
 def _derive_player_tenure(notes, current_season, league):
     """Derive explicit career-stage framing (e.g. 'in 2nd WNBA season') from a
     roster note like '2025 No. 4 overall draft pick'. Returns a short string
     or None.
+
+    Only fires for leagues in _TENURE_DRAFT_DIRECT_LEAGUES — for MLB / NHL the
+    draft-to-debut gap means draft year is the wrong anchor (see set comment).
 
     The 2026-05-22 demo eval showed that passing the raw draft-pick note alone
     is NOT enough — the model still framed a 2nd-year player as a rookie.
@@ -319,6 +347,8 @@ def _derive_player_tenure(notes, current_season, league):
     non-derivable fact.
     """
     if not notes or not current_season:
+        return None
+    if league not in _TENURE_DRAFT_DIRECT_LEAGUES:
         return None
     m = (
         re.search(r"(\d{4})\s+No\.\s+\d+\s+overall\s+draft", notes)
@@ -342,10 +372,24 @@ def _derive_player_tenure(notes, current_season, league):
     return f"in {label} {league_label} season"
 
 
+def _coach_title(coach):
+    """Return the title noun for the head coach role. Defaults to 'Head coach'
+    so existing KBs that don't set head_coach.title (basketball / hockey /
+    football / soccer — where 'Head coach' is correct) keep their current
+    rendering. Baseball KBs should set head_coach.title = 'Manager'."""
+    if not coach:
+        return "Head coach"
+    return (coach.get("title") or "Head coach").strip() or "Head coach"
+
+
 def _derive_coach_tenure(coach, current_season):
-    """Derive 'in Nth year as head coach' from coach.tenure_start vs current_season.
-    Returns a short string or None. Same motivation as player tenure: prevents
-    the writer from inferring a coach's tenure incorrectly."""
+    """Derive 'in Nth year as {title}' from coach.tenure_start vs current_season.
+    Returns a short string or None. Title comes from coach.title (KB-driven)
+    with a 'head coach' default — so baseball KBs that set title='Manager'
+    render 'in 1st year as manager'.
+
+    Same motivation as player tenure: prevents the writer from inferring a
+    coach's tenure incorrectly."""
     if not coach or not current_season:
         return None
     start = coach.get("tenure_start")
@@ -359,10 +403,11 @@ def _derive_coach_tenure(coach, current_season):
     diff = current_year - start_year
     if diff < 0 or diff > 50:
         return None
+    title_lower = _coach_title(coach).lower()
     if diff == 0:
-        return "in 1st year as head coach"
+        return f"in 1st year as {title_lower}"
     label = _TENURE_ORDINALS.get(diff, f"{diff + 1}th")
-    return f"in {label} year as head coach"
+    return f"in {label} year as {title_lower}"
 
 
 def kb_context_block(kb):
@@ -386,11 +431,12 @@ def kb_context_block(kb):
     coach_dict = kb.get("head_coach") or {}
     coach = coach_dict.get("name")
     if coach:
+        title = _coach_title(coach_dict)
         coach_tenure = _derive_coach_tenure(coach_dict, kb.get("current_season"))
         if coach_tenure:
-            lines.append(f"- Head coach: {coach} ({coach_tenure})")
+            lines.append(f"- {title}: {coach} ({coach_tenure})")
         else:
-            lines.append(f"- Head coach: {coach}")
+            lines.append(f"- {title}: {coach}")
 
     record = kb.get("current_record")
     if record:
@@ -678,10 +724,12 @@ _SOURCE_HIERARCHY_RULE = (
     "league-official / team-official. NEVER state a stat or bio fact from memory "
     "without one of these three anchors.\n"
     "- BOXSCORE DISCIPLINE: when the Story packet includes a per-player "
-    "boxscore, EVERY per-player stat in the article (points, FG/3P/FT splits, "
-    "rebounds, assists, +/-, minutes) MUST come verbatim from those rows. Do "
-    "not round, paraphrase, or 'compute' shooting percentages — cite the raw "
-    "made/attempted line and let readers do the math.\n"
+    "boxscore, EVERY per-player stat in the article MUST come verbatim from "
+    "those rows — whatever stats the sport tracks (points/runs/goals, "
+    "shooting/batting/pitching splits, rebounds, assists, +/-, time played). "
+    "Do not round, paraphrase, or compute derived metrics like shooting "
+    "percentages — cite the raw made/attempted (or other source-form) values "
+    "and let readers do the math.\n"
     "- WEB SEARCH USE: you have web_search available. Use it ONLY to verify or "
     "fetch facts NOT in the Verified team context or Story packet — e.g. a "
     "player's college if you want to mention it. Always cite the URL inline. "
