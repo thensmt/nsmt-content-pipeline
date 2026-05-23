@@ -65,8 +65,9 @@ class SourceLink(TypedDict):
     confidence: float
 
 
-# Per-player stat row from a team boxscore. All fields optional because ESPN
-# can return DNPs and partial rows; renderer skips empties.
+# Per-player stat row from a basketball boxscore — the original shape, kept
+# for backwards compatibility with the Mystics packet path. New sports use
+# BoxscoreEntry (below) instead, which is sport-agnostic.
 class BoxscoreRow(TypedDict, total=False):
     player: str
     position: str
@@ -84,11 +85,31 @@ class BoxscoreRow(TypedDict, total=False):
     starter: bool
 
 
+# Sport-agnostic per-player line. `stats` holds whatever labels ESPN returns
+# for this section in this sport — e.g. for MLB batting: H-AB / AB / R / H /
+# RBI / HR / BB / K / AVG / OBP / SLG; for MLB pitching: IP / H / R / ER /
+# BB / K / ERA; for basketball: MIN / PTS / REB / AST / FG / 3P / FT / +/-.
+# Renderer iterates and prints the labels as-given — no per-sport hardcoding
+# required to add a new league.
+class BoxscoreEntry(TypedDict, total=False):
+    player: str
+    position: str
+    starter: bool
+    section: str                  # 'batting', 'pitching', 'players', 'skaters', 'goaltenders', etc.
+    stats: dict[str, str]
+
+
 class TeamBoxscore(TypedDict, total=False):
     team_name: str
     team_abbr: str
     home_away: str
+    sport: str                    # 'basketball', 'baseball', 'football', 'hockey', 'soccer'
+    league: str                   # 'WNBA', 'MLB', 'NFL', 'NHL', etc.
+    # Either `rows` (legacy basketball-shaped) OR `entries` (new sport-
+    # neutral) will be populated, never both. Renderer checks both and
+    # prefers entries when present.
     rows: list[BoxscoreRow]
+    entries: list[BoxscoreEntry]
 
 
 class StoryPacket(TypedDict, total=False):

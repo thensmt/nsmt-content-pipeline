@@ -107,7 +107,7 @@ TEAMS = [
      "persona": "Ada Frost",       "voice": "tactical, hockey-specific terminology, no-fluff rink-side voice",
      "channel_target": "RECAPS"},
     # MLB
-    {"name": "Washington Nationals",  "league": "MLB",      "espn_id": "21",  "sport": "baseball",    "league_slug": "mlb",                     "category": "pro",
+    {"name": "Washington Nationals",  "league": "MLB",      "espn_id": "20",  "sport": "baseball",    "league_slug": "mlb",                     "category": "pro",
      "persona": "Marcus Bell",     "voice": "stats-curious, contextualizes performances with historical baseball perspective",
      "channel_target": "RECAPS"},
     # WNBA
@@ -520,10 +520,85 @@ def kb_context_block(kb):
 # boxscores) — distinct from KB files which carry TIMELESS team context.
 
 def _format_boxscore_rows(boxscore):
-    """Compact per-player rendering from a TeamBoxscore dict. Each row becomes
-    one line; missing stats are dropped rather than rendered as 0."""
+    """Compact per-player rendering from a TeamBoxscore dict.
+
+    Prefers the new sport-neutral `entries` shape (boxscore.entries — used by
+    every team except Mystics). Falls back to the legacy basketball-shaped
+    `rows` field for Mystics packets that haven't been migrated.
+
+    Returns a list of strings. When the boxscore has multiple sections (e.g.
+    baseball has 'batting' + 'pitching'), section headers are inserted as
+    sentinel lines like '[Batting]' so the caller can format them.
+    """
+    if not boxscore:
+        return []
+    entries = boxscore.get("entries") or []
+    if entries:
+        return _format_boxscore_entries(entries)
+    # Legacy basketball path for Mystics
+    return _format_boxscore_rows_basketball(boxscore.get("rows") or [])
+
+
+def _format_boxscore_entries(entries):
+    """Group sport-neutral entries by section and render each player as a one-
+    liner with all their stats. Works for any sport ESPN exposes — basketball
+    (one 'players' section), baseball (batting + pitching), hockey (skaters +
+    goaltenders), football (per-position groups), soccer (one section)."""
+    by_section: dict[str, list[dict]] = {}
+    section_order: list[str] = []
+    for entry in entries:
+        section = (entry.get("section") or "players").lower()
+        if section not in by_section:
+            by_section[section] = []
+            section_order.append(section)
+        by_section[section].append(entry)
+
+    out: list[str] = []
+    for section in section_order:
+        section_label = _SECTION_LABELS.get(section, section.title())
+        if len(section_order) > 1:
+            out.append(f"[{section_label}]")
+        for entry in by_section[section]:
+            name = entry.get("player") or "?"
+            position = entry.get("position") or ""
+            starter = entry.get("starter")
+            header_parts = []
+            if position:
+                header_parts.append(position)
+            if starter:
+                header_parts.append("starter")
+            header = f"{name} ({', '.join(header_parts)})" if header_parts else name
+
+            stats = entry.get("stats") or {}
+            stat_chunks = [f"{label} {value}" for label, value in stats.items() if value not in (None, "", "0-0")]
+            line = f"{header}: " + " · ".join(stat_chunks) if stat_chunks else header
+            out.append(line)
+    return out
+
+
+# Section header rendering. Maps ESPN's `type` / `name` values to display labels.
+_SECTION_LABELS = {
+    "batting":       "Batting",
+    "pitching":      "Pitching",
+    "skaters":       "Skaters",
+    "goaltenders":   "Goaltenders",
+    "passing":       "Passing",
+    "rushing":       "Rushing",
+    "receiving":     "Receiving",
+    "defense":       "Defense",
+    "kicking":       "Kicking",
+    "punting":       "Punting",
+    "kick returns":  "Kick Returns",
+    "punt returns":  "Punt Returns",
+    "players":       "Players",
+}
+
+
+def _format_boxscore_rows_basketball(rows):
+    """Legacy renderer for basketball-shaped `BoxscoreRow` entries (the
+    Mystics packet format). Preserved verbatim from the original to avoid
+    Mystics regression."""
     out = []
-    rows = (boxscore or {}).get("rows") or []
     for row in rows:
         name = row.get("player") or "?"
         position = row.get("position") or ""
