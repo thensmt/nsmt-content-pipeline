@@ -99,7 +99,7 @@ def call_sonnet(prompt: str, max_tokens: int = 2048, with_web_search: bool = Tru
         body["tools"] = [{
             "type": "web_search_20250305",
             "name": "web_search",
-            "max_uses": 5,
+            "max_uses": 2,  # lowered from 5 on 2026-05-22 for free-tier TPM
         }]
     resp = requests.post(
         "https://api.anthropic.com/v1/messages",

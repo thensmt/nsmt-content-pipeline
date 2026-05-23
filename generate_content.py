@@ -811,9 +811,12 @@ GUARDRAILS = (
 
 # Cap web searches the writer can make per article. Story packets carry the
 # per-game boxscore, so most stat claims should resolve from source without
-# searching at all — this cap exists to bound cost for the edge cases (player
-# bio facts not yet in the KB, venue lookups, etc.).
-WRITER_MAX_WEB_SEARCHES = 5
+# searching at all — this cap exists to bound cost AND reduce TPM consumption
+# (each search call's results return into context, billing against the
+# per-minute token cap). Lowered from 5 → 2 on 2026-05-22 to ease pressure
+# on Anthropic's free-tier TPM ceiling. If the writer needs more context,
+# the fix is enriching the KB / packet, not raising this cap.
+WRITER_MAX_WEB_SEARCHES = 2
 
 _SOURCE_HIERARCHY_RULE = (
     "- SOURCE HIERARCHY: when stating any factual claim, prefer in this order: "
@@ -977,10 +980,12 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
 
 FACT_VERDICTS = {"PASS", "NEEDS_REVISION", "FAIL", "UNKNOWN"}
 
-# Cap web searches per fact-check call. Anthropic web_search is metered at
-# ~$10 / 1K searches, and one fact-check shouldn't need many — most claims
-# resolve from a single ESPN/WNBA.com hit.
-FACT_CHECK_MAX_WEB_SEARCHES = 10
+# Cap web searches per fact-check call. Each search result returns into the
+# model's context, counting against TPM. Lowered from 10 → 2 on 2026-05-22
+# to ease free-tier TPM pressure. Two searches are usually enough to verify
+# a few key claims (a box score URL + a bio detail); the rest of the
+# fact-check leans on the source data already in the prompt.
+FACT_CHECK_MAX_WEB_SEARCHES = 2
 
 
 def fact_check_article(article_text, kb, packet, team):

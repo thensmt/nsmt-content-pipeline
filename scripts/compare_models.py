@@ -109,8 +109,10 @@ MODEL_REGISTRY = {
     },
 }
 
-# Writer call's web_search cap. Same as generate_content.WRITER_MAX_WEB_SEARCHES.
-WRITER_MAX_WEB_SEARCHES = 5
+# Writer call's web_search cap. Mirrors generate_content.WRITER_MAX_WEB_SEARCHES;
+# kept locally so this script doesn't need to re-import the constant. Lowered
+# from 5 → 2 on 2026-05-22 to ease free-tier TPM pressure.
+WRITER_MAX_WEB_SEARCHES = 2
 
 # Intra-model cooldown — between a model's writer call and its own fact-
 # check call. We hit 429s with 20s on 2026-05-22; 60s is the safer default
