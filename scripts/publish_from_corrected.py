@@ -24,9 +24,12 @@ Article types:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import date
 from pathlib import Path
+
+import requests
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -35,6 +38,9 @@ from generate_content import (  # noqa: E402
     ALL_TEAMS,
     team_slug,
     slugify,
+    build_byline,
+    NSMT_BLUE,
+    ADMIN_REVIEW_URL,
     get_nsmt_token,
     save_to_nsmt,
     post_recap_to_discord,
@@ -45,6 +51,38 @@ from generate_baselines import (  # noqa: E402
     paragraphs_to_html,
     build_slug as build_baseline_slug,
 )
+
+
+def _team_webhook_url(team: dict) -> str | None:
+    """If the env exposes DISCORD_<TEAM_SLUG_UPPER>_WEBHOOK_URL, use that
+    direct webhook (skips worker). Lets specific teams route to their own
+    channel without per-team worker config."""
+    slug = (team_slug(team) or "").upper().replace("-", "_")
+    if not slug:
+        return None
+    return os.environ.get(f"DISCORD_{slug}_WEBHOOK_URL")
+
+
+def _post_direct_webhook(webhook_url: str, embed: dict) -> None:
+    r = requests.post(webhook_url, json={"embeds": [embed]}, timeout=15)
+    r.raise_for_status()
+
+
+def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: date) -> dict:
+    persona = team.get("persona") or "NSMT Staff"
+    byline = build_byline(team)
+    desc_parts = []
+    if excerpt:
+        desc_parts.append(excerpt)
+    desc_parts.append(f"**Article:** {title}")
+    desc_parts.append(f"**Byline:** {byline}")
+    desc_parts.append(f"**Date:** {date_.isoformat()}")
+    desc_parts.append(f"[Review in admin]({ADMIN_REVIEW_URL})")
+    return {
+        "title": f"📝 New baseline draft — {team['name']}",
+        "description": "\n".join(desc_parts),
+        "color": NSMT_BLUE,
+    }
 
 
 def find_team(slug: str) -> dict:
@@ -80,6 +118,8 @@ def main() -> int:
         print("ERROR: NSMT admin auth failed.", file=sys.stderr)
         return 3
 
+    direct_webhook = _team_webhook_url(team)
+
     if args.type == "baseline":
         article_slug = build_baseline_slug(team, target_date)
         html_body = paragraphs_to_html(body)
@@ -89,8 +129,13 @@ def main() -> int:
             return 4
         print(f"  ✓ Saved to admin: BLOG#{blog_id}")
         try:
-            post_baseline_to_discord(args.title, args.excerpt, team, "offseason_outlook", target_date)
-            print("  ✓ Posted notification to #recap-pipeline")
+            if direct_webhook:
+                embed = _build_direct_baseline_embed(team, args.title, args.excerpt, target_date)
+                _post_direct_webhook(direct_webhook, embed)
+                print(f"  ✓ Posted to team-direct webhook (#{team_slug(team)})")
+            else:
+                post_baseline_to_discord(args.title, args.excerpt, team, "offseason_outlook", target_date)
+                print(f"  ✓ Posted to worker target {team.get('channel_target', 'RECAPS')!r}")
         except Exception as exc:
             print(f"  ✗ Discord notification failed (non-fatal): {exc!r}")
     else:  # recap
@@ -101,16 +146,21 @@ def main() -> int:
             print("ERROR: admin save failed.", file=sys.stderr)
             return 4
         print("  ✓ Saved to admin")
-        # post_recap_to_discord wants a game summary dict; for corrected
-        # republish we don't carry the original summary, so build a minimal
-        # one from what we know. score/venue won't appear in the embed.
         minimal_summary = {"score": args.title.split("|")[0].strip(), "venue": "", "opponent": ""}
         try:
-            post_recap_to_discord(
-                args.title, body, team, minimal_summary, target_date,
-                fact_verdict="UNKNOWN", fact_report=None,
-            )
-            print("  ✓ Posted to #recap-pipeline")
+            if direct_webhook:
+                # Reuse baseline-style embed for direct routing — keeps the
+                # team-direct channel feed visually consistent regardless of
+                # article type.
+                embed = _build_direct_baseline_embed(team, args.title, args.excerpt, target_date)
+                _post_direct_webhook(direct_webhook, embed)
+                print(f"  ✓ Posted to team-direct webhook (#{team_slug(team)})")
+            else:
+                post_recap_to_discord(
+                    args.title, body, team, minimal_summary, target_date,
+                    fact_verdict="UNKNOWN", fact_report=None,
+                )
+                print(f"  ✓ Posted to worker target {team.get('channel_target', 'RECAPS')!r}")
         except Exception as exc:
             print(f"  ✗ Discord notification failed (non-fatal): {exc!r}")
 

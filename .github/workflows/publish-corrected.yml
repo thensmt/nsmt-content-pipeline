@@ -66,6 +66,9 @@ jobs:
           NSMT_PASSWORD:        ${{ secrets.NSMT_PASSWORD }}
           DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
           DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
+          # Per-team direct webhook overrides (skip worker, post straight to
+          # the team's channel). Add more as more teams get dedicated channels.
+          DISCORD_COMMANDERS_WEBHOOK_URL: ${{ secrets.DISCORD_COMMANDERS_WEBHOOK_URL }}
         run: |
           python scripts/publish_from_corrected.py \
             --team "$INPUT_TEAM" \
