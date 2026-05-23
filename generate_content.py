@@ -466,23 +466,54 @@ def kb_context_block(kb):
     return "\n" + "\n".join(lines) + "\n"
 
 
-# ── Story packet (ingestion layer — not yet wired into run()) ────────────────
+# ── Story packet (ingestion layer) ───────────────────────────────────────────
 #
 # Story packets are produced by the ingestion module (see ingestion/) and live
 # at data/packets/{slug}_{YYYY-MM-DD}.json. They carry TIMELY enrichment
-# (yesterday's game, top performers, news, injuries, standings) — distinct
-# from KB files which carry TIMELESS team context.
-#
-# This function defines the contract for how a packet flattens into the
-# Claude prompt. It is intentionally NOT called from run() yet; that wiring
-# happens in a follow-up PR once the ingestion module ships and we've
-# validated packet output for one team end-to-end.
-#
-# Slot-in pattern (future):
-#     kb_block     = kb_context_block(load_team_kb(team))
-#     packet       = load_story_packet(team_slug(team), game_date)   # future
-#     packet_block = consume_story_packet(packet)
-#     # prepend both blocks to the user-prompt body inside generate_article()
+# (the day's game, top performers, news, injuries, standings, per-player
+# boxscores) — distinct from KB files which carry TIMELESS team context.
+
+def _format_boxscore_rows(boxscore):
+    """Compact per-player rendering from a TeamBoxscore dict. Each row becomes
+    one line; missing stats are dropped rather than rendered as 0."""
+    out = []
+    rows = (boxscore or {}).get("rows") or []
+    for row in rows:
+        name = row.get("player") or "?"
+        position = row.get("position") or ""
+        minutes = row.get("minutes")
+        header_parts = []
+        if position:
+            header_parts.append(position)
+        if minutes:
+            header_parts.append(f"{minutes} min")
+        if row.get("starter"):
+            header_parts.append("starter")
+        if "plus_minus" in row:
+            header_parts.append(f"{row['plus_minus']:+d}")
+        header = f"{name} ({', '.join(header_parts)})" if header_parts else name
+
+        stat_chunks = []
+        if "points" in row:
+            stat_chunks.append(f"{row['points']} PTS")
+        for shooting_key, label in (("fg", "FG"), ("three_pt", "3P"), ("ft", "FT")):
+            val = row.get(shooting_key)
+            if val and val != "0-0":
+                stat_chunks.append(f"{val} {label}")
+        for stat_key, label in (
+            ("rebounds", "REB"),
+            ("assists", "AST"),
+            ("steals", "STL"),
+            ("blocks", "BLK"),
+            ("turnovers", "TO"),
+        ):
+            if stat_key in row:
+                stat_chunks.append(f"{row[stat_key]} {label}")
+
+        line = f"{header}: " + " · ".join(stat_chunks) if stat_chunks else header
+        out.append(line)
+    return out
+
 
 def consume_story_packet(packet):
     """Flatten a story packet dict into a prompt-ready context block.
@@ -550,6 +581,21 @@ def consume_story_packet(packet):
 
     _section("Game summary",          packet.get("game_summary"))
     _section("Top performers",        packet.get("top_performers"))
+
+    # Full per-player boxscores from ESPN summary. Added 2026-05-22 to kill
+    # stat-line hallucination — the writer prompt instructs the model to use
+    # ONLY these numbers (or web-search when they're absent), never to invent.
+    box = packet.get("boxscore")
+    if box:
+        out.append(f"- {box.get('team_name', 'Team')} per-player boxscore (this game — use these numbers verbatim, do not paraphrase or compute deltas):")
+        for line in _format_boxscore_rows(box):
+            out.append(f"  · {line}")
+    opp_box = packet.get("opponent_boxscore")
+    if opp_box:
+        out.append(f"- {opp_box.get('team_name', 'Opponent')} per-player boxscore (opposing team):")
+        for line in _format_boxscore_rows(opp_box):
+            out.append(f"  · {line}")
+
     _section("Recent team context",   packet.get("recent_team_context"))
     _section("Key players",           packet.get("key_players"))
     _section("Injuries/availability", packet.get("injuries_or_availability"))
@@ -619,12 +665,38 @@ GUARDRAILS = (
 
 # ── Claude API helper ──────────────────────────────────────────────────────────
 
+# Cap web searches the writer can make per article. Story packets carry the
+# per-game boxscore, so most stat claims should resolve from source without
+# searching at all — this cap exists to bound cost for the edge cases (player
+# bio facts not yet in the KB, venue lookups, etc.).
+WRITER_MAX_WEB_SEARCHES = 5
+
+_SOURCE_HIERARCHY_RULE = (
+    "- SOURCE HIERARCHY: when stating any factual claim, prefer in this order: "
+    "(1) the Verified team context above, (2) the Story packet's boxscore / "
+    "game_summary / standings_context, (3) web_search results citing ESPN / "
+    "league-official / team-official. NEVER state a stat or bio fact from memory "
+    "without one of these three anchors.\n"
+    "- BOXSCORE DISCIPLINE: when the Story packet includes a per-player "
+    "boxscore, EVERY per-player stat in the article (points, FG/3P/FT splits, "
+    "rebounds, assists, +/-, minutes) MUST come verbatim from those rows. Do "
+    "not round, paraphrase, or 'compute' shooting percentages — cite the raw "
+    "made/attempted line and let readers do the math.\n"
+    "- WEB SEARCH USE: you have web_search available. Use it ONLY to verify or "
+    "fetch facts NOT in the Verified team context or Story packet — e.g. a "
+    "player's college if you want to mention it. Always cite the URL inline. "
+    "Do NOT search for stats that already appear in the boxscore."
+)
+
+
 def generate_article(game_summary, team, article_type="recap", target_date=None):
     """Call Claude to write a sports article based on game data.
 
     `target_date` is used to look up a same-date story packet at
-    data/packets/{slug}_{YYYY-MM-DD}.json. If found, packet content is
-    injected into the prompt alongside the timeless KB block.
+    data/packets/{slug}_{YYYY-MM-DD}.json. If found, packet content (including
+    full per-player boxscores when available) is injected into the prompt
+    alongside the timeless KB block. The writer also has web_search enabled
+    as a fallback for facts not in the source set.
     """
     if not ANTHROPIC_API_KEY:
         print("ERROR: ANTHROPIC_API_KEY not set.")
@@ -663,6 +735,7 @@ Guidelines:
 
 Editorial guardrails (HARD requirements):
 {GUARDRAILS}
+{_SOURCE_HIERARCHY_RULE}
 
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters) for the article preview."""
 
@@ -686,6 +759,7 @@ Guidelines:
 
 Editorial guardrails (HARD requirements):
 {GUARDRAILS}
+{_SOURCE_HIERARCHY_RULE}
 
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters)."""
 
@@ -699,14 +773,22 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
             },
             json={
                 "model": "claude-sonnet-4-6",
-                "max_tokens": 1024,
+                "max_tokens": 2048,
                 "messages": [{"role": "user", "content": prompt}],
+                "tools": [{
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": WRITER_MAX_WEB_SEARCHES,
+                }],
             },
-            timeout=60,
+            timeout=180,
         )
         resp.raise_for_status()
-        content = resp.json()["content"][0]["text"]
-        return content
+        # web_search responses interleave text + tool_use + tool_result blocks.
+        # Concatenate all text blocks for the final article body.
+        content_blocks = resp.json().get("content", [])
+        text_chunks = [b["text"] for b in content_blocks if b.get("type") == "text"]
+        return "\n\n".join(text_chunks) or None
     except Exception as e:
         print(f"  Claude API error: {e}")
         return None

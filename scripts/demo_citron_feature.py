@@ -84,9 +84,23 @@ def get_mystics() -> dict:
     raise RuntimeError(f"{TEAM_NAME} not found in ALL_TEAMS")
 
 
-def call_sonnet(prompt: str, max_tokens: int = 1500) -> str:
+def call_sonnet(prompt: str, max_tokens: int = 2048, with_web_search: bool = True) -> str:
+    """Sonnet 4.6 call. web_search is on by default — same pattern the daily
+    cron writer now uses — so the model can fetch boxscores / bios it doesn't
+    find in the packet rather than invent them."""
     if not ANTHROPIC_API_KEY:
         raise RuntimeError("ANTHROPIC_API_KEY not set")
+    body: dict = {
+        "model": "claude-sonnet-4-6",
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if with_web_search:
+        body["tools"] = [{
+            "type": "web_search_20250305",
+            "name": "web_search",
+            "max_uses": 5,
+        }]
     resp = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={
@@ -94,15 +108,13 @@ def call_sonnet(prompt: str, max_tokens: int = 1500) -> str:
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         },
-        json={
-            "model": "claude-sonnet-4-6",
-            "max_tokens": max_tokens,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=90,
+        json=body,
+        timeout=180,
     )
     resp.raise_for_status()
-    return resp.json()["content"][0]["text"].strip()
+    blocks = resp.json().get("content", [])
+    chunks = [b["text"] for b in blocks if b.get("type") == "text"]
+    return ("\n\n".join(chunks)).strip()
 
 
 def write_citron_feature(team: dict, kb: dict | None, packet: dict | None) -> str:
@@ -122,10 +134,10 @@ Write a focused player feature (550-750 words) on Sonia Citron, the Washington M
 Article angle: what Sonia Citron's early-season production tells us about her role on this team — and what it doesn't. She is one of the team's leading scorers; lean into her efficiency patterns (shooting splits across games, her best individual performance, when her scoring correlates with team outcomes).
 
 Hard requirements:
-- Use ONLY facts from the Verified team context and the Story packet (if present) above. The Verified roster lists every Mystics player you may reference. If a stat, date, opponent, score, venue, or biographical detail isn't in those blocks, do not invent one.
-- The Verified roster shows Sonia Citron as G #22 with no tenure notes — DO NOT call her a rookie, first-year, second-year, or refer to her draft year/pick/college unless the source explicitly provides that information.
-- Quote per-game stats and shooting splits directly from the packet's boxscore for the game in question; do not paraphrase or compute deltas in your head.
-- Connect her performances to team outcomes only when the source data supports it (e.g., her line in wins vs losses, or in road games vs home games — only if the data shows a real pattern).
+- Use facts in this order of preference: (1) the Verified team context above, (2) the Story packet's boxscore + game data, (3) web_search results from ESPN / WNBA.com / mystics.wnba.com. NEVER cite a stat or bio fact from memory.
+- The Verified roster shows Sonia Citron as G #22 with no tenure notes — DO NOT call her a rookie, first-year, second-year, or refer to her draft year/pick/college unless you verify it via web_search and cite the URL.
+- Per-game stats: when a packet boxscore is present, every per-player stat MUST be copied verbatim from that boxscore. Do not paraphrase, round, or compute shooting percentages in your head. When boxscore is absent, web_search the ESPN box score before writing the stat.
+- Connect her performances to team outcomes only when the source data supports it (e.g., her line in wins vs losses) — only if the data shows a real pattern.
 - Stay in your persona voice but keep it professional, written for DC/MD/VA sports fans.
 - Do NOT refer to yourself in first person or call attention to being an AI in the body — the byline handles disclosure.
 - Format: plain paragraphs only, no headers, no bullet points.

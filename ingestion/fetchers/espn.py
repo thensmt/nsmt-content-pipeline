@@ -69,6 +69,8 @@ def fetch(target_date: date, retrieved_at: str) -> dict[str, Any]:
         "top_performers": _extract_top_performers(event, summary),
         "recent_team_context": _extract_context(event, summary, target_date),
         "editorial_angle_candidates": _narrative_angles(event, summary),
+        "boxscore": _extract_team_boxscore(event, summary, mystics=True),
+        "opponent_boxscore": _extract_team_boxscore(event, summary, mystics=False),
         "source_links": sources,
         "confidence_notes": notes,
     }
@@ -258,6 +260,119 @@ def _mystics_boxscore_block(summary: dict[str, Any]) -> dict[str, Any]:
         if str(team.get("id")) == ESPN_TEAM_ID or team.get("displayName") == TEAM_NAME:
             return block
     return {}
+
+
+def _opponent_boxscore_block(summary: dict[str, Any]) -> dict[str, Any]:
+    """Return the non-Mystics team's boxscore block. ESPN summary always has
+    exactly two teams; we pick the one that isn't us."""
+    for block in (summary.get("boxscore") or {}).get("players") or []:
+        team = block.get("team") or {}
+        if str(team.get("id")) != ESPN_TEAM_ID and team.get("displayName") != TEAM_NAME:
+            return block
+    return {}
+
+
+def _extract_team_boxscore(event: dict[str, Any], summary: dict[str, Any] | None, mystics: bool) -> dict[str, Any] | None:
+    """Return a structured TeamBoxscore dict for one side of the game, or None
+    when ESPN didn't return stats yet (preseason / not-started / DNP-only).
+
+    Designed to be the canonical per-game stat source for the writer prompt —
+    the writer must reference these numbers rather than invent stat lines.
+    """
+    if not summary:
+        return None
+    block = _mystics_boxscore_block(summary) if mystics else _opponent_boxscore_block(summary)
+    if not block:
+        return None
+
+    team = block.get("team") or {}
+    competitors = event.get("competitions", [{}])[0].get("competitors", [])
+    home_away = ""
+    for c in competitors:
+        ct = c.get("team") or {}
+        if str(ct.get("id")) == str(team.get("id")):
+            home_away = c.get("homeAway", "")
+            break
+
+    stats_block = (block.get("statistics") or [{}])[0]
+    labels = stats_block.get("labels") or []
+    athletes = stats_block.get("athletes") or []
+    if not labels or not athletes:
+        return None
+
+    label_idx = {label: labels.index(label) for label in labels}
+
+    def stat(stats: list[Any], label: str) -> str:
+        i = label_idx.get(label)
+        if i is None or i >= len(stats):
+            return ""
+        return str(stats[i] or "")
+
+    def to_int(value: str) -> int | None:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    rows: list[dict[str, Any]] = []
+    for entry in athletes:
+        stats = entry.get("stats") or []
+        if not stats:
+            continue
+        athlete = entry.get("athlete") or {}
+        name = athlete.get("displayName") or ""
+        if not name:
+            continue
+        position = (athlete.get("position") or {}).get("abbreviation", "")
+        row: dict[str, Any] = {
+            "player": name,
+            "position": position,
+            "starter": bool(entry.get("starter")),
+        }
+        minutes = stat(stats, "MIN")
+        if minutes:
+            row["minutes"] = minutes
+        pts = to_int(stat(stats, "PTS"))
+        if pts is not None:
+            row["points"] = pts
+        reb = to_int(stat(stats, "REB"))
+        if reb is not None:
+            row["rebounds"] = reb
+        ast = to_int(stat(stats, "AST"))
+        if ast is not None:
+            row["assists"] = ast
+        stl = to_int(stat(stats, "STL"))
+        if stl is not None:
+            row["steals"] = stl
+        blk = to_int(stat(stats, "BLK"))
+        if blk is not None:
+            row["blocks"] = blk
+        to = to_int(stat(stats, "TO"))
+        if to is not None:
+            row["turnovers"] = to
+        fg = stat(stats, "FG")
+        if fg:
+            row["fg"] = fg
+        three_pt = stat(stats, "3PT")
+        if three_pt:
+            row["three_pt"] = three_pt
+        ft = stat(stats, "FT")
+        if ft:
+            row["ft"] = ft
+        plus_minus = to_int(stat(stats, "+/-"))
+        if plus_minus is not None:
+            row["plus_minus"] = plus_minus
+        rows.append(row)
+
+    if not rows:
+        return None
+
+    return {
+        "team_name": team.get("displayName") or "",
+        "team_abbr": team.get("abbreviation") or "",
+        "home_away": home_away,
+        "rows": rows,
+    }
 
 
 def _linescore_line(summary: dict[str, Any] | None) -> str:

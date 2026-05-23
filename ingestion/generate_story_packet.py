@@ -98,6 +98,13 @@ def build_story_packet(
         "confidence_notes": confidence_notes,
         "source_links": source_links,
     }
+    # Full per-player boxscores from ESPN summary. When present, the writer
+    # prompt MUST cite these over training-data recall — that's the fix for
+    # the stat-line hallucination class we saw on 2026-05-22.
+    if espn_data.get("boxscore") is not None:
+        packet["boxscore"] = espn_data["boxscore"]
+    if espn_data.get("opponent_boxscore") is not None:
+        packet["opponent_boxscore"] = espn_data["opponent_boxscore"]
     validate_packet(packet)
     return packet
 

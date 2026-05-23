@@ -27,6 +27,8 @@ class GameSummary(TypedDict, total=False):
     date: str
     status: str
     home_away: str
+    linescore: str
+    attendance: int
 
 
 class TopPerformer(TypedDict):
@@ -63,7 +65,33 @@ class SourceLink(TypedDict):
     confidence: float
 
 
-class StoryPacket(TypedDict):
+# Per-player stat row from a team boxscore. All fields optional because ESPN
+# can return DNPs and partial rows; renderer skips empties.
+class BoxscoreRow(TypedDict, total=False):
+    player: str
+    position: str
+    minutes: str
+    points: int
+    rebounds: int
+    assists: int
+    steals: int
+    blocks: int
+    turnovers: int
+    fg: str           # e.g. "10-14"
+    three_pt: str     # e.g. "1-4"
+    ft: str           # e.g. "9-10"
+    plus_minus: int
+    starter: bool
+
+
+class TeamBoxscore(TypedDict, total=False):
+    team_name: str
+    team_abbr: str
+    home_away: str
+    rows: list[BoxscoreRow]
+
+
+class StoryPacket(TypedDict, total=False):
     team: str
     league: str
     event_type: EventType
@@ -79,7 +107,30 @@ class StoryPacket(TypedDict):
     editorial_angle_candidates: list[str]
     confidence_notes: list[str]
     source_links: list[SourceLink]
+    # Optional — present when we successfully pulled ESPN summary for the
+    # recapped game. The writer + fact-checker MUST prefer these per-player
+    # numbers over training-data recall.
+    boxscore: TeamBoxscore | None
+    opponent_boxscore: TeamBoxscore | None
 
 
-REQUIRED_PACKET_FIELDS = tuple(StoryPacket.__annotations__.keys())
+# The original required set — kept explicit so adding optional fields above
+# doesn't suddenly break older callers / writers / tests.
+REQUIRED_PACKET_FIELDS = (
+    "team",
+    "league",
+    "event_type",
+    "retrieved_at",
+    "kb_slug",
+    "game_summary",
+    "top_performers",
+    "recent_team_context",
+    "key_players",
+    "injuries_or_availability",
+    "standings_context",
+    "recent_news_items",
+    "editorial_angle_candidates",
+    "confidence_notes",
+    "source_links",
+)
 
