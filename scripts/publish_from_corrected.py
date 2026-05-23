@@ -68,8 +68,18 @@ def _post_direct_webhook(webhook_url: str, embed: dict) -> None:
     r.raise_for_status()
 
 
-def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: date) -> dict:
-    persona = team.get("persona") or "NSMT Staff"
+_VERDICT_ICON = {
+    "PASS": "✅ PASS",
+    "NEEDS_REVISION": "⚠️ NEEDS_REVISION",
+    "FAIL": "❌ FAIL",
+    "UNKNOWN": "❓ UNKNOWN",
+}
+
+
+def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: date,
+                                 v1_verdict: str = "", v2_verdict: str = "",
+                                 corrections_summary: str = "",
+                                 review_trail_url: str = "") -> dict:
     byline = build_byline(team)
     desc_parts = []
     if excerpt:
@@ -78,11 +88,33 @@ def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: da
     desc_parts.append(f"**Byline:** {byline}")
     desc_parts.append(f"**Date:** {date_.isoformat()}")
     desc_parts.append(f"[Review in admin]({ADMIN_REVIEW_URL})")
-    return {
+
+    fields = []
+    if v1_verdict or v2_verdict:
+        trail = (
+            f"v1 (Sonnet draft): {_VERDICT_ICON.get(v1_verdict, v1_verdict)}\n"
+            f"v2 (after Codex rewrite): {_VERDICT_ICON.get(v2_verdict, v2_verdict)}"
+        )
+        if review_trail_url:
+            trail += f"\n[Full review trail]({review_trail_url})"
+        fields.append({"name": "🔍 Codex review trail", "value": trail[:1024], "inline": False})
+
+    if corrections_summary:
+        # Discord field value limit is 1024 chars. Truncate with a pointer to
+        # the full trail artifact if the summary is long.
+        summary_value = corrections_summary
+        if len(summary_value) > 980:
+            summary_value = summary_value[:980].rstrip() + "\n…(see full review trail artifact)"
+        fields.append({"name": "✏️ Corrections made", "value": summary_value, "inline": False})
+
+    embed = {
         "title": f"📝 New baseline draft — {team['name']}",
         "description": "\n".join(desc_parts),
         "color": NSMT_BLUE,
     }
+    if fields:
+        embed["fields"] = fields
+    return embed
 
 
 def find_team(slug: str) -> dict:
@@ -100,7 +132,15 @@ def main() -> int:
     ap.add_argument("--excerpt", default="")
     ap.add_argument("--type", choices=["baseline", "recap"], required=True)
     ap.add_argument("--body", required=True, help="Path to the corrected markdown body")
+    ap.add_argument("--v1-verdict", default="", help="Codex verdict on the original Sonnet draft")
+    ap.add_argument("--v2-verdict", default="", help="Codex verdict on the corrected body")
+    ap.add_argument("--corrections-summary", default="", help="Path to a corrections summary markdown file")
+    ap.add_argument("--review-trail-url", default="", help="URL to the publish workflow run that has the review trail artifact attached")
     args = ap.parse_args()
+
+    corrections_summary = ""
+    if args.corrections_summary and Path(args.corrections_summary).exists():
+        corrections_summary = Path(args.corrections_summary).read_text().strip()
 
     team = find_team(args.team)
     target_date = date.fromisoformat(args.date)
@@ -130,7 +170,12 @@ def main() -> int:
         print(f"  ✓ Saved to admin: BLOG#{blog_id}")
         try:
             if direct_webhook:
-                embed = _build_direct_baseline_embed(team, args.title, args.excerpt, target_date)
+                embed = _build_direct_baseline_embed(
+                    team, args.title, args.excerpt, target_date,
+                    v1_verdict=args.v1_verdict, v2_verdict=args.v2_verdict,
+                    corrections_summary=corrections_summary,
+                    review_trail_url=args.review_trail_url,
+                )
                 _post_direct_webhook(direct_webhook, embed)
                 print(f"  ✓ Posted to team-direct webhook (#{team_slug(team)})")
             else:
@@ -149,10 +194,12 @@ def main() -> int:
         minimal_summary = {"score": args.title.split("|")[0].strip(), "venue": "", "opponent": ""}
         try:
             if direct_webhook:
-                # Reuse baseline-style embed for direct routing — keeps the
-                # team-direct channel feed visually consistent regardless of
-                # article type.
-                embed = _build_direct_baseline_embed(team, args.title, args.excerpt, target_date)
+                embed = _build_direct_baseline_embed(
+                    team, args.title, args.excerpt, target_date,
+                    v1_verdict=args.v1_verdict, v2_verdict=args.v2_verdict,
+                    corrections_summary=corrections_summary,
+                    review_trail_url=args.review_trail_url,
+                )
                 _post_direct_webhook(direct_webhook, embed)
                 print(f"  ✓ Posted to team-direct webhook (#{team_slug(team)})")
             else:

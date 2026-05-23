@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -155,7 +156,10 @@ def download_artifact_for_run(run_id: str, dest_dir: Path) -> tuple[dict, Path]:
 
 
 def trigger_publish(team: str, date_: str, title: str, excerpt: str,
-                    body_path: Path, article_type: str) -> None:
+                    body_path: Path, article_type: str,
+                    v1_verdict: str, v2_verdict: str,
+                    corrections_summary_path: Path,
+                    review_trail_path: Path) -> None:
     subprocess.run(
         ["gh", "workflow", "run", PUBLISH_WF, "-R", REPO,
          "-f", f"team={team}",
@@ -163,7 +167,11 @@ def trigger_publish(team: str, date_: str, title: str, excerpt: str,
          "-f", f"title={title}",
          "-f", f"excerpt={excerpt}",
          "-f", f"type={article_type}",
-         "-F", f"body=@{body_path}"],
+         "-f", f"v1_verdict={v1_verdict}",
+         "-f", f"v2_verdict={v2_verdict}",
+         "-F", f"body=@{body_path}",
+         "-F", f"corrections_summary=@{corrections_summary_path}",
+         "-F", f"review_trail=@{review_trail_path}"],
         check=True,
     )
 
@@ -203,12 +211,25 @@ For each claim graded:
   💬 EDITORIAL                   → LEAVE ALONE (subjective judgment)
   ✅ SUPPORTED                   → LEAVE ALONE
 
+Output FORMAT — return BOTH sections in this exact structure, with the literal markers:
+
+=== CORRECTED_ARTICLE_BEGIN ===
+[the corrected article body, paragraph breaks preserved, with the EXCERPT: line at the end if the original had one]
+=== CORRECTED_ARTICLE_END ===
+
+=== CORRECTIONS_SUMMARY_BEGIN ===
+[bullet list of what you changed; one bullet per change. Use this shape, exact verbatim quotes where possible:
+- Fixed: "<original phrase>" → "<corrected phrase>" — <one-line reason citing the evidence>
+- Softened: "<original phrase>" → "<corrected phrase>" — <one-line reason>
+- Removed: "<original phrase>" — <one-line reason>
+If you made no changes, output a single line: "No changes — article already passes fact-check."]
+=== CORRECTIONS_SUMMARY_END ===
+
 Hard rules:
-- Output ONLY the corrected article body. No commentary, no markdown code fences around the whole thing, no "Here's the corrected article" preface.
-- Do NOT add citations, footnotes, or "(corrected: ...)" annotations into the prose.
+- The CORRECTED_ARTICLE section is the publishable body, nothing else. No code fences, no preface, no annotations in the prose.
+- Do NOT add citations, footnotes, or "(corrected: ...)" markers into the article body itself.
 - Do NOT add new claims or new paragraphs.
-- Keep the EXCERPT: line at the end of the article if one exists.
-- If no FALSE or UNVERIFIED claims need editing, return the article body unchanged.
+- The CORRECTIONS_SUMMARY is for human + AI review only — write it in plain markdown bullets.
 
 ARTICLE:
 ---
@@ -220,10 +241,17 @@ FACT-CHECK REPORT:
 {report}
 ---
 
-Now output the corrected article body."""
+Now output both sections in the required format."""
 
 
-def codex_rewrite(article_body: str, factcheck_report: str) -> str:
+_ARTICLE_RE  = re.compile(r"=== CORRECTED_ARTICLE_BEGIN ===\s*(.*?)\s*=== CORRECTED_ARTICLE_END ===", re.DOTALL)
+_SUMMARY_RE  = re.compile(r"=== CORRECTIONS_SUMMARY_BEGIN ===\s*(.*?)\s*=== CORRECTIONS_SUMMARY_END ===", re.DOTALL)
+
+
+def codex_rewrite(article_body: str, factcheck_report: str) -> tuple[str, str]:
+    """Returns (corrected_body, corrections_summary). If the model output is
+    missing one of the sections, falls back gracefully — corrected_body falls
+    back to the raw output, corrections_summary falls back to a placeholder."""
     prompt = CODEX_REWRITE_PROMPT_TMPL.format(article=article_body, report=factcheck_report)
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as outf:
         out_path = outf.name
@@ -240,15 +268,18 @@ def codex_rewrite(article_body: str, factcheck_report: str) -> str:
             raise RuntimeError(
                 f"codex rewrite exit {result.returncode}: {result.stderr[:500]}"
             )
-        text = Path(out_path).read_text().strip()
-        if not text:
-            text = result.stdout.strip()
-        return text
+        text = Path(out_path).read_text().strip() or result.stdout.strip()
     finally:
         try:
             Path(out_path).unlink()
         except OSError:
             pass
+
+    m_art = _ARTICLE_RE.search(text)
+    m_sum = _SUMMARY_RE.search(text)
+    corrected = m_art.group(1).strip() if m_art else text
+    summary   = m_sum.group(1).strip() if m_sum else "(Codex did not return a corrections summary section.)"
+    return corrected, summary
 
 
 # ── Per-run processing ────────────────────────────────────────────────────────
@@ -286,27 +317,72 @@ def process_run(run: dict, *, dry_run: bool) -> str:
             excerpt = tail.strip()
 
         title = meta.get("title", "(untitled)")
-        print(f"  · {label}: fact-checking '{title[:60]}' (~2-5 min at xhigh)…")
-        verdict, report = codex_factcheck(body, title, team)
-        print(f"  · {label}: fact-check verdict {verdict}")
+        print(f"  · {label}: fact-check v1 '{title[:60]}' (~2-5 min at xhigh)…")
+        v1_verdict, v1_report = codex_factcheck(body, title, team)
+        print(f"  · {label}: v1 verdict {v1_verdict}")
 
-        if verdict == "PASS":
+        if v1_verdict == "PASS":
             corrected = body
-            print(f"  · {label}: PASS — no rewrite needed")
+            v2_verdict = "PASS"
+            v2_report = "(v1 passed — no rewrite needed)"
+            corrections_summary = "No changes — article already passes fact-check on first pass."
+            print(f"  · {label}: PASS on v1 — no rewrite needed")
         else:
             print(f"  · {label}: rewriting (~3-10 min at xhigh)…")
-            corrected = codex_rewrite(body, report)
+            corrected, corrections_summary = codex_rewrite(body, v1_report)
             if excerpt and "EXCERPT:" not in corrected:
                 corrected = f"{corrected.rstrip()}\n\nEXCERPT: {excerpt}\n"
+            print(f"  · {label}: fact-check v2 of corrected body (~2-5 min)…")
+            v2_verdict, v2_report = codex_factcheck(corrected, title, team)
+            print(f"  · {label}: v2 verdict {v2_verdict}")
 
         body_path = dest / "corrected.md"
         body_path.write_text(corrected)
 
+        # Persist the corrections summary and the full review trail for both
+        # the publish workflow's Discord embed (short summary) and the
+        # publish artifact (full trail for AI feedback / audit).
+        corrections_path = dest / "corrections_summary.md"
+        corrections_path.write_text(corrections_summary)
+
+        trail_path = dest / "review_trail.md"
+        trail_lines = [
+            f"# Codex review trail — {title}",
+            "",
+            f"- Team: {team['name']} ({meta['team_slug']})",
+            f"- Date: {meta['article_date']}",
+            f"- Source workflow: {run['_workflow']} (run {run_id})",
+            f"- v1 verdict (Sonnet draft):    **{v1_verdict}**",
+            f"- v2 verdict (after rewrite):   **{v2_verdict}**",
+            "",
+            "## Corrections summary (Codex)",
+            "",
+            corrections_summary,
+            "",
+            "## v1 fact-check (full report on Sonnet draft)",
+            "",
+            v1_report,
+            "",
+            "## v2 fact-check (full report on corrected body)",
+            "",
+            v2_report,
+            "",
+            "## Sonnet draft v1 (original)",
+            "",
+            body,
+            "",
+            "## Corrected v2 (published)",
+            "",
+            corrected,
+            "",
+        ]
+        trail_path.write_text("\n".join(trail_lines))
+
         if dry_run:
-            print(f"\n----- dry-run: corrected body for {label} -----")
-            print(corrected[:2000])
-            print(f"----- (truncated at 2000 chars) -----\n")
-            return f"  ✓ {label}: dry-run, publish skipped"
+            print(f"\n----- dry-run review trail for {label} -----")
+            print(trail_path.read_text()[:3000])
+            print(f"----- (truncated at 3000 chars) -----\n")
+            return f"  ✓ {label}: dry-run, publish skipped (v1={v1_verdict}, v2={v2_verdict})"
 
         print(f"  · {label}: triggering {PUBLISH_WF}…")
         trigger_publish(
@@ -316,8 +392,12 @@ def process_run(run: dict, *, dry_run: bool) -> str:
             excerpt=excerpt,
             body_path=body_path,
             article_type=meta["article_type"],
+            v1_verdict=v1_verdict,
+            v2_verdict=v2_verdict,
+            corrections_summary_path=corrections_path,
+            review_trail_path=trail_path,
         )
-        return f"  ✓ {label}: published via {PUBLISH_WF} (verdict {verdict})"
+        return f"  ✓ {label}: published (v1={v1_verdict} → v2={v2_verdict})"
 
 
 # ── Main loop ─────────────────────────────────────────────────────────────────

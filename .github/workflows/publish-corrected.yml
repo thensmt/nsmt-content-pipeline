@@ -1,9 +1,9 @@
 name: Publish Codex-corrected article
 
 # Invoked by the Mac codex_rewrite.py script via `gh workflow run`. Takes a
-# corrected article body + metadata and pushes it to admin.thensmt.com +
-# #recap-pipeline. All publishing secrets stay in CI; the Mac side never
-# sees ANTHROPIC, NSMT admin, or Discord proxy creds.
+# corrected article body + review trail and pushes it to admin.thensmt.com
+# + the team's Discord channel. All publishing secrets stay in CI; the Mac
+# side never sees ANTHROPIC, NSMT admin, or Discord proxy creds.
 
 on:
   workflow_dispatch:
@@ -36,17 +36,37 @@ on:
         description: 'Corrected article body (markdown). Pass via `-F body=@file.md`.'
         required: true
         type: string
+      v1_verdict:
+        description: 'Codex verdict on the original Sonnet draft (PASS / FAIL / NEEDS_REVISION / UNKNOWN)'
+        required: true
+        type: string
+      v2_verdict:
+        description: 'Codex verdict on the corrected body after rewrite (PASS / FAIL / NEEDS_REVISION / UNKNOWN)'
+        required: true
+        type: string
+      corrections_summary:
+        description: 'Markdown bullet list of corrections Codex made'
+        required: true
+        type: string
+      review_trail:
+        description: 'Full review trail (v1+v2 reports, both bodies). Uploaded as artifact, not inlined to Discord.'
+        required: true
+        type: string
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      INPUT_TEAM:    ${{ inputs.team }}
-      INPUT_DATE:    ${{ inputs.date }}
-      INPUT_TITLE:   ${{ inputs.title }}
-      INPUT_EXCERPT: ${{ inputs.excerpt }}
-      INPUT_TYPE:    ${{ inputs.type }}
-      INPUT_BODY:    ${{ inputs.body }}
+      INPUT_TEAM:                ${{ inputs.team }}
+      INPUT_DATE:                ${{ inputs.date }}
+      INPUT_TITLE:               ${{ inputs.title }}
+      INPUT_EXCERPT:             ${{ inputs.excerpt }}
+      INPUT_TYPE:                ${{ inputs.type }}
+      INPUT_BODY:                ${{ inputs.body }}
+      INPUT_V1_VERDICT:          ${{ inputs.v1_verdict }}
+      INPUT_V2_VERDICT:          ${{ inputs.v2_verdict }}
+      INPUT_CORRECTIONS_SUMMARY: ${{ inputs.corrections_summary }}
+      INPUT_REVIEW_TRAIL:        ${{ inputs.review_trail }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -54,11 +74,22 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
 
-      - name: Write body to file (avoids shell-interpolating user input)
+      - name: Write body + review-trail files
         run: |
           mkdir -p /tmp/nsmt
-          printf '%s' "$INPUT_BODY" > /tmp/nsmt/body.md
-          echo "Wrote $(wc -c < /tmp/nsmt/body.md) bytes, $(wc -w < /tmp/nsmt/body.md) words."
+          printf '%s' "$INPUT_BODY"                > /tmp/nsmt/body.md
+          printf '%s' "$INPUT_CORRECTIONS_SUMMARY" > /tmp/nsmt/corrections_summary.md
+          printf '%s' "$INPUT_REVIEW_TRAIL"        > /tmp/nsmt/review_trail.md
+          echo "body: $(wc -c < /tmp/nsmt/body.md) bytes"
+          echo "summary: $(wc -c < /tmp/nsmt/corrections_summary.md) bytes"
+          echo "trail: $(wc -c < /tmp/nsmt/review_trail.md) bytes"
+
+      - name: Upload review trail as artifact (full v1+v2 reports + diff)
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-trail-${{ inputs.team }}-${{ inputs.date }}-${{ github.run_id }}
+          path: /tmp/nsmt/review_trail.md
+          retention-days: 30
 
       - name: Publish to admin + Discord
         env:
@@ -76,4 +107,8 @@ jobs:
             --title "$INPUT_TITLE" \
             --excerpt "$INPUT_EXCERPT" \
             --type "$INPUT_TYPE" \
-            --body /tmp/nsmt/body.md
+            --body /tmp/nsmt/body.md \
+            --v1-verdict "$INPUT_V1_VERDICT" \
+            --v2-verdict "$INPUT_V2_VERDICT" \
+            --corrections-summary /tmp/nsmt/corrections_summary.md \
+            --review-trail-url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
