@@ -250,7 +250,7 @@ This is an independent second-opinion pass — the in-line Sonnet 4.6 fact-check
 
 You have TWO sources of truth:
 1. Structured source data (JSON below) — the team KB + any story packet the writer was handed. This is the data the writer was supposed to draw from.
-2. The open internet. Authoritative sources for sports facts in priority order: ESPN.com, the league's official site (WNBA.com / NBA.com / NHL.com / NFL.com / MLB.com / MLS / NWSL / UFL), the team's official site, Basketball-Reference / Pro-Football-Reference / Baseball-Reference. Avoid social media / unsourced wikis as primary sources.
+2. The open internet. Authoritative sources in priority order: ESPN.com, AP (apnews.com), the league's official site (MLB.com / NBA.com / NHL.com / NFL.com / WNBA.com / MLS / NWSL / UFL), CBS Sports, Yahoo Sports, the team's official site, The Athletic, NBC Sports, Sports Reference family (Baseball-Reference / Basketball-Reference / Pro-Football-Reference / Hockey-Reference), major regional newspaper coverage (Washington Post for DMV teams). Avoid social media / unsourced wikis as primary sources.
 
 Structured source data (JSON):
 ```
@@ -264,38 +264,40 @@ Article:
 {article["body"]}
 ```
 
-Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details). For each claim:
+Your job: extract every factual or judgment-style claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details, AND editorial claims like "best game of his career"). For each claim:
 
 A. Check the structured source data first.
 B. If not in source, WEB-SEARCH it. Cite the URL you used.
-C. Grade the claim:
-   ✅ SUPPORTED                   — verified true (appears in source data OR confirmed via web; cite source)
+C. Grade the claim using the 5-tier shape:
+   ✅ SUPPORTED                   — verified true (in source OR confirmed via web; cite source)
    ⚠️ OUT_OF_SOURCE_BUT_VERIFIED  — true, but writer pulled from outside the source set we handed them (process note, not a factual error)
-   ❓ UNVERIFIED                  — couldn't be confirmed via web search (uncertain, needs human eye)
+   💬 EDITORIAL                   — subjective/judgment claim, not strictly falsifiable. Examples: "best game of his career," "showed grit," "the turning point was X," "looked sharp out of the bullpen." Sports writers are allowed to make these — flag them so the human reviewer sees opinion vs. fact, but do NOT treat as factual errors.
+   ❓ UNVERIFIED                  — factual claim you couldn't confirm via web (needs human eye)
    ❌ FALSE                       — contradicted by web or source data; demonstrably wrong
 
-A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, the claim is ❓ UNVERIFIED — do NOT mark it ❌ just because it's missing from the structured source data.
+A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, mark it ❓ UNVERIFIED. If the claim is opinion/judgment rather than verifiable fact, mark it 💬 EDITORIAL — do NOT FAIL the article over an editorial judgment.
 
 Pay particular attention to:
 - Career-stage / tenure claims (rookie, first-year, "N games into their career") — verify against team KB notes AND public sources.
 - Coach / front-office names — verify against the team's official site.
 - Roster discipline — every player named MUST exist on the current roster (cross-check ESPN team page).
-- Linescore / quarter splits — verify against ESPN box score for that specific game.
+- Linescore / inning / quarter splits — verify against ESPN box score for that specific game.
 - Per-player stat lines — verify against ESPN box score; do not approve based on plausibility.
+- Play-event precision — when the article describes how a player produced a result (e.g. "reached on a walk and ultimately came through"), check whether the wording compresses separate events in a way that misleads. A walk + later RBI groundout is two separate events, not one phrase.
 
 Output format (strict — keep this format even after web searches):
 
 VERDICT: PASS | NEEDS_REVISION | FAIL
 
-(PASS = every claim is ✅ or ⚠️. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
+(PASS = every claim is ✅ / ⚠️ / 💬. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
 
 CLAIMS:
-1. "[exact quote from article]" → ✅/⚠️/❓/❌  [reason + citation, e.g. "ESPN box score confirms 26 pts on 9-15 FG: espn.com/wnba/boxscore/_/gameId/..." or "not found on ESPN, WNBA.com, or mystics.wnba.com"]
+1. "[exact quote from article]" → ✅/⚠️/💬/❓/❌  [reason + citation, e.g. "ESPN box score confirms 1-4 H-AB: espn.com/mlb/boxscore/_/gameId/..." or "AP/CBS contradict: actual play was RBI groundout, not walk" or "subjective judgment about pitching performance — not strictly verifiable"]
 2. ...
 
-SUMMARY: 2-3 sentences naming the most serious factual issues, or "no factual issues found" — note ⚠️ process flags separately if relevant.
+SUMMARY: 2-3 sentences naming the most serious factual issues, or "no factual issues found" — note 💬 editorial claims + ⚠️ process flags separately if relevant.
 
-Do not invent issues. Do not approve a claim just because it sounds plausible. Do not ❌ a claim just because it isn't in the structured source data — if the web confirms it, it's ⚠️ at worst.
+Do not invent issues. Do not approve a claim just because it sounds plausible. Do not ❌ a claim just because it isn't in the structured source data — if the web confirms it, it's ⚠️. Do not ❌ a subjective judgment — those go in 💬.
 """
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as outf:
         out_path = outf.name

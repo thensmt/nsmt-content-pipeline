@@ -1,0 +1,79 @@
+name: 3-Model Comparison (Nationals season feature)
+
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: 'Comma-separated subset: haiku,sonnet,opus (default: all 3)'
+        required: false
+        default: 'haiku,sonnet,opus'
+      stop_after:
+        description: 'Stop after this model (e.g. sonnet to skip Opus)'
+        required: false
+        default: ''
+      no_discord:
+        description: 'Skip Discord posts (drafts artifact only)'
+        required: false
+        default: 'false'
+      date:
+        description: 'Story-packet date YYYY-MM-DD (default 2026-05-21)'
+        required: false
+        default: '2026-05-21'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate Nationals packet for the comparison date
+        env:
+          INPUT_DATE: ${{ github.event.inputs.date }}
+        run: |
+          PACKET_DATE="${INPUT_DATE:-2026-05-21}"
+          echo "Generating Nationals packet for $PACKET_DATE"
+          python -m ingestion.generate_story_packet --team nationals --date "$PACKET_DATE" || \
+            echo "Packet generation failed; writer will fall back to KB + web_search."
+
+      - name: Run 3-model comparison
+        env:
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
+          DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
+          INPUT_MODELS:     ${{ github.event.inputs.models }}
+          INPUT_STOP_AFTER: ${{ github.event.inputs.stop_after }}
+          INPUT_NO_DISCORD: ${{ github.event.inputs.no_discord }}
+          INPUT_DATE:       ${{ github.event.inputs.date }}
+        run: |
+          ARGS=()
+          if [ -n "$INPUT_MODELS" ]; then
+            ARGS+=(--models "$INPUT_MODELS")
+          fi
+          if [ -n "$INPUT_STOP_AFTER" ]; then
+            ARGS+=(--stop-after "$INPUT_STOP_AFTER")
+          fi
+          if [ "$INPUT_NO_DISCORD" = "true" ]; then
+            ARGS+=(--no-discord)
+          fi
+          if [ -n "$INPUT_DATE" ]; then
+            ARGS+=(--date "$INPUT_DATE")
+          fi
+          python scripts/compare_models.py "${ARGS[@]}"
+
+      - name: Upload comparison drafts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-comparison-${{ github.run_id }}
+          path: drafts/nationals-season-*.md
+          if-no-files-found: warn

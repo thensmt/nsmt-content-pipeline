@@ -354,5 +354,12 @@
     }
   ],
   "verification_notes": "MAJOR ORG CHANGE: Old leadership (Dave Martinez as manager, Mike Rizzo as president of baseball ops) fired in July 2025. Miguel Cairo served as interim manager rest of 2025 (29-43) but was not retained. Current 2026 leadership: Manager Blake Butera (33, former Rays minor-league manager), Pres. of Baseball Ops Paul Toboni (35, from Boston), GM Ani Kilambi (31, from Philadelphia). Owner Mark Lerner (Lerner family) confirmed via Wikipedia. Coaching staff fully verified via SI / Federal Baseball / District on Deck reports. Roster pulled from ESPN as of 2026-05-21 -- this is current Active Roster mid-2026 season. Stadium capacity left null -- Wikipedia did not return it in fetch (true value is ~41,000 but not pulled from authoritative source so omitted per 'never fabricate' rule). Recent games and upcoming games verified directly from ESPN schedule page. Standings at 25-25 second in NL East is unusually competitive for a rebuilding team -- worth flagging.",
-  "last_updated": "2026-05-22"
+  "last_updated": "2026-05-22",
+  "editorial_lessons": [
+    {
+      "date_added": "2026-05-22",
+      "lesson": "Avoid 'best game of his career' framing for active pitchers like Cade Cavalli — too easily contradicted by prior outings. If you want to praise a specific outing, praise a specific dimension: 'season-high 9 K's', 'longest start of his career so far', 'first quality start since X'. Specificity beats hyperbole.",
+      "source": "Codex CLI review of 2026-05-22 Nationals @ Mets recap (Discord #recap-pipeline thread)"
+    }
+  ]
 }

@@ -509,6 +509,21 @@ def kb_context_block(kb):
             tag = f" ({', '.join(tag_parts)})" if tag_parts else ""
             lines.append(f"  · {nm}{tag}")
 
+    # Editorial lessons accumulated from past fact-check / Codex reviews of
+    # articles about this team. Each entry is `{date_added, lesson, source}`.
+    # The writer should treat these as binding instructions for the current
+    # article — they were learned the hard way.
+    lessons = kb.get("editorial_lessons") or []
+    if lessons:
+        lines.append("- Prior-review lessons for this team (apply these — they reflect issues caught by fact-checkers on past articles):")
+        for entry in lessons:
+            if isinstance(entry, dict):
+                text = entry.get("lesson", "")
+                if text:
+                    lines.append(f"  · {text}")
+            elif isinstance(entry, str) and entry.strip():
+                lines.append(f"  · {entry.strip()}")
+
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -778,6 +793,14 @@ GUARDRAILS = (
     "unless that exact fact appears in the Verified team context above. Even "
     "if you 'know' something from elsewhere — omit it. Player tenure and "
     "coach tenure are the only career-stage claims allowed.\n"
+    "- PLAY-EVENT PRECISION: when describing how a player produced a result, "
+    "keep separate events separate. Don't compress 'reached base via walk' + "
+    "'later scored on a groundout' into a single phrase like 'reaching via "
+    "walk and ultimately coming through' — that reads as if the walk drove "
+    "the run in. Name each event distinctly. Same applies across sports: "
+    "'stole the ball and ultimately knocked down the three' should make clear "
+    "whether the steal led directly to the three-point shot or whether they "
+    "were separate possessions.\n"
     "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
     "experiments, or any 'this team is X' framing in the first ~10 games of a "
     "season, hedge openly. Acknowledge sample-size limits."
@@ -795,9 +818,16 @@ WRITER_MAX_WEB_SEARCHES = 5
 _SOURCE_HIERARCHY_RULE = (
     "- SOURCE HIERARCHY: when stating any factual claim, prefer in this order: "
     "(1) the Verified team context above, (2) the Story packet's boxscore / "
-    "game_summary / standings_context, (3) web_search results citing ESPN / "
-    "league-official / team-official. NEVER state a stat or bio fact from memory "
-    "without one of these three anchors.\n"
+    "game_summary / standings_context, (3) web_search results from the "
+    "authoritative-sources list below. NEVER state a stat or bio fact from "
+    "memory without one of these three anchors.\n"
+    "  Authoritative web sources (in priority order): ESPN.com, AP (apnews.com), "
+    "the league's official site (MLB.com / NBA.com / NHL.com / NFL.com / WNBA.com "
+    "/ MLS / NWSL / UFL), CBS Sports (cbssports.com), Yahoo Sports, the team's "
+    "official site, The Athletic, NBC Sports, Sports Reference family "
+    "(Baseball-Reference / Basketball-Reference / Pro-Football-Reference / "
+    "Hockey-Reference), major regional newspaper coverage (Washington Post for "
+    "DMV teams). Avoid social media, fan blogs, fan wikis as primary sources.\n"
     "- BOXSCORE DISCIPLINE: when the Story packet includes a per-player "
     "boxscore, EVERY per-player stat in the article MUST come verbatim from "
     "those rows — whatever stats the sport tracks (points/runs/goals, "
@@ -919,20 +949,25 @@ Also provide at the very end, on a new line starting with EXCERPT: a one-sentenc
 
 # ── Adversarial fact-check pass ───────────────────────────────────────────────
 #
-# Added 2026-05-22 after the Mystics demo eval, rebuilt 2026-05-22 (later) to
-# actually verify claims against the open internet rather than just check
-# source-consistency. Calls Sonnet 4.6 with Anthropic's web_search server tool
-# enabled and a 4-tier claim grade:
+# Added 2026-05-22 after the Mystics demo eval. Calls Sonnet 4.6 with
+# Anthropic's web_search server tool enabled and a 5-tier claim grade:
 #
 #   ✅ SUPPORTED                   — true (verified via source OR web)
 #   ⚠️  OUT_OF_SOURCE_BUT_VERIFIED — true, but writer pulled from outside
 #                                    the source set we handed them (process
 #                                    note, not a factual error)
+#   💬 EDITORIAL                   — subjective judgment, not falsifiable
+#                                    (e.g. "best game of his career") —
+#                                    flagged for visibility but doesn't fail
+#                                    the article. Added 2026-05-22 after a
+#                                    Codex review FAIL'd an article for an
+#                                    editorial claim that was reasonable
+#                                    sports-writer language.
 #   ❓ UNVERIFIED                  — couldn't be confirmed by web search
 #   ❌ FALSE                       — contradicted by web or source
 #
 # Article-level verdict from claim mix:
-#   PASS              — all ✅ (or ✅ + ⚠️ only)
+#   PASS              — all ✅ + ⚠️ + 💬 (factually clean; opinions allowed)
 #   NEEDS_REVISION    — any ❓
 #   FAIL              — any ❌
 #
@@ -970,19 +1005,20 @@ def fact_check_article(article_text, kb, packet, team):
 
 You have TWO sources of truth:
 1. The structured source data block below (the team KB + any story packet the writer was given). This is the data the writer was supposed to draw from.
-2. The open internet. Authoritative sources for sports facts in priority order: ESPN.com, the league's official site (WNBA.com / NBA.com / NHL.com / NFL.com / MLB.com / MLS / NWSL / UFL), the team's official site, Basketball-Reference / Pro-Football-Reference / Baseball-Reference. Avoid social media / fan blogs / unsourced wikis as primary sources.
+2. The open internet. Authoritative sources in priority order: ESPN.com, AP (apnews.com), the league's official site (MLB.com / NBA.com / NHL.com / NFL.com / WNBA.com / MLS / NWSL / UFL), CBS Sports, Yahoo Sports, the team's official site, The Athletic, NBC Sports, Sports Reference family (Baseball-Reference / Basketball-Reference / Pro-Football-Reference / Hockey-Reference), and major regional newspaper coverage (Washington Post for DMV teams). Avoid social media / fan blogs / unsourced wikis as primary sources.
 
-Your job: extract every factual claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details). For each claim, do this:
+Your job: extract every factual or judgment-style claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details, AND editorial assertions like "best game of his career" / "the turning point was X"). For each claim, do this:
 
 A. Check the structured source data block.
-B. If it's not in the source block, search the web. Use ESPN/league/team-official sites preferentially. Cite the URL(s) you used.
-C. Grade the claim:
-   ✅ SUPPORTED                   — verified true (appears in source data OR confirmed via web; cite source)
+B. If it's not in the source block, search the web. Use the authoritative sources above. Cite the URL(s) you used.
+C. Grade the claim with the 5-tier shape:
+   ✅ SUPPORTED                   — verified true (in source data OR confirmed via web; cite source)
    ⚠️  OUT_OF_SOURCE_BUT_VERIFIED — true, but not in the structured source data we handed the writer (process note: writer pulled from outside source)
-   ❓ UNVERIFIED                  — couldn't be confirmed by web search (uncertain, needs human eye)
+   💬 EDITORIAL                   — subjective/judgment claim that is not strictly falsifiable. Examples: "best game of his career," "showed grit," "the game turned on X," "looked tired in the late innings." Sports writers are allowed to make these, but flag them so the human reviewer sees what's being asserted as opinion vs. fact.
+   ❓ UNVERIFIED                  — factual claim you couldn't confirm via web search (uncertain, needs human eye)
    ❌ FALSE                       — contradicted by web or source data; demonstrably wrong
 
-Be precise about which web sources you used. A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, the claim is ❓ UNVERIFIED — do NOT mark it ❌ just because it's missing from the structured source data.
+Be precise about which web sources you used. A claim is ❌ FALSE only if you actively found contradicting authoritative evidence. If web search returns nothing definitive, the claim is ❓ UNVERIFIED — do NOT mark it ❌ just because it's missing from the structured source data. And if a claim is opinion/judgment rather than verifiable fact, mark it 💬 — do NOT mark it ❌ just because you can't verify a subjective judgment.
 
 Structured source data (JSON):
 ```
@@ -998,15 +1034,15 @@ Output format (strict — keep this format even after using web search):
 
 VERDICT: PASS | NEEDS_REVISION | FAIL
 
-(PASS = every claim is ✅ or ⚠️. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
+(PASS = every claim is ✅ / ⚠️ / 💬. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
 
 CLAIMS:
-1. "[exact quote from article]" → ✅/⚠️/❓/❌  [reason + citation, e.g. "ESPN box score confirms 26 pts on 9-15 FG (espn.com/...)" or "not found on ESPN, WNBA.com, or mystics.wnba.com"]
+1. "[exact quote from article]" → ✅/⚠️/💬/❓/❌  [reason + citation, e.g. "ESPN box score confirms 9-of-15 FG (espn.com/...)" or "not found on ESPN, MLB.com, or AP" or "subjective judgment — not verifiable via source"]
 2. ...
 
-SUMMARY: [2-3 sentences naming the most serious factual issues, or "no factual issues found" — note ⚠️ process flags separately if relevant]
+SUMMARY: [2-3 sentences naming the most serious factual issues, or "no factual issues found" — note 💬 editorial claims + ⚠️ process flags separately if relevant]
 
-Do not invent issues. Do not be lenient on ❌. But ALSO do not mark a claim ❌ when web search confirms it — those go in the ⚠️ bucket instead."""
+Do not invent issues. Do not be lenient on ❌. But ALSO do not mark a claim ❌ when web search confirms it (those go in ⚠️), and do not mark a subjective judgment ❌ just because you can't verify it (those go in 💬)."""
 
     try:
         resp = requests.post(
