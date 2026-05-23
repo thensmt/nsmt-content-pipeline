@@ -25,7 +25,7 @@
   "front_office": {
     "general_manager": "Nathan Minion",
     "president": null,
-    "head_of_basketball_ops": null
+    "head_of_soccer_ops": null
   },
   "head_coach": {
     "name": "Adrián González",
@@ -34,69 +34,337 @@
     "career_record_with_team": null
   },
   "coaching_staff": [
-    {"name": "Cristian Catena", "role": "Assistant Coach"},
-    {"name": "Salva Todoli", "role": "Video Analyst Lead"},
-    {"name": "Victoria Boardman", "role": "Player Development Specialist"},
-    {"name": "Mike Bristol", "role": "Director of Player Personnel"},
-    {"name": "Nicole Barnhart", "role": "Goalkeeper Coach"}
+    {
+      "name": "Cristian Catena",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Salva Todoli",
+      "role": "Video Analyst Lead"
+    },
+    {
+      "name": "Victoria Boardman",
+      "role": "Player Development Specialist"
+    },
+    {
+      "name": "Mike Bristol",
+      "role": "Director of Player Personnel"
+    },
+    {
+      "name": "Nicole Barnhart",
+      "role": "Goalkeeper Coach"
+    }
   ],
   "roster": [
-    {"name": "Aubrey Kingsbury", "position": "GK", "number": "1", "notes": null},
-    {"name": "Trinity Rodman", "position": "F", "number": "2", "notes": "USWNT forward"},
-    {"name": "Casey Krueger", "position": "D", "number": "3", "notes": null},
-    {"name": "Rebeca Bernal", "position": "D", "number": "4", "notes": null},
-    {"name": "Élisabeth Tsé", "position": "D", "number": "5", "notes": null},
-    {"name": "Kate Wiesner", "position": "D", "number": "6", "notes": null},
-    {"name": "Tara Rudd", "position": "D", "number": "9", "notes": null},
-    {"name": "Leicy Santos", "position": "M", "number": "10", "notes": null},
-    {"name": "Claudia Martínez", "position": "F", "number": "11", "notes": null},
-    {"name": "Andi Sullivan", "position": "M", "number": "12", "notes": null},
-    {"name": "Lucia Di Guglielmo", "position": "D", "number": "13", "notes": null},
-    {"name": "Gabrielle Carle", "position": "D", "number": "14", "notes": null},
-    {"name": "Tamara Bolt", "position": "F", "number": "16", "notes": null},
-    {"name": "Hal Hershfelt", "position": "M", "number": "17", "notes": null},
-    {"name": "Sandy MacIver", "position": "GK", "number": "18", "notes": null},
-    {"name": "Rosemonde Kouassi", "position": "F", "number": "19", "notes": null},
-    {"name": "Deborah Abiodun", "position": "M", "number": "20", "notes": null},
-    {"name": "Gift Monday", "position": "F", "number": "21", "notes": null},
-    {"name": "Esme Morgan", "position": "D", "number": "24", "notes": null},
-    {"name": "Paige Metayer", "position": "M", "number": "26", "notes": null},
-    {"name": "Sofia Cantore", "position": "F", "number": "27", "notes": null},
-    {"name": "Sara Wojdelko", "position": "GK", "number": "28", "notes": null},
-    {"name": "Emma Gaines-Ramos", "position": "F", "number": "29", "notes": null},
-    {"name": "Kaylie Collins", "position": "GK", "number": "31", "notes": null},
-    {"name": "Ashley Hatch", "position": "F", "number": "33", "notes": null},
-    {"name": "Molly Skurcenski", "position": "M", "number": "34", "notes": null},
-    {"name": "Madison Haugen", "position": "D", "number": "35", "notes": null}
+    {
+      "name": "Kaylie Collins",
+      "position": "G",
+      "number": "31",
+      "notes": null
+    },
+    {
+      "name": "Aubrey Kingsbury",
+      "position": "G",
+      "number": "1",
+      "notes": null
+    },
+    {
+      "name": "Sandy MacIver",
+      "position": "G",
+      "number": "18",
+      "notes": null
+    },
+    {
+      "name": "Sara Wojdelko",
+      "position": "G",
+      "number": "28",
+      "notes": null
+    },
+    {
+      "name": "Gabrielle Carle",
+      "position": "D",
+      "number": "14",
+      "notes": null
+    },
+    {
+      "name": "Casey Krueger",
+      "position": "D",
+      "number": "3",
+      "notes": null
+    },
+    {
+      "name": "Rebeca Bernal",
+      "position": "D",
+      "number": "4",
+      "notes": null
+    },
+    {
+      "name": "Tara Rudd",
+      "position": "D",
+      "number": "9",
+      "notes": null
+    },
+    {
+      "name": "Madison Haugen",
+      "position": "D",
+      "number": "35",
+      "notes": null
+    },
+    {
+      "name": "Esme Morgan",
+      "position": "D",
+      "number": "24",
+      "notes": null
+    },
+    {
+      "name": "Lucia Di Guglielmo",
+      "position": "D",
+      "number": "13",
+      "notes": null
+    },
+    {
+      "name": "Kate Wiesner",
+      "position": "D",
+      "number": "6",
+      "notes": null
+    },
+    {
+      "name": "Élisabeth Tsé",
+      "position": "D",
+      "number": "5",
+      "notes": null
+    },
+    {
+      "name": "Andi Sullivan",
+      "position": "M",
+      "number": "12",
+      "notes": null
+    },
+    {
+      "name": "Leicy Santos",
+      "position": "M",
+      "number": "10",
+      "notes": null
+    },
+    {
+      "name": "Hal Hershfelt",
+      "position": "M",
+      "number": "17",
+      "notes": null
+    },
+    {
+      "name": "Deborah Abiodun",
+      "position": "M",
+      "number": "20",
+      "notes": null
+    },
+    {
+      "name": "Molly Skurcenski",
+      "position": "M",
+      "number": "34",
+      "notes": null
+    },
+    {
+      "name": "Paige Metayer",
+      "position": "M",
+      "number": "26",
+      "notes": null
+    },
+    {
+      "name": "Ashley Hatch",
+      "position": "F",
+      "number": "33",
+      "notes": null
+    },
+    {
+      "name": "Trinity Rodman",
+      "position": "F",
+      "number": "2",
+      "notes": "USWNT forward"
+    },
+    {
+      "name": "Sofia Cantore",
+      "position": "F",
+      "number": "27",
+      "notes": null
+    },
+    {
+      "name": "Gift Monday",
+      "position": "F",
+      "number": "21",
+      "notes": null
+    },
+    {
+      "name": "Rosemonde Kouassi",
+      "position": "F",
+      "number": "19",
+      "notes": null
+    },
+    {
+      "name": "Claudia Martínez",
+      "position": "F",
+      "number": "11",
+      "notes": null
+    },
+    {
+      "name": "Emma Gaines-Ramos",
+      "position": "F",
+      "number": "29",
+      "notes": null
+    },
+    {
+      "name": "Tamara Bolt",
+      "position": "F",
+      "number": "16",
+      "notes": null
+    }
   ],
   "recent_games": [
-    {"date": "2026-03-13", "opponent": "Portland Thorns FC", "result": "L 0-1", "venue": "home", "notes": null},
-    {"date": "2026-03-20", "opponent": "Racing Louisville FC", "result": "D 2-2", "venue": "away", "notes": null},
-    {"date": "2026-03-25", "opponent": "Utah Royals FC", "result": "D 1-1", "venue": "home", "notes": null},
-    {"date": "2026-03-28", "opponent": "Denver Summit FC", "result": "D 0-0", "venue": "away", "notes": null},
-    {"date": "2026-04-05", "opponent": "Bay FC", "result": "W 2-0", "venue": "away", "notes": null},
-    {"date": "2026-04-24", "opponent": "Kansas City Current", "result": "W 4-0", "venue": "home", "notes": null},
-    {"date": "2026-04-29", "opponent": "Racing Louisville FC", "result": "W 1-0", "venue": "home", "notes": null},
-    {"date": "2026-05-02", "opponent": "Orlando Pride", "result": "W 4-2", "venue": "away", "notes": null},
-    {"date": "2026-05-10", "opponent": "Seattle Reign FC", "result": "W 1-0", "venue": "away", "notes": null},
-    {"date": "2026-05-15", "opponent": "San Diego Wave FC", "result": "L 1-2", "venue": "away", "notes": null},
-    {"date": "2026-05-20", "opponent": "CF Pachuca", "result": "W 1-0", "venue": "away", "notes": "Concacaf W Champions Cup Semifinal"}
+    {
+      "date": "2026-03-13",
+      "opponent": "Portland Thorns FC",
+      "result": "L 0-1",
+      "venue": "home",
+      "notes": null
+    },
+    {
+      "date": "2026-03-20",
+      "opponent": "Racing Louisville FC",
+      "result": "D 2-2",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-03-25",
+      "opponent": "Utah Royals FC",
+      "result": "D 1-1",
+      "venue": "home",
+      "notes": null
+    },
+    {
+      "date": "2026-03-28",
+      "opponent": "Denver Summit FC",
+      "result": "D 0-0",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-04-05",
+      "opponent": "Bay FC",
+      "result": "W 2-0",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-04-24",
+      "opponent": "Kansas City Current",
+      "result": "W 4-0",
+      "venue": "home",
+      "notes": null
+    },
+    {
+      "date": "2026-04-29",
+      "opponent": "Racing Louisville FC",
+      "result": "W 1-0",
+      "venue": "home",
+      "notes": null
+    },
+    {
+      "date": "2026-05-02",
+      "opponent": "Orlando Pride",
+      "result": "W 4-2",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-05-10",
+      "opponent": "Seattle Reign FC",
+      "result": "W 1-0",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-05-15",
+      "opponent": "San Diego Wave FC",
+      "result": "L 1-2",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-05-20",
+      "opponent": "CF Pachuca",
+      "result": "W 1-0",
+      "venue": "away",
+      "notes": "Concacaf W Champions Cup Semifinal"
+    }
   ],
   "upcoming_games": [
-    {"date": "2026-05-23", "opponent": "Club América", "venue": "home", "tipoff_et": "21:30", "notes": "Concacaf W Champions Cup"},
-    {"date": "2026-05-30", "opponent": "Seattle Reign FC", "venue": "home", "tipoff_et": "18:30", "notes": "NWSL — earliest sellout in club history"},
-    {"date": "2026-07-03", "opponent": "Houston Dash", "venue": "home", "tipoff_et": "20:00"},
-    {"date": "2026-07-11", "opponent": "North Carolina Courage", "venue": "away", "tipoff_et": "18:30"},
-    {"date": "2026-07-15", "opponent": "Gotham FC", "venue": "away", "tipoff_et": "20:00"}
+    {
+      "date": "2026-05-23",
+      "opponent": "Club América",
+      "venue": "home",
+      "tipoff_et": "21:30",
+      "notes": "Concacaf W Champions Cup"
+    },
+    {
+      "date": "2026-05-30",
+      "opponent": "Seattle Reign FC",
+      "venue": "home",
+      "tipoff_et": "18:30",
+      "notes": "NWSL — earliest sellout in club history"
+    },
+    {
+      "date": "2026-07-03",
+      "opponent": "Houston Dash",
+      "venue": "home",
+      "tipoff_et": "20:00"
+    },
+    {
+      "date": "2026-07-11",
+      "opponent": "North Carolina Courage",
+      "venue": "away",
+      "tipoff_et": "18:30"
+    },
+    {
+      "date": "2026-07-15",
+      "opponent": "Gotham FC",
+      "venue": "away",
+      "tipoff_et": "20:00"
+    }
   ],
   "rivalries": [],
   "sources": [
-    {"url": "https://www.espn.com/soccer/team/squad/_/id/15365/washington-spirit", "scraped_at": "2026-05-21", "notes": "Full 2026 squad with positions and jersey numbers"},
-    {"url": "https://en.wikipedia.org/wiki/Washington_Spirit", "scraped_at": "2026-05-21", "notes": "Ownership (Michele Kang), GM, head coach, assistant coaches, founding year, home stadium"},
-    {"url": "https://washingtonspirit.com/schedule/", "scraped_at": "2026-05-21", "notes": "Recent completed games and current 2026 record (6-2-3)"},
-    {"url": "https://washingtonspirit.com/blog/2026/05/04/washington-spirit-head-coach-adrian-gonzalez-named-nwsl-coach-of-the-month/", "scraped_at": "2026-05-21", "notes": "Head coach Adrián González named NWSL Coach of the Month May 2026"},
-    {"url": "https://www.espn.com/soccer/team/fixtures/_/id/15365/washington-spirit", "scraped_at": "2026-05-21", "notes": "Upcoming fixtures and table position"}
+    {
+      "url": "https://www.espn.com/soccer/team/squad/_/id/15365/washington-spirit",
+      "scraped_at": "2026-05-21",
+      "notes": "Full 2026 squad with positions and jersey numbers"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Washington_Spirit",
+      "scraped_at": "2026-05-21",
+      "notes": "Ownership (Michele Kang), GM, head coach, assistant coaches, founding year, home stadium"
+    },
+    {
+      "url": "https://washingtonspirit.com/schedule/",
+      "scraped_at": "2026-05-21",
+      "notes": "Recent completed games and current 2026 record (6-2-3)"
+    },
+    {
+      "url": "https://washingtonspirit.com/blog/2026/05/04/washington-spirit-head-coach-adrian-gonzalez-named-nwsl-coach-of-the-month/",
+      "scraped_at": "2026-05-21",
+      "notes": "Head coach Adrián González named NWSL Coach of the Month May 2026"
+    },
+    {
+      "url": "https://www.espn.com/soccer/team/fixtures/_/id/15365/washington-spirit",
+      "scraped_at": "2026-05-21",
+      "notes": "Upcoming fixtures and table position"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.nwsl/teams/15365",
+      "scraped_at": "2026-05-22",
+      "notes": "Auto-refresh: record, roster, recent_games, upcoming_games"
+    }
   ],
   "verification_notes": "Full 27-player squad verified via ESPN squad page; cross-checked select players (Trinity Rodman, Andi Sullivan, Ashley Hatch — confirmed long-time Spirit players). Player names with accents (Élisabeth Tsé, Adrián González, Leicy Santos, Claudia Martínez, Lucia Di Guglielmo, Rosemonde Kouassi) preserved exactly. Head coach Adrián González confirmed via both Wikipedia and team's official blog. Record cited as 6-2-3 from washingtonspirit.com/schedule; an earlier search result said 5-2-3/18 pts. The 6-2-3 count appears to include the May 20 Concacaf semifinal which should not count toward NWSL standings — NWSL-only record is likely 5-2-3 with 18 pts. Both figures noted in verification. No formal designated rivalry recorded. GM Nathan Minion sourced from Wikipedia only — recommend manual verification.",
-  "last_updated": "2026-05-21"
+  "last_updated": "2026-05-22"
 }

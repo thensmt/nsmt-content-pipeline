@@ -5,11 +5,11 @@
   "league_full": "Women's National Basketball Association",
   "conference": "Eastern",
   "division": null,
-  "espn_id": "14",
+  "espn_id": "16",
   "official_url": "https://mystics.wnba.com",
   "founded": "1998",
   "current_season": "2026",
-  "current_record": "2-2 (as of 2026-05-18)",
+  "current_record": "2-2 (0-1 home, 2-1 away) as of 2026-05-22",
   "venue": {
     "name": "CareFirst Arena",
     "city": "Washington",
@@ -34,48 +34,195 @@
     "career_record_with_team": null
   },
   "coaching_staff": [
-    {"name": "Jessie Miller", "role": "Assistant Coach"},
-    {"name": "Emre Vatansever", "role": "Assistant Coach"},
-    {"name": "Barbara Turner", "role": "Assistant Coach"}
+    {
+      "name": "Jessie Miller",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Emre Vatansever",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Barbara Turner",
+      "role": "Assistant Coach"
+    }
   ],
   "roster": [
-    {"name": "Shakira Austin", "position": "C", "number": "0", "notes": null},
-    {"name": "Alicia Florez Getino", "position": "G", "number": "2", "notes": null},
-    {"name": "Rori Harmon", "position": "G", "number": "3", "notes": null},
-    {"name": "Alex Wilson", "position": "G", "number": "4", "notes": null},
-    {"name": "Darianna Littlepage-Buggs", "position": "G", "number": "5", "notes": null},
-    {"name": "Georgia Amoore", "position": "G", "number": "8", "notes": null},
-    {"name": "Michaela Onyenwere", "position": "F", "number": "12", "notes": null},
-    {"name": "Cassandre Prosper", "position": "G", "number": "18", "notes": null},
-    {"name": "Sonia Citron", "position": "G", "number": "22", "notes": null},
-    {"name": "Cotie McMahon", "position": "G", "number": "23", "notes": null},
-    {"name": "Angela Dugalic", "position": "F", "number": "32", "notes": null},
-    {"name": "Lucy Olsen", "position": "G", "number": "33", "notes": null},
-    {"name": "Kiki Iriafen", "position": "F", "number": "44", "notes": "2025 No. 4 overall draft pick"},
-    {"name": "Lauren Betts", "position": "C", "number": "51", "notes": null}
+    {
+      "name": "Georgia Amoore",
+      "position": "G",
+      "number": "8",
+      "notes": null
+    },
+    {
+      "name": "Shakira Austin",
+      "position": "C",
+      "number": "0",
+      "notes": null
+    },
+    {
+      "name": "Lauren Betts",
+      "position": "C",
+      "number": "51",
+      "notes": null
+    },
+    {
+      "name": "Sonia Citron",
+      "position": "G",
+      "number": "22",
+      "notes": null
+    },
+    {
+      "name": "Angela Dugalic",
+      "position": "F",
+      "number": "32",
+      "notes": null
+    },
+    {
+      "name": "Alicia Florez Getino",
+      "position": "G",
+      "number": "2",
+      "notes": null
+    },
+    {
+      "name": "Rori Harmon",
+      "position": "G",
+      "number": "3",
+      "notes": null
+    },
+    {
+      "name": "Kiki Iriafen",
+      "position": "F",
+      "number": "44",
+      "notes": "2025 No. 4 overall draft pick"
+    },
+    {
+      "name": "Darianna Littlepage-Buggs",
+      "position": "G",
+      "number": "5",
+      "notes": null
+    },
+    {
+      "name": "Cotie McMahon",
+      "position": "G",
+      "number": "23",
+      "notes": null
+    },
+    {
+      "name": "Lucy Olsen",
+      "position": "G",
+      "number": "33",
+      "notes": null
+    },
+    {
+      "name": "Michaela Onyenwere",
+      "position": "F",
+      "number": "12",
+      "notes": null
+    },
+    {
+      "name": "Cassandre Prosper",
+      "position": "G",
+      "number": "18",
+      "notes": null
+    },
+    {
+      "name": "Alex Wilson",
+      "position": "G",
+      "number": "4",
+      "notes": null
+    }
   ],
   "recent_games": [
-    {"date": "2026-05-08", "opponent": "Toronto Tempo", "result": "W 68-65", "venue": "away", "notes": null},
-    {"date": "2026-05-10", "opponent": "New York Liberty", "result": "L 98-93 OT", "venue": "home", "notes": "Overtime loss"},
-    {"date": "2026-05-15", "opponent": "Indiana Fever", "result": "W 104-102 OT", "venue": "away", "notes": "Overtime win"},
-    {"date": "2026-05-18", "opponent": "Dallas Wings", "result": "L 92-69", "venue": "away", "notes": null}
+    {
+      "date": "2026-05-08",
+      "opponent": "Toronto Tempo",
+      "result": "W 68-65",
+      "venue": "away",
+      "notes": null
+    },
+    {
+      "date": "2026-05-10",
+      "opponent": "New York Liberty",
+      "result": "L 98-93 OT",
+      "venue": "home",
+      "notes": "Overtime loss"
+    },
+    {
+      "date": "2026-05-15",
+      "opponent": "Indiana Fever",
+      "result": "W 104-102 OT",
+      "venue": "away",
+      "notes": "Overtime win"
+    },
+    {
+      "date": "2026-05-18",
+      "opponent": "Dallas Wings",
+      "result": "L 92-69",
+      "venue": "away",
+      "notes": null
+    }
   ],
   "upcoming_games": [
-    {"date": "2026-05-24", "opponent": "Seattle Storm", "venue": "away", "tipoff_et": null},
-    {"date": "2026-05-27", "opponent": "Seattle Storm", "venue": "away", "tipoff_et": null},
-    {"date": "2026-05-29", "opponent": "Los Angeles Sparks", "venue": "home", "tipoff_et": null},
-    {"date": "2026-06-02", "opponent": "Chicago Sky", "venue": "home", "tipoff_et": null},
-    {"date": "2026-06-06", "opponent": "Atlanta Dream", "venue": "away", "tipoff_et": null},
-    {"date": "2026-06-08", "opponent": "Indiana Fever", "venue": "home", "tipoff_et": null},
-    {"date": "2026-06-12", "opponent": "Toronto Tempo", "venue": "home", "tipoff_et": null}
+    {
+      "date": "2026-05-24",
+      "opponent": "Seattle Storm",
+      "venue": "away",
+      "start_time_et": null
+    },
+    {
+      "date": "2026-05-28",
+      "opponent": "Seattle Storm",
+      "venue": "away",
+      "start_time_et": null
+    },
+    {
+      "date": "2026-05-29",
+      "opponent": "Los Angeles Sparks",
+      "venue": "home",
+      "start_time_et": null
+    },
+    {
+      "date": "2026-06-02",
+      "opponent": "Chicago Sky",
+      "venue": "home",
+      "start_time_et": null
+    },
+    {
+      "date": "2026-06-06",
+      "opponent": "Atlanta Dream",
+      "venue": "away",
+      "start_time_et": null
+    }
   ],
   "rivalries": [],
   "sources": [
-    {"url": "https://www.espn.com/wnba/team/roster/_/name/wsh/washington-mystics", "scraped_at": "2026-05-21", "notes": "Active roster with jersey numbers and positions"},
-    {"url": "https://www.espn.com/wnba/team/schedule/_/name/wsh", "scraped_at": "2026-05-21", "notes": "Completed games and upcoming schedule with current record"},
-    {"url": "https://en.wikipedia.org/wiki/Washington_Mystics", "scraped_at": "2026-05-21", "notes": "Ownership, head coach, GM, assistant coaches, arena and founding info"},
-    {"url": "https://mystics.wnba.com/roster", "scraped_at": "2026-05-21", "notes": "Official roster URL (fetch timed out; cross-referenced via ESPN)"}
+    {
+      "url": "https://www.espn.com/wnba/team/roster/_/name/wsh/washington-mystics",
+      "scraped_at": "2026-05-21",
+      "notes": "Active roster with jersey numbers and positions"
+    },
+    {
+      "url": "https://www.espn.com/wnba/team/schedule/_/name/wsh",
+      "scraped_at": "2026-05-21",
+      "notes": "Completed games and upcoming schedule with current record"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Washington_Mystics",
+      "scraped_at": "2026-05-21",
+      "notes": "Ownership, head coach, GM, assistant coaches, arena and founding info"
+    },
+    {
+      "url": "https://mystics.wnba.com/roster",
+      "scraped_at": "2026-05-21",
+      "notes": "Official roster URL (fetch timed out; cross-referenced via ESPN)"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/16",
+      "scraped_at": "2026-05-22",
+      "notes": "Auto-refresh: record, roster, recent_games, upcoming_games"
+    }
   ],
   "verification_notes": "Roster of 14 players verified via ESPN (cross-referenced with Wikipedia roster context). Head coach Sydney Johnson confirmed via both ESPN and Wikipedia. Assistant coaches sourced from Wikipedia; an earlier search result mentioned Shelley Patterson and Ashley McGee as assistants but Wikipedia (more recent) lists Jessie Miller, Emre Vatansever, and Barbara Turner — used Wikipedia. Arena capacity and exact opening year for CareFirst Arena not confirmed (ESA opened 2018, rebrand to CareFirst more recent). No formal designated rivalries identified for WNBA. Record (2-2) reflects games through 2026-05-18; verify before publishing if more games played by post date.",
-  "last_updated": "2026-05-21"
+  "last_updated": "2026-05-22"
 }

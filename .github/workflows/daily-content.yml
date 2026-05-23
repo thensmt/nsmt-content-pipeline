@@ -2,13 +2,20 @@ name: NSMT Daily Content Generation
 
 on:
   schedule:
-    # Target: articles ready in Discord by 8 AM Eastern.
-    # GH Actions free-tier scheduled workflows are typically delayed 1-3 hours
-    # past the cron time, so we schedule ~3 hours early to land near 8 AM ET.
-    # 10:00 UTC = 6 AM EDT (Mar-Nov) / 5 AM EST (Nov-Mar)
-    # With typical 1-3 hr delay → actual run lands 7-9 AM ET year-round.
+    # 10:00 UTC = 6 AM EDT (Mar-Nov) / 5 AM EST (Nov-Mar). GH Actions
+    # free-tier scheduled workflows are typically delayed 1-3 hours past
+    # the cron, so actual run lands 7-9 AM ET year-round.
     - cron: '0 10 * * *'
-  workflow_dispatch:        # allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Date YYYY-MM-DD (default: yesterday)'
+        required: false
+        default: ''
+      team_slug:
+        description: 'Single team slug (e.g. nationals). Default: all in-season teams.'
+        required: false
+        default: ''
 
 jobs:
   generate-articles:
@@ -26,6 +33,23 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Generate story packet for scoped team
+        env:
+          INPUT_TEAM_SLUG:   ${{ github.event.inputs.team_slug }}
+          INPUT_TARGET_DATE: ${{ github.event.inputs.target_date }}
+        run: |
+          if [ -z "$INPUT_TEAM_SLUG" ]; then
+            echo "No team_slug input — skipping per-team packet generation."
+            exit 0
+          fi
+          PACKET_DATE="$INPUT_TARGET_DATE"
+          if [ -z "$PACKET_DATE" ]; then
+            PACKET_DATE=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
+          fi
+          echo "Generating packet for team=$INPUT_TEAM_SLUG date=$PACKET_DATE"
+          python -m ingestion.generate_story_packet --team "$INPUT_TEAM_SLUG" --date "$PACKET_DATE" || \
+            echo "Packet generation failed for $INPUT_TEAM_SLUG on $PACKET_DATE — writer will fall back to web_search."
+
       - name: Run content pipeline
         env:
           ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
@@ -33,7 +57,17 @@ jobs:
           NSMT_PASSWORD:        ${{ secrets.NSMT_PASSWORD }}
           DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
           DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
-        run: python generate_content.py
+          INPUT_TARGET_DATE: ${{ github.event.inputs.target_date }}
+          INPUT_TEAM_SLUG:   ${{ github.event.inputs.team_slug }}
+        run: |
+          ARGS=()
+          if [ -n "$INPUT_TARGET_DATE" ]; then
+            ARGS+=("$INPUT_TARGET_DATE")
+          fi
+          if [ -n "$INPUT_TEAM_SLUG" ]; then
+            ARGS+=(--team "$INPUT_TEAM_SLUG")
+          fi
+          python generate_content.py "${ARGS[@]}"
 
       - name: Upload draft articles (if any local fallbacks)
         uses: actions/upload-artifact@v4

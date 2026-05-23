@@ -103,7 +103,7 @@ TEAMS = [
      "persona": "Casper Wexler",   "voice": "modern, analytics-first, pace-and-space NBA tone",
      "channel_target": "RECAPS"},
     # NHL
-    {"name": "Washington Capitals",   "league": "NHL",      "espn_id": "15",  "sport": "hockey",      "league_slug": "nhl",                     "category": "pro",
+    {"name": "Washington Capitals",   "league": "NHL",      "espn_id": "23",  "sport": "hockey",      "league_slug": "nhl",                     "category": "pro",
      "persona": "Ada Frost",       "voice": "tactical, hockey-specific terminology, no-fluff rink-side voice",
      "channel_target": "RECAPS"},
     # MLB
@@ -111,15 +111,15 @@ TEAMS = [
      "persona": "Marcus Bell",     "voice": "stats-curious, contextualizes performances with historical baseball perspective",
      "channel_target": "RECAPS"},
     # WNBA
-    {"name": "Washington Mystics",    "league": "WNBA",     "espn_id": "14",  "sport": "basketball",  "league_slug": "wnba",                    "category": "pro",
+    {"name": "Washington Mystics",    "league": "WNBA",     "espn_id": "16",  "sport": "basketball",  "league_slug": "wnba",                    "category": "pro",
      "persona": "Sibyl Avery",     "voice": "insightful, draws connections between plays and player tendencies",
      "channel_target": "RECAPS"},
     # NWSL
-    {"name": "Washington Spirit",     "league": "NWSL",     "espn_id": "WAS", "sport": "soccer",      "league_slug": "usa.nwsl",                "category": "pro",
+    {"name": "Washington Spirit",     "league": "NWSL",     "espn_id": "15365", "sport": "soccer",    "league_slug": "usa.nwsl",                "category": "pro",
      "persona": "Wren Holloway",   "voice": "tactical, internationalist, women's-soccer-savvy",
      "channel_target": "RECAPS"},
     # MLS
-    {"name": "DC United",             "league": "MLS",      "espn_id": "DC",  "sport": "soccer",      "league_slug": "usa.1",                   "category": "pro",
+    {"name": "DC United",             "league": "MLS",      "espn_id": "193", "sport": "soccer",      "league_slug": "usa.1",                   "category": "pro",
      "persona": "Beckett Calloway","voice": "cosmopolitan, MLS-savvy, soccer-purist sensibility",
      "channel_target": "RECAPS"},
     # NBA G-League
@@ -1256,11 +1256,19 @@ def save_local_draft(title, body, team, game_date):
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-def run(target_date=None):
+def run(target_date=None, team_slug_filter=None):
+    """Generate recaps for all in-season DMV teams that played on `target_date`.
+
+    `team_slug_filter` scopes the run to a single team (matches the slug from
+    `_TEAM_SLUG_MAP`). Useful for cost-controlled testing via workflow_dispatch
+    without iterating the full TEAMS list.
+    """
     if target_date is None:
         target_date = date.today() - timedelta(days=1)  # yesterday by default
 
     print(f"\nNSMT Content Pipeline — {target_date.isoformat()}")
+    if team_slug_filter:
+        print(f"  scoped to team_slug={team_slug_filter!r}")
     print("=" * 50)
 
     # Get a single fresh token for this run
@@ -1272,7 +1280,11 @@ def run(target_date=None):
     fetched = {}
 
     skipped_offseason = []
+    skipped_filter = []
     for team in ALL_TEAMS:
+        if team_slug_filter and team_slug(team) != team_slug_filter:
+            skipped_filter.append(team["name"])
+            continue
         if not in_season(team, target_date):
             skipped_offseason.append(team["name"])
             continue
@@ -1332,16 +1344,25 @@ def run(target_date=None):
 
     if skipped_offseason:
         print(f"\nSkipped (out of season): {', '.join(skipped_offseason)}")
+    if skipped_filter:
+        print(f"Skipped ({len(skipped_filter)} teams — outside team_slug filter)")
 
     print(f"\nDone. {articles_generated} article(s) generated for {target_date.isoformat()}.")
     print("Review drafts at: https://admin.thensmt.com/#/blogs")
 
 
 if __name__ == "__main__":
-    # Optionally pass a date: python generate_content.py 2026-03-13
-    if len(sys.argv) > 1:
+    import argparse
+    parser = argparse.ArgumentParser(description="Daily content pipeline.")
+    parser.add_argument("date", nargs="?", default=None,
+                        help="Target date YYYY-MM-DD (default: yesterday).")
+    parser.add_argument("--team", default=None,
+                        help="Single team slug to process (e.g. 'nationals'). "
+                             "When provided, all other teams are skipped. "
+                             "Use for cost-controlled testing.")
+    args = parser.parse_args()
+    target = None
+    if args.date:
         from datetime import datetime
-        target = datetime.strptime(sys.argv[1], "%Y-%m-%d").date()
-    else:
-        target = None
-    run(target)
+        target = datetime.strptime(args.date, "%Y-%m-%d").date()
+    run(target, team_slug_filter=args.team)

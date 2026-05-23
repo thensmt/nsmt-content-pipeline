@@ -1,20 +1,22 @@
-"""Story packet generator.
+"""Story packet generator — one method for every team.
 
-Two entry points:
+Canonical entry point:
 
-- `build_story_packet("mystics", ...)` — the original Mystics-only path. Uses
-  the layered Mystics fetchers (ESPN, WNBA.com, mystics official site, reddit
-  stub) and emits a packet with the legacy basketball boxscore shape (`rows`).
-  Don't touch this path — the existing test suite covers it.
+- `build_story_packet_for_team(team_slug, ...)` — generic ESPN-only path used
+  for ALL teams in generate_content.ALL_TEAMS. Sport-parameterized, emits the
+  sport-neutral `boxscore.entries` shape. Adding a new team requires zero new
+  fetcher code.
 
-- `build_story_packet_for_team(team_slug, ...)` — the generic path for any
-  team in generate_content.ALL_TEAMS. Uses `ingestion.fetchers.espn_generic`
-  (sport-parameterized) and emits a packet with the new sport-neutral
-  boxscore shape (`entries`). This is what new sports (MLB, NFL, NHL, MLS,
-  NWSL, UFL) flow through.
+Legacy (deprecated, kept only for `tests/test_story_packet.py` compatibility):
 
-CLI accepts either path via `--team <slug>`. Mystics goes through the legacy
-path; everything else goes through the generic path.
+- `build_story_packet("mystics", ..., fetchers=...)` — the original Mystics-
+  only multi-source path (ESPN + WNBA.com + mystics_official + reddit_stub).
+  Emits the older `boxscore.rows` shape. CLI no longer invokes this by
+  default; use `--legacy` flag if you specifically need it (you almost
+  certainly don't).
+
+The CLI route: `python -m ingestion.generate_story_packet --team {slug} --date YYYY-MM-DD`
+runs the generic path for every team, including Mystics.
 """
 
 from __future__ import annotations
@@ -267,14 +269,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Generate a story packet JSON file for any team in ALL_TEAMS.")
     parser.add_argument("--team", required=True,
-                        help="Team slug (e.g. 'mystics', 'nationals'). Mystics uses the legacy "
-                             "multi-source fetcher; other teams use the generic ESPN-only path.")
+                        help="Team slug (e.g. 'mystics', 'nationals'). All teams go through "
+                             "the generic ESPN-only path — one method for every team.")
     parser.add_argument("--date", dest="target_date", type=_parse_date, default=date.today())
     parser.add_argument("--dry-run", action="store_true", help="Print validated JSON and do not write a file.")
+    parser.add_argument("--legacy", action="store_true",
+                        help="Mystics only: use the deprecated multi-source fetcher path "
+                             "(ESPN + WNBA.com + mystics_official + reddit_stub). Retained for "
+                             "the test_story_packet.py suite; do not use for new work.")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    if args.team == TEAM_SLUG:
+    if args.legacy and args.team == TEAM_SLUG:
+        # Legacy Mystics path — deprecated but kept for backwards-compat tests.
         packet = build_story_packet(args.team, args.target_date)
     else:
         packet = build_story_packet_for_team(args.team, args.target_date)

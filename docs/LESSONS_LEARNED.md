@@ -309,6 +309,131 @@ were hardcoded that don't generalize:
 
 ---
 
+### 10. Data hygiene + auto-refresh — five gotchas from the 2026-05-22 cross-team build-out
+
+When extending the pipeline from one team (Mystics) to all 19 teams across
+nine leagues, several class-of-failure patterns surfaced that don't appear
+when you only have one team in scope:
+
+**A. The TEAMS dict's `espn_id` values were lies for 4 of 9 pro teams.**
+
+The Mystics (`14` was Seattle Storm), Capitals (`15` was wrong), Spirit
+(`"WAS"` is not a valid soccer ID), and DC United (`"DC"` is not a valid
+soccer ID) all had `espn_id` values that — when fed to ESPN's
+team-specific endpoints (roster, schedule, team_info) — returned a
+different team's data. The Mystics' wrong ID would have caused the refresh
+script to clobber the Mystics roster with **Seattle Storm players** on its
+first run.
+
+The fix: hit `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league_slug}/teams`
+to enumerate every team in a league with its real ESPN id and abbreviation.
+Match by display name, not by guessed id. Correct values now in TEAMS
+(generate_content.py:96+):
+- Mystics: `16` · Wizards: `27` · Capitals: `23` · Nationals: `20` ·
+  Commanders: `28` · Spirit: `15365` · DC United: `193` · Defenders: `112646`
+
+**B. ESPN's API drops diacritics — refresh must use accent-insensitive matching.**
+
+ESPN returns "Andres Chaparro", "Jose Tena", "Luis Garcia Jr.", "Nasim
+Nunez" — the KB has the accented spellings. A naive refresh would
+overwrite the KB's correct accented names with ESPN's unaccented ones on
+every run.
+
+The fix: `_normalize_name()` in `scripts/refresh_kb.py` strips diacritics
++ lowercases for matching. When a refresh finds a name match (accent-
+insensitive), it KEEPS the KB's spelling. New players (no match) get
+ESPN's spelling.
+
+**C. Rich KB records hold context ESPN doesn't return — preserve them.**
+
+Spirit's KB has a 216-character `current_record` with NWSL points totals,
+table position, and a Concacaf W Champions Cup semifinal note explaining
+why their all-competitions record diverges from their NWSL record. ESPN
+returns "5-3-2 as of YYYY-MM-DD" — 22 characters, no context. A naive
+refresh would replace 216 chars of curated insight with 22 chars of W-L.
+
+The fix: only overwrite `current_record` when the existing one is short
+(< 50 chars) OR when the new ESPN record is comparable in length. See
+`refresh_kb.py` step 1.
+
+**D. Roster-overlap safety guard catches future ID errors.**
+
+Even with the correct ID set in TEAMS, future renames or ESPN data
+restructuring could send wrong-team data into the refresh. The script now
+computes accent-normalized name overlap between the ESPN-returned roster
+and the existing KB roster. If overlap is < 30% AND the existing roster
+has ≥ 5 players, the refresh REFUSES to update. Validated live on
+2026-05-22: Mary Washington's KB has 15 D-III players; ESPN returns 0
+players (D-III roster data isn't exposed); guard correctly preserved the
+KB.
+
+**E. ESPN doesn't cover everything — accept gaps with explicit notes.**
+
+For 4 of 19 teams, ESPN's site.api doesn't provide the data the refresh
+needs:
+- G-League (Capital City Go-Go): no URL slug works on site.api.espn.com
+- UFL (DC Defenders): scoreboard + schedule work, but roster returns
+  empty position groups
+- NCAA D-III (Mary Washington, Marymount): team-detail data not exposed
+
+Pattern: when refresh can't help, add a `verification_notes` line
+explaining the ESPN limitation. This documents the gap for human curators
+and signals to future automation that the KB is hand-maintained.
+
+**Pattern for future sport/team additions:**
+
+- **Always verify the ESPN ID** by hitting `/sports/{sport}/{league_slug}/teams`
+  and checking the display name matches — don't trust TEAMS dict values.
+- **Add roster-overlap safety** before any code path that overwrites KB
+  data wholesale.
+- **Preserve curated text fields** (records, verification_notes, head_coach.background)
+  when refreshing from terse API sources.
+- **Document data-source limitations** in `verification_notes` rather
+  than letting refreshes silently fail.
+
+---
+
+### 11. One method for every team — unified ESPN generator path
+
+**Pre-2026-05-22 state.** Mystics had a special-case "legacy" packet path
+(`build_story_packet("mystics", ...)`) that used four fetchers — ESPN
+scoreboard/summary, WNBA.com (standings + injuries), mystics.wnba.com
+(recent news), and a reddit stub. Every other team used the new
+`build_story_packet_for_team(slug, ...)` which talks to ESPN only and
+emits a different boxscore shape (`entries` vs `rows`).
+
+**Why we unified.** Two code paths means two failure modes, two test
+matrices, two ways for behavior to drift. The "rich enrichment" the
+legacy path provided (news, injuries, league-specific standings) is
+mostly recoverable via web_search at the writer + fact-checker — the
+features that AREN'T recoverable cheaply (full per-player boxscore for
+both teams) are only on the generic path, not the legacy one. The
+legacy path was actually the worse data path.
+
+**What changed.** `generate_story_packet.main()` now routes every team —
+Mystics included — through `build_story_packet_for_team`. The legacy
+`build_story_packet()` function is kept in place (covered by
+tests/test_story_packet.py) but no longer reachable from the CLI without
+the explicit `--legacy` flag. Mystics packets now emit `boxscore.entries`
+just like every other team.
+
+**What Mystics specifically lost** (and why it's an acceptable trade-off):
+- `_biggest_run` narrative beat (from legacy WNBA fetcher) — easy to
+  port to the generic fetcher as a sport-aware enhancement; deferred.
+- `_win_prob_arc` peak/trough — same; deferred.
+- WNBA.com structured injury data — writer can web_search.
+- Mystics official-site news items — writer can web_search.
+
+**What Mystics gained:**
+- Full per-player boxscore for both teams (legacy only stored top 5).
+- Same packet shape as every other team — one rendering path, no surprises.
+
+**Where this lives in code:**
+- `ingestion/generate_story_packet.py` — `main()` dispatch, module-level
+  docstring documenting the canonical vs deprecated paths.
+
+---
+
 ## Patterns to reuse when extending
 
 - Any factual claim the writer might make where the inference is non-obvious

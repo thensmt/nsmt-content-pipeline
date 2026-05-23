@@ -1,16 +1,20 @@
 {
   "team_name": "American University Eagles",
   "slug": "american",
+  "league": "College Basketball",
   "program": "men's basketball",
   "league_full": "NCAA Division I",
   "conference": "Patriot League",
   "espn_id": "44",
   "official_url": "https://aueagles.com/sports/mens-basketball",
   "school_official_url": "https://aueagles.com",
-  "school_location": {"city": "Washington", "state": "D.C."},
+  "school_location": {
+    "city": "Washington",
+    "state": "D.C."
+  },
   "founded_program": null,
   "current_season": "2025-26",
-  "current_record": "16-16 (overall) / 9-9 (Patriot League, T-5th) — final, season ended March 2026",
+  "current_record": "16-16 (11-6 home, 5-10 away) as of 2026-05-22",
   "venue": {
     "name": "Bender Arena",
     "city": "Washington",
@@ -27,16 +31,169 @@
     "career_record_at_program": "54-45 across three seasons at American (2023-24: 16-16; 2024-25: 22-13; 2025-26: 16-16)"
   },
   "assistant_coaches": [
-    {"name": "Nate Bollinger", "role": "Associate Head Coach", "notes": "Promoted September 2025"},
-    {"name": "Jackie Manuel", "role": "Associate Head Coach", "notes": "Promoted September 2025"}
+    {
+      "name": "Nate Bollinger",
+      "role": "Associate Head Coach",
+      "notes": "Promoted September 2025"
+    },
+    {
+      "name": "Jackie Manuel",
+      "role": "Associate Head Coach",
+      "notes": "Promoted September 2025"
+    }
   ],
-  "roster": [],
+  "roster": [
+    {
+      "name": "Jack Anderson",
+      "position": "G",
+      "number": "8",
+      "notes": null
+    },
+    {
+      "name": "Luke Brown",
+      "position": "F",
+      "number": "16",
+      "notes": null
+    },
+    {
+      "name": "Matthew Casey",
+      "position": "G",
+      "number": "9",
+      "notes": null
+    },
+    {
+      "name": "Gibraltar Coleman",
+      "position": "F",
+      "number": "14",
+      "notes": null
+    },
+    {
+      "name": "Madden Collins",
+      "position": "G",
+      "number": "2",
+      "notes": null
+    },
+    {
+      "name": "Chris Eagan",
+      "position": "F",
+      "number": "35",
+      "notes": null
+    },
+    {
+      "name": "Dean Hogans",
+      "position": "G",
+      "number": "3",
+      "notes": null
+    },
+    {
+      "name": "Julen Iturbe",
+      "position": "F",
+      "number": "32",
+      "notes": null
+    },
+    {
+      "name": "Greg Jones",
+      "position": "F",
+      "number": "23",
+      "notes": null
+    },
+    {
+      "name": "Noah Jones",
+      "position": "F",
+      "number": "21",
+      "notes": null
+    },
+    {
+      "name": "Matt Mayock",
+      "position": "F",
+      "number": "33",
+      "notes": null
+    },
+    {
+      "name": "Carson McDonald",
+      "position": "F",
+      "number": "13",
+      "notes": null
+    },
+    {
+      "name": "Eric Michaels",
+      "position": "F",
+      "number": "25",
+      "notes": null
+    },
+    {
+      "name": "Wyatt Nausadis",
+      "position": "G",
+      "number": "7",
+      "notes": null
+    },
+    {
+      "name": "Shane O'Reilly",
+      "position": "G",
+      "number": "22",
+      "notes": null
+    },
+    {
+      "name": "Kamran Prince",
+      "position": "G",
+      "number": "1",
+      "notes": null
+    },
+    {
+      "name": "Adrian Samuels",
+      "position": "G",
+      "number": "10",
+      "notes": null
+    },
+    {
+      "name": "Kade Sebastian",
+      "position": "G",
+      "number": "4",
+      "notes": null
+    },
+    {
+      "name": "Geoff Sprouse",
+      "position": "G",
+      "number": "12",
+      "notes": null
+    }
+  ],
   "recent_games": [
-    {"date": "2026-03-05", "opponent": "Boston University", "result": "L 73-75", "venue": "away", "tournament": "Patriot League Tournament Quarterfinal"},
-    {"date": "2026-02-27", "opponent": "Boston University", "result": "L 65-68", "venue": "home", "tournament": null},
-    {"date": "2026-02-25", "opponent": "Lehigh", "result": "L 73-78", "venue": "away", "tournament": null},
-    {"date": "2026-02-22", "opponent": "Lafayette", "result": "W 75-61", "venue": "away", "tournament": null},
-    {"date": "2026-02-18", "opponent": "Bucknell", "result": "W 75-57", "venue": "away", "tournament": null}
+    {
+      "date": "2026-03-05",
+      "opponent": "Boston University",
+      "result": "L 73-75",
+      "venue": "away",
+      "tournament": "Patriot League Tournament Quarterfinal"
+    },
+    {
+      "date": "2026-02-27",
+      "opponent": "Boston University",
+      "result": "L 65-68",
+      "venue": "home",
+      "tournament": null
+    },
+    {
+      "date": "2026-02-25",
+      "opponent": "Lehigh",
+      "result": "L 73-78",
+      "venue": "away",
+      "tournament": null
+    },
+    {
+      "date": "2026-02-22",
+      "opponent": "Lafayette",
+      "result": "W 75-61",
+      "venue": "away",
+      "tournament": null
+    },
+    {
+      "date": "2026-02-18",
+      "opponent": "Bucknell",
+      "result": "W 75-57",
+      "venue": "away",
+      "tournament": null
+    }
   ],
   "upcoming_games": [],
   "postseason_2025_26": {
@@ -44,15 +201,53 @@
     "seed": null,
     "result": "Did not qualify; lost to Boston University 73-75 in Patriot League Tournament Quarterfinal as the 5 seed"
   },
-  "rivalries": ["Navy Midshipmen", "Bucknell Bison", "Lehigh Mountain Hawks", "Boston University Terriers"],
+  "rivalries": [
+    "Navy Midshipmen",
+    "Bucknell Bison",
+    "Lehigh Mountain Hawks",
+    "Boston University Terriers"
+  ],
   "sources": [
-    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44", "scraped_at": "2026-05-22", "notes": "ESPN team ID 44 confirmed, record 16-16"},
-    {"url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44/schedule", "scraped_at": "2026-05-22", "notes": "Full 2025-26 schedule with scores"},
-    {"url": "https://aueagles.com/sports/mens-basketball", "scraped_at": "2026-05-22", "notes": "Official AU men's basketball page"},
-    {"url": "https://aueagles.com/sports/mens-basketball/roster/coaches/duane-simpkins/950", "scraped_at": "2026-05-22", "notes": "Head coach bio and tenure"},
-    {"url": "https://aueagles.com/news/2025/9/29/mens-basketballs-nate-bollinger-and-jackie-manuel-promoted-to-associate-head-coaches.aspx", "scraped_at": "2026-05-22", "notes": "Associate head coach promotions"},
-    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_American_Eagles_men%27s_basketball_team", "scraped_at": "2026-05-22", "notes": "Season summary, final record, postseason exit"},
-    {"url": "https://en.wikipedia.org/wiki/American_Eagles", "scraped_at": "2026-05-22", "notes": "Athletic director JM Caparro, Bender Arena, Patriot League"}
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44",
+      "scraped_at": "2026-05-22",
+      "notes": "ESPN team ID 44 confirmed, record 16-16"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44/schedule",
+      "scraped_at": "2026-05-22",
+      "notes": "Full 2025-26 schedule with scores"
+    },
+    {
+      "url": "https://aueagles.com/sports/mens-basketball",
+      "scraped_at": "2026-05-22",
+      "notes": "Official AU men's basketball page"
+    },
+    {
+      "url": "https://aueagles.com/sports/mens-basketball/roster/coaches/duane-simpkins/950",
+      "scraped_at": "2026-05-22",
+      "notes": "Head coach bio and tenure"
+    },
+    {
+      "url": "https://aueagles.com/news/2025/9/29/mens-basketballs-nate-bollinger-and-jackie-manuel-promoted-to-associate-head-coaches.aspx",
+      "scraped_at": "2026-05-22",
+      "notes": "Associate head coach promotions"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_American_Eagles_men%27s_basketball_team",
+      "scraped_at": "2026-05-22",
+      "notes": "Season summary, final record, postseason exit"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/American_Eagles",
+      "scraped_at": "2026-05-22",
+      "notes": "Athletic director JM Caparro, Bender Arena, Patriot League"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/44",
+      "scraped_at": "2026-05-22",
+      "notes": "Auto-refresh: record, roster, recent_games, upcoming_games"
+    }
   ],
   "verification_notes": "ESPN team ID 44 confirmed via mens-college-basketball/teams listing — displayName 'American University Eagles', abbreviation 'AMER'. 2025-26 was Duane Simpkins's third season; Eagles finished 16-16 (9-9 Patriot League), eliminated in the Patriot League Tournament Quarterfinal by Boston University 73-75. A step back from the 2024-25 NCAA Tournament season. Bender Arena capacity not in returned source content and left null per 'never fabricate' rule. Roster left empty for now — daily recap prompt does not lean on it; can be backfilled if a specific feature requires player names. Conference rivalries (Navy, Bucknell, Lehigh, BU) captured based on Patriot League beat coverage. 2026-27 staff and schedule not yet announced; season-end snapshot only.",
   "last_updated": "2026-05-22"

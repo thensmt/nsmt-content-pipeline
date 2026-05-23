@@ -34,39 +34,149 @@
     "career_record_with_team": "80-58 across three seasons (2023-24 through 2025-26)"
   },
   "coaching_staff": [
-    {"name": "TC Swirsky", "role": "Assistant Coach"},
-    {"name": "Jason Thompson", "role": "Assistant Coach"},
-    {"name": "Pete Fusilero", "role": "Assistant Coach"},
-    {"name": "Ashton Gibbs", "role": "Assistant Coach"},
-    {"name": "Jason Clark", "role": "Assistant Coach / Video Coordinator"}
+    {
+      "name": "TC Swirsky",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Jason Thompson",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Pete Fusilero",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Ashton Gibbs",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Jason Clark",
+      "role": "Assistant Coach / Video Coordinator"
+    }
   ],
   "roster": [
-    {"name": "Kadary Richmond", "position": "SG", "number": "1", "notes": null},
-    {"name": "Nolan Hickman", "position": "PG", "number": "2", "notes": null},
-    {"name": "Jamir Watkins", "position": "SG", "number": "5", "notes": null},
-    {"name": "Chris Livingston", "position": "SF", "number": "7", "notes": "Wizards two-way / assignment player"},
-    {"name": "Sharife Cooper", "position": "PG", "number": "13", "notes": null},
-    {"name": "Leaky Black", "position": "SF", "number": "14", "notes": null},
-    {"name": "Julian Reese", "position": "C", "number": "15", "notes": null},
-    {"name": "Skal Labissière", "position": "PF", "number": "17", "notes": "Haitian-born veteran big"},
-    {"name": "Will Riley", "position": "PF", "number": "27", "notes": "2025 NBA Draft pick context — verify status"},
-    {"name": "Tristan Vukčević", "position": "C", "number": null, "notes": "Wizards assignment player"},
-    {"name": "Christopher Mantis", "position": null, "number": null, "notes": null},
-    {"name": "Akoldah Gak", "position": null, "number": null, "notes": null},
-    {"name": "Damari Monsanto", "position": null, "number": null, "notes": null},
-    {"name": "Trae Hannibal", "position": null, "number": null, "notes": null},
-    {"name": "Alondes Williams", "position": null, "number": null, "notes": "Listed in Wikipedia roster context"}
+    {
+      "name": "Kadary Richmond",
+      "position": "SG",
+      "number": "1",
+      "notes": null
+    },
+    {
+      "name": "Nolan Hickman",
+      "position": "PG",
+      "number": "2",
+      "notes": null
+    },
+    {
+      "name": "Jamir Watkins",
+      "position": "SG",
+      "number": "5",
+      "notes": null
+    },
+    {
+      "name": "Chris Livingston",
+      "position": "SF",
+      "number": "7",
+      "notes": "Wizards two-way / assignment player"
+    },
+    {
+      "name": "Sharife Cooper",
+      "position": "PG",
+      "number": "13",
+      "notes": null
+    },
+    {
+      "name": "Leaky Black",
+      "position": "SF",
+      "number": "14",
+      "notes": null
+    },
+    {
+      "name": "Julian Reese",
+      "position": "C",
+      "number": "15",
+      "notes": null
+    },
+    {
+      "name": "Skal Labissière",
+      "position": "PF",
+      "number": "17",
+      "notes": "Haitian-born veteran big"
+    },
+    {
+      "name": "Will Riley",
+      "position": "PF",
+      "number": "27",
+      "notes": "2025 NBA Draft pick context — verify status"
+    },
+    {
+      "name": "Tristan Vukčević",
+      "position": "C",
+      "number": null,
+      "notes": "Wizards assignment player"
+    },
+    {
+      "name": "Christopher Mantis",
+      "position": null,
+      "number": null,
+      "notes": null
+    },
+    {
+      "name": "Akoldah Gak",
+      "position": null,
+      "number": null,
+      "notes": null
+    },
+    {
+      "name": "Damari Monsanto",
+      "position": null,
+      "number": null,
+      "notes": null
+    },
+    {
+      "name": "Trae Hannibal",
+      "position": null,
+      "number": null,
+      "notes": null
+    },
+    {
+      "name": "Alondes Williams",
+      "position": null,
+      "number": null,
+      "notes": "Listed in Wikipedia roster context"
+    }
   ],
   "recent_games": [],
   "upcoming_games": [],
   "rivalries": [],
   "sources": [
-    {"url": "https://en.wikipedia.org/wiki/Capital_City_Go-Go", "scraped_at": "2026-05-21", "notes": "2025-26 final record (20-14, 6th East, Conf Quarterfinal exit), arena, ownership, key players"},
-    {"url": "https://capitalcity.gleague.nba.com/news/go-go-announce-2025-26-coaching-staff", "scraped_at": "2026-05-21", "notes": "Official 2025-26 coaching staff announcement (fetched via OurSportsCentral mirror after official URL timed out)"},
-    {"url": "https://www.oursportscentral.com/services/releases/go-go-announce-2025-26-coaching-staff/n-6297654", "scraped_at": "2026-05-21", "notes": "Coaching staff list mirror"},
-    {"url": "https://basketball.usbasket.com/team/Capital-City-Go-Go/48888", "scraped_at": "2026-05-21", "notes": "Roster with jersey numbers, heights, ages, positions"},
-    {"url": "https://roundtable.io/sports/nba/wizards/news/washington-wizards-promoting-g-league-head-coach-to-2026-27-staff", "scraped_at": "2026-05-21", "notes": "Report on Toppert's promotion to Wizards staff"}
+    {
+      "url": "https://en.wikipedia.org/wiki/Capital_City_Go-Go",
+      "scraped_at": "2026-05-21",
+      "notes": "2025-26 final record (20-14, 6th East, Conf Quarterfinal exit), arena, ownership, key players"
+    },
+    {
+      "url": "https://capitalcity.gleague.nba.com/news/go-go-announce-2025-26-coaching-staff",
+      "scraped_at": "2026-05-21",
+      "notes": "Official 2025-26 coaching staff announcement (fetched via OurSportsCentral mirror after official URL timed out)"
+    },
+    {
+      "url": "https://www.oursportscentral.com/services/releases/go-go-announce-2025-26-coaching-staff/n-6297654",
+      "scraped_at": "2026-05-21",
+      "notes": "Coaching staff list mirror"
+    },
+    {
+      "url": "https://basketball.usbasket.com/team/Capital-City-Go-Go/48888",
+      "scraped_at": "2026-05-21",
+      "notes": "Roster with jersey numbers, heights, ages, positions"
+    },
+    {
+      "url": "https://roundtable.io/sports/nba/wizards/news/washington-wizards-promoting-g-league-head-coach-to-2026-27-staff",
+      "scraped_at": "2026-05-21",
+      "notes": "Report on Toppert's promotion to Wizards staff"
+    }
   ],
-  "verification_notes": "Head coach Cody Toppert and assistant staff confirmed via official Go-Go press release (mirrored on OurSportsCentral). Career record (80-58 over 3 seasons) cited in search results — derived from 2025-26 record of 20-14 implying prior two seasons combined 60-44. Final 2025-26 record of 20-14, 6th in Eastern Conference, lost Conference Quarterfinal sourced from Wikipedia summary. G-League playoff bracket details and exact playoff opponent not captured — verify before publishing playoff recaps. Roster reflects end-of-season composition; G-League rosters churn significantly via two-way calls, assignments, and 10-day NBA contracts. Several reserve players have no jersey numbers in source (Christopher Mantis, Akoldah Gak, Damari Monsanto, Trae Hannibal, Alondes Williams) — recommend manual confirmation against official end-of-season roster. Player name 'Tristan Vukčević' uses Serbian diacritic (also commonly spelled 'Vukcevic' in English-language sources); 'Skal Labissière' takes the grave accent. Recent and upcoming games left empty: season ended in April 2026, no current schedule. No formal designated rivalries documented for the franchise.",
-  "last_updated": "2026-05-21"
+  "verification_notes": "Head coach Cody Toppert and assistant staff confirmed via official Go-Go press release (mirrored on OurSportsCentral). Career record (80-58 over 3 seasons) cited in search results — derived from 2025-26 record of 20-14 implying prior two seasons combined 60-44. Final 2025-26 record of 20-14, 6th in Eastern Conference, lost Conference Quarterfinal sourced from Wikipedia summary. G-League playoff bracket details and exact playoff opponent not captured — verify before publishing playoff recaps. Roster reflects end-of-season composition; G-League rosters churn significantly via two-way calls, assignments, and 10-day NBA contracts. Several reserve players have no jersey numbers in source (Christopher Mantis, Akoldah Gak, Damari Monsanto, Trae Hannibal, Alondes Williams) — recommend manual confirmation against official end-of-season roster. Player name 'Tristan Vukčević' uses Serbian diacritic (also commonly spelled 'Vukcevic' in English-language sources); 'Skal Labissière' takes the grave accent. Recent and upcoming games left empty: season ended in April 2026, no current schedule. No formal designated rivalries documented for the franchise. \n\nESPN limitation: G-League is not exposed via site.api.espn.com under any URL slug tested (nba-g-league, nba-gleague, g-league, nba-d-league all 404). Refresh script cannot update this KB. Roster, record, and schedule must be manually maintained from gleague.nba.com or the team's official channels.",
+  "last_updated": "2026-05-22"
 }

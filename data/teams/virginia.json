@@ -1,16 +1,20 @@
 {
   "team_name": "Virginia Cavaliers",
   "slug": "virginia",
+  "league": "College Basketball",
   "program": "men's basketball",
   "league_full": "NCAA Division I",
   "conference": "ACC",
   "espn_id": "258",
   "official_url": "https://virginiasports.com/sports/mbball",
   "school_official_url": "https://virginiasports.com",
-  "school_location": {"city": "Charlottesville", "state": "Virginia"},
+  "school_location": {
+    "city": "Charlottesville",
+    "state": "Virginia"
+  },
   "founded_program": null,
   "current_season": "2025-26",
-  "current_record": "30-6 (overall) / 15-3 (ACC) — final, season ended March 2026",
+  "current_record": "30-6 (16-1 home, 8-2 away) as of 2026-05-22",
   "venue": {
     "name": "John Paul Jones Arena",
     "city": "Charlottesville",
@@ -27,31 +31,130 @@
     "career_record_at_program": "30-6 (1 season)"
   },
   "assistant_coaches": [
-    {"name": "Griff Aldrich", "role": "Associate Head Coach"},
-    {"name": "Matt Henry", "role": "Assistant Coach"},
-    {"name": "Bryce Crawford", "role": "Assistant Coach"},
-    {"name": "Darius Theus", "role": "Assistant Coach"}
+    {
+      "name": "Griff Aldrich",
+      "role": "Associate Head Coach"
+    },
+    {
+      "name": "Matt Henry",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Bryce Crawford",
+      "role": "Assistant Coach"
+    },
+    {
+      "name": "Darius Theus",
+      "role": "Assistant Coach"
+    }
   ],
   "roster": [
-    {"name": "Malik Thomas", "position": "G", "number": "1", "class_year": "GR", "height": "6'5\"", "hometown": "Fontana, CA", "notes": "Graduate transfer"},
-    {"name": "Chance Mallory", "position": "G", "number": "2", "class_year": "FR", "height": "5'10\"", "hometown": "Charlottesville, VA", "notes": null},
-    {"name": "Sam Lewis", "position": "G", "number": "5", "class_year": "JR", "height": "6'7\"", "hometown": "Chicago, IL", "notes": null},
-    {"name": "Jacari White", "position": "G", "number": "6", "class_year": "GR", "height": "6'3\"", "hometown": "Orlando, FL", "notes": "Graduate transfer"},
-    {"name": "Martin Carrere", "position": "G/F", "number": "7", "class_year": "FR", "height": "6'9\"", "hometown": "France", "notes": "Redshirt freshman; international prospect"},
-    {"name": "Devin Tillis", "position": "F", "number": "11", "class_year": "GR", "height": "6'7\"", "hometown": "Los Angeles, CA", "notes": "Graduate transfer"},
-    {"name": "Elijah Gertrude", "position": "G", "number": "12", "class_year": "SO", "height": "6'4\"", "hometown": "Jersey City, NJ", "notes": "Redshirt sophomore"},
-    {"name": "Desmond Roberts", "position": "G", "number": "13", "class_year": "SO", "height": "6'4\"", "hometown": "Charlottesville, VA", "notes": "Redshirt sophomore"},
-    {"name": "Johann Grünloh", "position": "C", "number": "17", "class_year": "FR", "height": "7'0\"", "hometown": "Germany", "notes": "International freshman"},
-    {"name": "Silas Barksdale", "position": "F", "number": "21", "class_year": "FR", "height": "6'9\"", "hometown": "Newport News, VA", "notes": null},
-    {"name": "Owen Odom", "position": "F", "number": "22", "class_year": "FR", "height": "6'1\"", "hometown": "Annapolis, MD", "notes": "Son of head coach Ryan Odom"},
-    {"name": "Thijs De Ridder", "position": "F", "number": "28", "class_year": "FR", "height": "6'9\"", "hometown": "Belgium", "notes": "International freshman"},
-    {"name": "Dallin Hall", "position": "G", "number": "30", "class_year": "GR", "height": "6'4\"", "hometown": "Plain City, UT", "notes": "Graduate transfer from BYU"},
-    {"name": "Ugonna Onyenso", "position": "C", "number": "33", "class_year": "SR", "height": "7'0\"", "hometown": "Nigeria", "notes": null},
-    {"name": "Carter Lang", "position": "F", "number": "35", "class_year": "SO", "height": "6'9\"", "hometown": "Charlottesville, VA", "notes": "Redshirt sophomore"}
+    {
+      "name": "Silas Barksdale",
+      "position": "F",
+      "number": "21",
+      "notes": null
+    },
+    {
+      "name": "Martin Carrere",
+      "position": "G",
+      "number": "7",
+      "notes": "Redshirt freshman; international prospect"
+    },
+    {
+      "name": "Thijs De Ridder",
+      "position": "F",
+      "number": "28",
+      "notes": "International freshman"
+    },
+    {
+      "name": "Elijah Gertrude",
+      "position": "G",
+      "number": "12",
+      "notes": "Redshirt sophomore"
+    },
+    {
+      "name": "Johann Grünloh",
+      "position": "C",
+      "number": "17",
+      "notes": "International freshman"
+    },
+    {
+      "name": "Dallin Hall",
+      "position": "G",
+      "number": "30",
+      "notes": "Graduate transfer from BYU"
+    },
+    {
+      "name": "Carter Lang",
+      "position": "F",
+      "number": "35",
+      "notes": "Redshirt sophomore"
+    },
+    {
+      "name": "Sam Lewis",
+      "position": "G",
+      "number": "5",
+      "notes": null
+    },
+    {
+      "name": "Chance Mallory",
+      "position": "G",
+      "number": "2",
+      "notes": null
+    },
+    {
+      "name": "Owen Odom",
+      "position": "G",
+      "number": "22",
+      "notes": "Son of head coach Ryan Odom"
+    },
+    {
+      "name": "Ugonna Onyenso",
+      "position": "C",
+      "number": "33",
+      "notes": null
+    },
+    {
+      "name": "Desmond Roberts",
+      "position": "G",
+      "number": "13",
+      "notes": "Redshirt sophomore"
+    },
+    {
+      "name": "Malik Thomas",
+      "position": "G",
+      "number": "1",
+      "notes": "Graduate transfer"
+    },
+    {
+      "name": "Devin Tillis",
+      "position": "F",
+      "number": "11",
+      "notes": "Graduate transfer"
+    },
+    {
+      "name": "Jacari White",
+      "position": "G",
+      "number": "6",
+      "notes": "Graduate transfer"
+    }
   ],
   "recent_games": [
-    {"date": "2026-03", "opponent": "Wright State", "result": "W", "venue": "neutral", "tournament": "NCAA Tournament First Round (Midwest 3 seed vs 14 seed)"},
-    {"date": "2026-03", "opponent": "Tennessee", "result": "L 72-79", "venue": "neutral", "tournament": "NCAA Tournament Second Round (vs #23/6-seed Tennessee)"}
+    {
+      "date": "2026-03-15",
+      "opponent": "Wright State",
+      "result": "W",
+      "venue": "neutral",
+      "tournament": "NCAA Tournament First Round (Midwest 3 seed vs 14 seed)"
+    },
+    {
+      "date": "2026-03-15",
+      "opponent": "Tennessee",
+      "result": "L 72-79",
+      "venue": "neutral",
+      "tournament": "NCAA Tournament Second Round (vs #23/6-seed Tennessee)"
+    }
   ],
   "upcoming_games": [],
   "postseason_2025_26": {
@@ -59,13 +162,39 @@
     "seed": 3,
     "result": "Lost in Round of 32 to 6-seed Tennessee"
   },
-  "rivalries": ["Virginia Tech", "Duke", "North Carolina", "Maryland (historical)"],
+  "rivalries": [
+    "Virginia Tech",
+    "Duke",
+    "North Carolina",
+    "Maryland (historical)"
+  ],
   "sources": [
-    {"url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Virginia_Cavaliers_men%27s_basketball_team", "scraped_at": "2026-05-21", "notes": "Season summary, roster, coaching staff"},
-    {"url": "https://virginiasports.com/sports/mbball/roster/season/2025-26/staff/ryan-odom", "scraped_at": "2026-05-21", "notes": "Head coach bio"},
-    {"url": "https://virginiasports.com/sports/mbball", "scraped_at": "2026-05-21", "notes": "Official athletics page"},
-    {"url": "https://en.wikipedia.org/wiki/John_Paul_Jones_Arena", "scraped_at": "2026-05-21", "notes": "Arena capacity (14,593) and opening (2006)"}
+    {
+      "url": "https://en.wikipedia.org/wiki/2025%E2%80%9326_Virginia_Cavaliers_men%27s_basketball_team",
+      "scraped_at": "2026-05-21",
+      "notes": "Season summary, roster, coaching staff"
+    },
+    {
+      "url": "https://virginiasports.com/sports/mbball/roster/season/2025-26/staff/ryan-odom",
+      "scraped_at": "2026-05-21",
+      "notes": "Head coach bio"
+    },
+    {
+      "url": "https://virginiasports.com/sports/mbball",
+      "scraped_at": "2026-05-21",
+      "notes": "Official athletics page"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/John_Paul_Jones_Arena",
+      "scraped_at": "2026-05-21",
+      "notes": "Arena capacity (14,593) and opening (2006)"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/258",
+      "scraped_at": "2026-05-22",
+      "notes": "Auto-refresh: record, roster, recent_games, upcoming_games"
+    }
   ],
   "verification_notes": "Ryan Odom completed his first season (2025-26) as Virginia head coach after being hired March 22, 2025. Cavaliers finished 30-6 (15-3 ACC, 2nd in conference) and earned a 3-seed in the NCAA Tournament Midwest region; beat Wright State in First Round, lost to 6-seed Tennessee in Second Round. Roster shown is 2025-26 season-end roster. The playing surface at John Paul Jones Arena was officially named 'Tony Bennett Court' on February 21, 2026. Owen Odom is the head coach's son. Ryan Odom's career head coaching record across all programs (UMBC, Utah State, VCU, Virginia) not verified — left null. 2026-27 schedule TBD. New seating plan begins 2027-28 season.",
-  "last_updated": "2026-05-21"
+  "last_updated": "2026-05-22"
 }
