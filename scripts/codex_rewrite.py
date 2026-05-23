@@ -304,11 +304,19 @@ def process_run(run: dict, *, dry_run: bool) -> str:
             return f"  - {label}: team_slug {meta['team_slug']!r} unknown, skipped"
 
         raw = draft_path.read_text()
-        lines = raw.splitlines()
-        if lines and lines[0].startswith("# "):
-            body = "\n".join(lines[1:]).lstrip()
+        # save_local_baseline_draft writes a frontmatter block:
+        #   # {title}\n\n**Team:** ...\n**Date:** ...\n\n---\n\n{body}
+        # Strip everything before (and including) the first --- separator so
+        # only the article prose flows through. Falls back to "strip the title
+        # line" for files without the separator.
+        if "\n---\n" in raw:
+            body = raw.split("\n---\n", 1)[1].lstrip()
         else:
-            body = raw
+            lines = raw.splitlines()
+            if lines and lines[0].startswith("# "):
+                body = "\n".join(lines[1:]).lstrip()
+            else:
+                body = raw
 
         excerpt = ""
         if "EXCERPT:" in body:
