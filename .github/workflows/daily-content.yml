@@ -16,6 +16,10 @@ on:
         description: 'Single team slug (e.g. nationals). Default: all in-season teams.'
         required: false
         default: ''
+      enable_fact_check:
+        description: 'Run the in-line Sonnet fact-check (true/false). Default off — Codex review provides verdict for free.'
+        required: false
+        default: 'false'
 
 jobs:
   generate-articles:
@@ -57,9 +61,16 @@ jobs:
           NSMT_PASSWORD:        ${{ secrets.NSMT_PASSWORD }}
           DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
           DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
-          INPUT_TARGET_DATE: ${{ github.event.inputs.target_date }}
-          INPUT_TEAM_SLUG:   ${{ github.event.inputs.team_slug }}
+          INPUT_TARGET_DATE:    ${{ github.event.inputs.target_date }}
+          INPUT_TEAM_SLUG:      ${{ github.event.inputs.team_slug }}
+          INPUT_FACT_CHECK:     ${{ github.event.inputs.enable_fact_check }}
         run: |
+          if [ "$INPUT_FACT_CHECK" = "true" ]; then
+            export NSMT_FACT_CHECK=true
+            echo "In-line Sonnet fact-check ENABLED for this run."
+          else
+            echo "In-line Sonnet fact-check disabled (default). Codex review will provide verdict."
+          fi
           ARGS=()
           if [ -n "$INPUT_TARGET_DATE" ]; then
             ARGS+=("$INPUT_TARGET_DATE")

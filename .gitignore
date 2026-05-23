@@ -7,6 +7,9 @@ drafts/*.md
 !drafts/.gitkeep
 cache/
 .codex-review-state.json
+data/fact_check_log.jsonl
+data/packets/*.json
+!data/packets/.gitkeep
 
 # Local dev preview is now about/index.html (committed for GitHub Pages hosting).
 # Rebuild via about/build.sh after editing AIWriters.jsx.

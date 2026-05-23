@@ -18,7 +18,9 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 # ── Credentials (set as environment variables) ────────────────────────────────
 ANTHROPIC_API_KEY    = os.environ.get("ANTHROPIC_API_KEY")
@@ -801,6 +803,21 @@ GUARDRAILS = (
     "'stole the ball and ultimately knocked down the three' should make clear "
     "whether the steal led directly to the three-point shot or whether they "
     "were separate possessions.\n"
+    "- ARITHMETIC CONSISTENCY: any 'N-game mark' / 'after N games' / 'through "
+    "N games' framing MUST match wins + losses (+ ties / draws / OT losses "
+    "where applicable) from the Verified team context. If the record is 25-27, "
+    "the team has played 52 games, NOT 50, NOT 'around 50'. Same for win "
+    "percentage / .500 framing: 25-27 is .481, NOT .500. Math is checkable; "
+    "check it before writing the framing. Caught on 2026-05-22 when both Opus "
+    "and Haiku wrote 'through 50 games' for a 25-27 record.\n"
+    "- NO COMPARISON WITHOUT SOURCE: do not claim a stat is a 'season-high', "
+    "'career-high', 'best of', 'lowest since', 'most in N games', 'first time "
+    "since', or any other comparison-across-time UNLESS that comparison is "
+    "explicitly present in the Verified team context or Story packet. A "
+    "single per-game line in the boxscore is one data point — it tells you "
+    "nothing about whether it's the season-high or career-high. Cite "
+    "absolute numbers ('9 strikeouts in 7 innings') instead of unverifiable "
+    "comparatives ('season-high in strikeouts').\n"
     "- HEDGE EARLY-SEASON CLAIMS: for plus-minus, win probability, lineup "
     "experiments, or any 'this team is X' framing in the first ~10 games of a "
     "season, hedge openly. Acknowledge sample-size limits."
@@ -994,10 +1011,18 @@ def fact_check_article(article_text, kb, packet, team):
     Calls Sonnet 4.6 with web_search enabled so the checker can actually
     verify claims against ESPN/WNBA.com/team-official sources, not just
     check whether claims appear in the in-prompt source data.
+
+    Every call (success or failure) appends one line to
+    data/fact_check_log.jsonl so we can answer effectiveness questions
+    empirically over time (verdict distribution, agreement with Codex,
+    cost trajectory).
     """
+    fc_start = time.time()
     if not ANTHROPIC_API_KEY:
+        _log_fact_check(team, "UNKNOWN", "(no API key)", 0.0)
         return ("UNKNOWN", "(skipped — ANTHROPIC_API_KEY not set)")
     if not article_text:
+        _log_fact_check(team, "UNKNOWN", "(empty article)", 0.0)
         return ("UNKNOWN", "(skipped — empty article)")
 
     source_data = json.dumps(
@@ -1078,10 +1103,51 @@ Do not invent issues. Do not be lenient on ❌. But ALSO do not mark a claim ❌
         report = "\n\n".join(text_chunks).strip() or "(empty response)"
     except Exception as e:
         print(f"  Fact-check API error: {e}")
+        _log_fact_check(team, "UNKNOWN", str(e), round(time.time() - fc_start, 1))
         return ("UNKNOWN", f"(fact-check call failed: {e})")
 
     verdict = _parse_verdict(report)
+    _log_fact_check(team, verdict, report, round(time.time() - fc_start, 1))
     return (verdict, report)
+
+
+def _log_fact_check(team, verdict, report, fc_seconds):
+    """Append one line to data/fact_check_log.jsonl per fact-check call.
+
+    Records timestamp, team, model used, verdict, tier counts, and elapsed
+    seconds. We can read this back later to answer questions like:
+    - What % of articles are passing vs failing?
+    - Does the verdict distribution differ by team / sport?
+    - When the in-line check + Codex disagree, what's the pattern?
+
+    Never raises — logging failure must not break the fact-check pipeline.
+    """
+    try:
+        import re as _re
+        log_dir = Path(__file__).resolve().parent / "data"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / "fact_check_log.jsonl"
+        tier_counts = {
+            "supported":  len(_re.findall(r"✅", report or "")),
+            "verified":   len(_re.findall(r"⚠️", report or "")),
+            "editorial":  len(_re.findall(r"💬", report or "")),
+            "unverified": len(_re.findall(r"❓", report or "")),
+            "false":      len(_re.findall(r"❌", report or "")),
+        }
+        entry = {
+            "timestamp":   datetime.now(timezone.utc).isoformat(),
+            "team_slug":   team_slug(team) if team else None,
+            "team_name":   (team or {}).get("name"),
+            "model":       "claude-sonnet-4-6",
+            "verdict":     verdict,
+            "fc_seconds":  fc_seconds,
+            "tier_counts": tier_counts,
+            "report_len":  len(report or ""),
+        }
+        with log_path.open("a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass  # never break the pipeline on a log write
 
 
 def _parse_verdict(report):
@@ -1358,12 +1424,22 @@ def run(target_date=None, team_slug_filter=None):
             body_raw = parts[0].strip()
             excerpt  = parts[1].strip()
 
-        # Adversarial fact-check against the same KB+packet the writer saw.
-        # Verdict is informational only — never blocks admin save.
-        kb_for_check = load_team_kb(team)
-        packet_for_check = load_story_packet(team, target_date)
-        fact_verdict, fact_report = fact_check_article(body_raw, kb_for_check, packet_for_check, team)
-        print(f"  Fact-check: {fact_verdict}")
+        # In-line fact-check (Sonnet 4.6 + web_search). Default OFF — set
+        # NSMT_FACT_CHECK=true to enable. Tonight's 3-model comparison showed
+        # Codex (free via ChatGPT sub) reaches the SAME verdict as the in-line
+        # Sonnet check for every article we compared. The in-line check costs
+        # ~$0.10-0.25/article × 14 teams/day = $42-105/month with no verdict-
+        # level signal beyond what the codex_review.py launchd job produces
+        # at 8:05am next day. Flip NSMT_FACT_CHECK=true for the rare high-
+        # stakes article that needs same-second verdict on the Discord embed.
+        if os.environ.get("NSMT_FACT_CHECK", "").lower() in ("1", "true", "yes"):
+            kb_for_check = load_team_kb(team)
+            packet_for_check = load_story_packet(team, target_date)
+            fact_verdict, fact_report = fact_check_article(body_raw, kb_for_check, packet_for_check, team)
+            print(f"  Fact-check: {fact_verdict}")
+        else:
+            fact_verdict, fact_report = "UNKNOWN", None
+            print("  Fact-check skipped (NSMT_FACT_CHECK not set). Codex review will provide verdict.")
 
         # body_raw goes to Discord (markdown-friendly). body_html goes to admin
         # (wrapped in <p> tags for the rich text editor).
