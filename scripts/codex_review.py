@@ -309,6 +309,7 @@ Do not invent issues. Do not approve a claim just because it sounds plausible. D
                 "--sandbox", "read-only",
                 "--ephemeral",
                 "--color", "never",
+                "-c", 'model_reasoning_effort="xhigh"',
                 "--output-last-message", out_path,
                 "-",
             ],

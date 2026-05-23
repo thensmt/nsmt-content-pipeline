@@ -1,0 +1,113 @@
+name: Draft baseline (to staging)
+
+# Generates a baseline article via Sonnet and posts it to the staging
+# Discord channel (target=PRE_CODEX) so the Mac codex_rewrite.py can pick
+# it up for fact-check + revision. Does NOT save to admin and does NOT
+# post to #recap-pipeline — those happen later via publish-corrected.yml
+# after Codex has reviewed and revised.
+
+on:
+  workflow_dispatch:
+    inputs:
+      team:
+        description: 'Team slug (e.g. commanders, capitals, nationals)'
+        required: true
+        type: string
+      date:
+        description: 'Article date YYYY-MM-DD (default: today UTC)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    env:
+      INPUT_TEAM: ${{ inputs.team }}
+      INPUT_DATE: ${{ inputs.date }}
+      GH_RUN_ID:  ${{ github.run_id }}
+      GH_REPO:    ${{ github.repository }}
+      ANTHROPIC_API_KEY:           ${{ secrets.ANTHROPIC_API_KEY }}
+      DISCORD_PRE_CODEX_WEBHOOK_URL: ${{ secrets.DISCORD_PRE_CODEX_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+
+      - name: Resolve target date
+        run: |
+          if [ -z "$INPUT_DATE" ]; then
+            RESOLVED_DATE=$(date -u +%Y-%m-%d)
+          else
+            RESOLVED_DATE="$INPUT_DATE"
+          fi
+          echo "RESOLVED_DATE=$RESOLVED_DATE" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=nsmt-draft-${INPUT_TEAM}-${GH_RUN_ID}" >> "$GITHUB_ENV"
+
+      - name: Generate baseline article (no admin save, no live Discord)
+        run: |
+          python generate_baselines.py \
+            --team "$INPUT_TEAM" \
+            --date "$RESOLVED_DATE" \
+            --no-admin --no-discord
+
+      - name: Locate draft file + extract title
+        run: |
+          DRAFT_PATH=$(ls drafts/*baseline.md 2>/dev/null | head -1)
+          if [ -z "$DRAFT_PATH" ]; then
+            echo "No baseline draft was produced. Check Anthropic key / team slug." >&2
+            exit 1
+          fi
+          DRAFT_TITLE=$(head -1 "$DRAFT_PATH" | sed 's/^# //')
+          echo "DRAFT_PATH=$DRAFT_PATH"   >> "$GITHUB_ENV"
+          echo "DRAFT_TITLE=$DRAFT_TITLE" >> "$GITHUB_ENV"
+
+      - name: Upload draft as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DRAFT_PATH }}
+          retention-days: 7
+
+      - name: Notify Mac via staging Discord (direct webhook → #commanders)
+        run: |
+          python <<'PY'
+          import os, requests
+
+          team     = os.environ["INPUT_TEAM"]
+          date_    = os.environ["RESOLVED_DATE"]
+          title    = os.environ["DRAFT_TITLE"]
+          run_id   = os.environ["GH_RUN_ID"]
+          repo     = os.environ["GH_REPO"]
+          artifact = os.environ["ARTIFACT_NAME"]
+
+          embed = {
+              "title": f"📥 Pre-codex draft ready — {team}",
+              "description": (
+                  f"**Title:** {title}\n"
+                  f"**Article type:** baseline\n"
+                  f"**Date:** {date_}\n\n"
+                  f"Mac fetch:\n"
+                  f"```\ngh run download {run_id} -R {repo} -n {artifact}\n```"
+              ),
+              "color": 0x0E80FC,
+              "fields": [
+                  {"name": "team_slug",     "value": team,     "inline": True},
+                  {"name": "article_type",  "value": "baseline", "inline": True},
+                  {"name": "article_date",  "value": date_,    "inline": True},
+                  {"name": "run_id",        "value": run_id,   "inline": True},
+                  {"name": "artifact_name", "value": artifact, "inline": False},
+              ],
+          }
+
+          r = requests.post(
+              os.environ["DISCORD_PRE_CODEX_WEBHOOK_URL"],
+              json={"embeds": [embed]},
+              timeout=15,
+          )
+          print(f"PRE_CODEX webhook status: {r.status_code}")
+          print(r.text[:400])
+          r.raise_for_status()
+          PY

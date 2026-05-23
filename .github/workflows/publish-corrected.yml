@@ -1,0 +1,76 @@
+name: Publish Codex-corrected article
+
+# Invoked by the Mac codex_rewrite.py script via `gh workflow run`. Takes a
+# corrected article body + metadata and pushes it to admin.thensmt.com +
+# #recap-pipeline. All publishing secrets stay in CI; the Mac side never
+# sees ANTHROPIC, NSMT admin, or Discord proxy creds.
+
+on:
+  workflow_dispatch:
+    inputs:
+      team:
+        description: 'Team slug (e.g. commanders)'
+        required: true
+        type: string
+      date:
+        description: 'Article date (YYYY-MM-DD)'
+        required: true
+        type: string
+      title:
+        description: 'Article title'
+        required: true
+        type: string
+      excerpt:
+        description: 'Excerpt / teaser line'
+        required: false
+        type: string
+        default: ''
+      type:
+        description: 'Article type'
+        required: true
+        type: choice
+        options:
+          - baseline
+          - recap
+      body:
+        description: 'Corrected article body (markdown). Pass via `-F body=@file.md`.'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      INPUT_TEAM:    ${{ inputs.team }}
+      INPUT_DATE:    ${{ inputs.date }}
+      INPUT_TITLE:   ${{ inputs.title }}
+      INPUT_EXCERPT: ${{ inputs.excerpt }}
+      INPUT_TYPE:    ${{ inputs.type }}
+      INPUT_BODY:    ${{ inputs.body }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+
+      - name: Write body to file (avoids shell-interpolating user input)
+        run: |
+          mkdir -p /tmp/nsmt
+          printf '%s' "$INPUT_BODY" > /tmp/nsmt/body.md
+          echo "Wrote $(wc -c < /tmp/nsmt/body.md) bytes, $(wc -w < /tmp/nsmt/body.md) words."
+
+      - name: Publish to admin + Discord
+        env:
+          NSMT_USERNAME:        ${{ secrets.NSMT_USERNAME }}
+          NSMT_PASSWORD:        ${{ secrets.NSMT_PASSWORD }}
+          DISCORD_PROXY_URL:    ${{ secrets.DISCORD_PROXY_URL }}
+          DISCORD_PROXY_SECRET: ${{ secrets.DISCORD_PROXY_SECRET }}
+        run: |
+          python scripts/publish_from_corrected.py \
+            --team "$INPUT_TEAM" \
+            --date "$INPUT_DATE" \
+            --title "$INPUT_TITLE" \
+            --excerpt "$INPUT_EXCERPT" \
+            --type "$INPUT_TYPE" \
+            --body /tmp/nsmt/body.md
