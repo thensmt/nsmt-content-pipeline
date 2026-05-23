@@ -77,17 +77,24 @@ _VERDICT_ICON = {
 
 
 def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: date,
+                                 body: str = "",
                                  v1_verdict: str = "", v2_verdict: str = "",
                                  corrections_summary: str = "",
                                  review_trail_url: str = "") -> dict:
+    """Direct-webhook embed for the team channel. Article body is the main
+    content (in the embed description, truncated to fit Discord's 4096-char
+    limit). Review trail + corrections sit below as fields."""
     byline = build_byline(team)
-    desc_parts = []
-    if excerpt:
-        desc_parts.append(excerpt)
-    desc_parts.append(f"**Article:** {title}")
-    desc_parts.append(f"**Byline:** {byline}")
-    desc_parts.append(f"**Date:** {date_.isoformat()}")
-    desc_parts.append(f"[Review in admin]({ADMIN_REVIEW_URL})")
+
+    # Description: body first, then metadata footer with admin link.
+    MAX_BODY = 3600          # leave ~500 chars headroom for the footer line
+    body_text = (body or "").strip()
+    if not body_text:
+        body_text = "(no body provided)"
+    if len(body_text) > MAX_BODY:
+        body_text = body_text[:MAX_BODY].rstrip() + f"…\n\n[Continue reading in admin →]({ADMIN_REVIEW_URL})"
+    else:
+        body_text = f"{body_text}\n\n[Review in admin]({ADMIN_REVIEW_URL})"
 
     fields = []
     if v1_verdict or v2_verdict:
@@ -108,9 +115,11 @@ def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: da
         fields.append({"name": "✏️ Corrections made", "value": summary_value, "inline": False})
 
     embed = {
-        "title": f"📝 New baseline draft — {team['name']}",
-        "description": "\n".join(desc_parts),
+        "title": title,
+        "description": body_text,
         "color": NSMT_BLUE,
+        "author": {"name": f"📝 {byline}"},
+        "footer": {"text": f"{team['name']} • {date_.isoformat()}"},
     }
     if fields:
         embed["fields"] = fields
@@ -172,6 +181,7 @@ def main() -> int:
             if direct_webhook:
                 embed = _build_direct_baseline_embed(
                     team, args.title, args.excerpt, target_date,
+                    body=body,
                     v1_verdict=args.v1_verdict, v2_verdict=args.v2_verdict,
                     corrections_summary=corrections_summary,
                     review_trail_url=args.review_trail_url,
@@ -196,6 +206,7 @@ def main() -> int:
             if direct_webhook:
                 embed = _build_direct_baseline_embed(
                     team, args.title, args.excerpt, target_date,
+                    body=body,
                     v1_verdict=args.v1_verdict, v2_verdict=args.v2_verdict,
                     corrections_summary=corrections_summary,
                     review_trail_url=args.review_trail_url,
