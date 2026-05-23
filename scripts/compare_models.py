@@ -112,10 +112,15 @@ MODEL_REGISTRY = {
 # Writer call's web_search cap. Same as generate_content.WRITER_MAX_WEB_SEARCHES.
 WRITER_MAX_WEB_SEARCHES = 5
 
-# Sleep between successive Anthropic API calls. We hit a 429 on 2026-05-22
-# doing back-to-back writer+fact-check; this cooldown lets the TPM window
-# drain.
-INTER_CALL_COOLDOWN_SEC = 20
+# Intra-model cooldown — between a model's writer call and its own fact-
+# check call. We hit 429s with 20s on 2026-05-22; 60s is the safer default
+# to let TPM drain between two heavy Sonnet+web_search calls.
+INTER_CALL_COOLDOWN_SEC = 60
+
+# Inter-model cooldown — between models. Heavier than intra because each
+# model just consumed tokens for writer + fact-check. 300s (5 min) is a
+# safe default for tier-limited Anthropic accounts.
+DEFAULT_INTER_MODEL_COOLDOWN_SEC = 300
 
 
 # ── Season-feature prompt (topic #4) ──────────────────────────────────────────
@@ -305,10 +310,12 @@ def post_comparison_thread(team: dict, model_name: str, title: str, body: str,
         "footer":    {"text": f"{team['league']} · 3-model comparison · codex_review will reply"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    # For comparison runs, only send the article embed (verdict is shown in
+    # the article embed's fields). The full fact-check report is in the
+    # local draft artifact + Codex review will reply separately. Embedding
+    # the full FC report alongside the article exceeds Discord's 6000-char
+    # combined-embed limit when articles are 800+ words.
     embeds = [article_embed]
-    if report and verdict in {"NEEDS_REVISION", "FAIL"}:
-        from generate_content import build_fact_check_embed
-        embeds.append(build_fact_check_embed(team, verdict, report))
     thread_name = f"Compare — {model_name} — {team['name']}"[:99]
     payload = {"thread_name": thread_name, "embeds": embeds}
     resp = requests.post(
@@ -446,6 +453,10 @@ def main() -> int:
                         help="Disable web_search at the writer (still on for fact-check).")
     parser.add_argument("--date", default="2026-05-21",
                         help="Story-packet date (YYYY-MM-DD).")
+    parser.add_argument("--inter-model-cooldown", type=int,
+                        default=DEFAULT_INTER_MODEL_COOLDOWN_SEC,
+                        help="Seconds to sleep between models (default 300 = 5 min). "
+                             "Avoids cumulative TPM exhaustion on tier-limited accounts.")
     args = parser.parse_args()
 
     requested = [m.strip().lower() for m in args.models.split(",") if m.strip()]
@@ -496,8 +507,8 @@ def main() -> int:
                 "draft_path":  "—",
             })
         if i < len(requested) - 1:
-            print(f"\n... sleeping {INTER_CALL_COOLDOWN_SEC}s before next model …")
-            time.sleep(INTER_CALL_COOLDOWN_SEC)
+            print(f"\n... sleeping {args.inter_model_cooldown}s before next model …")
+            time.sleep(args.inter_model_cooldown)
 
     print_summary(results)
     return 0
