@@ -264,8 +264,15 @@ Article:
 {article["body"]}
 ```
 
-Your job: extract every factual or judgment-style claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details, AND editorial claims like "best game of his career"). For each claim:
+Your job: extract every distinct factual or judgment-style claim in the article (records, scores, stat lines, dates, opponents, venues, player names, scoring runs, win-probability claims, ranking claims, attendance, draft years, career stages, coaching staff, ownership, biographical details, AND editorial claims like "best game of his career").
 
+**DEDUPLICATE BY UNDERLYING FACT — CRITICAL.** Writers often restate the same fact in different words across paragraphs. Group these as ONE claim with all instances listed under it. Examples of what to merge into a single claim:
+- "Dan Quinn is a second-year head coach" AND "his second year running this operation" AND "the second-year coach faces another rebuild" → ONE claim about Quinn's tenure
+- "Daniels threw for 22 TDs" AND "the rookie's 22-touchdown debut" → ONE claim about TD count
+- "5-12 record" AND "12 losses last season" → ONE claim about W-L record
+If you grade an underlying fact ❌ FALSE, list EVERY phrasing of it in the article — the rewriter must fix all instances, not just the first.
+
+For each (deduplicated) claim:
 A. Check the structured source data first.
 B. If not in source, WEB-SEARCH it. Cite the URL you used.
 C. Grade the claim using the 5-tier shape:
@@ -292,7 +299,9 @@ VERDICT: PASS | NEEDS_REVISION | FAIL
 (PASS = every claim is ✅ / ⚠️ / 💬. NEEDS_REVISION = at least one ❓ but no ❌. FAIL = at least one ❌.)
 
 CLAIMS:
-1. "[exact quote from article]" → ✅/⚠️/💬/❓/❌  [reason + citation, e.g. "ESPN box score confirms 1-4 H-AB: espn.com/mlb/boxscore/_/gameId/..." or "AP/CBS contradict: actual play was RBI groundout, not walk" or "subjective judgment about pitching performance — not strictly verifiable"]
+1. CLAIM: <one-line description of the underlying fact, e.g. "Dan Quinn's tenure as Commanders head coach">
+   INSTANCES: "exact quote 1" • "exact quote 2 (if same fact restated)" • "exact quote 3"
+   VERDICT: ✅/⚠️/💬/❓/❌  [reason + citation, e.g. "ESPN box score confirms 1-4 H-AB: espn.com/mlb/boxscore/_/gameId/..." or "AP/CBS contradict: Quinn was hired Feb 3 2024 — entering year 3 in 2026, not year 2"]
 2. ...
 
 SUMMARY: 2-3 sentences naming the most serious factual issues, or "no factual issues found" — note 💬 editorial claims + ⚠️ process flags separately if relevant.

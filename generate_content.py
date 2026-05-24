@@ -22,6 +22,8 @@ import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from style_guide import NO_META_COMMENTARY, AI_TELLS_AVOIDANCE
+
 # ── Credentials (set as environment variables) ────────────────────────────────
 ANTHROPIC_API_KEY    = os.environ.get("ANTHROPIC_API_KEY")
 NSMT_USERNAME        = os.environ.get("NSMT_USERNAME")
@@ -885,9 +887,9 @@ def generate_article(game_summary, team, article_type="recap", target_date=None)
     packet_block = consume_story_packet(packet) if packet else ""
 
     if article_type == "recap":
-        prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet covering Washington DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers know your byline is AI-authored. Your voice: {persona_voice}.
+        prompt = f"""You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.
 {kb_block}{packet_block}
-Write a professional, engaging game recap article (400-550 words) for the following game:
+Write a professional, engaging game recap article (400-550 words) for the following game. Open with the moment that decided the game — the specific play, the missed shot, the called third strike — not with framing about coverage.
 
 Team: {team['name']}
 League: {team['league']}
@@ -896,15 +898,19 @@ Final Score: {game_summary['score']}
 Venue: {game_summary['venue']}
 Top Performers: {', '.join(game_summary['leaders']) if game_summary['leaders'] else 'Not available'}
 
-Guidelines:
-- Open with a strong lede that captures the result
-- Highlight key moments and turning points
-- Mention standout individual performances
-- Add context about standings or season implications
-- Close with a forward-looking line about the team's next challenge
-- Stay in your voice ({persona_voice}) but keep it professional, written for DC/MD/VA sports fans
-- Do NOT refer to yourself in first person or call attention to being AI in the article body — the byline handles disclosure
-- Format: plain paragraphs only, no headers or bullet points
+Coverage:
+- Lead with the moment that decided it (specific play, turning point)
+- Standout individual performances with one or two concrete numbers, not a stat dump
+- Context about standings or season implications, briefly
+- Close on a specific stat, quote, or one-line punch — NOT "looking ahead" or "only time will tell"
+
+{NO_META_COMMENTARY}
+
+{AI_TELLS_AVOIDANCE}
+
+Voice + sourcing:
+- Stay in your voice ({persona_voice}) — written for DC/MD/VA sports fans.
+- Format: plain paragraphs only, no headers or bullet points.
 
 Editorial guardrails (HARD requirements):
 {GUARDRAILS}
@@ -913,22 +919,27 @@ Editorial guardrails (HARD requirements):
 Also provide at the very end, on a new line starting with EXCERPT: a one-sentence teaser (max 160 characters) for the article preview."""
 
     elif article_type == "preview":
-        prompt = f"""You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media Team), the DMV's premier independent sports media outlet. Your voice: {persona_voice}.
+        prompt = f"""You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.
 {kb_block}{packet_block}
-Write a professional game preview article (350-450 words) for the upcoming game:
+Write a professional game preview article (350-450 words) for the upcoming game. Open with a specific storyline, matchup edge, or stake — not with framing about coverage.
 
 Team: {team['name']}
 League: {team['league']}
 Matchup: {game_summary['matchup']}
 Venue: {game_summary['venue']}
 
-Guidelines:
+Coverage:
 - Preview the matchup and what's at stake
-- Discuss key players to watch on both sides
-- Mention recent form or storylines where relevant
-- Stay in your voice but keep it professional, for DC/MD/VA fans
-- Do NOT refer to yourself in first person or call attention to being AI in the body
-- Format: plain paragraphs only, no headers or bullet points
+- Key players to watch on both sides with one specific reason each
+- Recent form or storylines where relevant
+
+{NO_META_COMMENTARY}
+
+{AI_TELLS_AVOIDANCE}
+
+Voice + sourcing:
+- Stay in your voice ({persona_voice}) — written for DC/MD/VA fans.
+- Format: plain paragraphs only, no headers or bullet points.
 
 Editorial guardrails (HARD requirements):
 {GUARDRAILS}

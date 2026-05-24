@@ -53,6 +53,7 @@ from generate_content import (
     slugify,
     NSMT_API,
 )
+from style_guide import NO_META_COMMENTARY, AI_TELLS_AVOIDANCE
 
 
 # ── Persona helpers ───────────────────────────────────────────────────────────
@@ -108,27 +109,20 @@ def build_prompt(team, article_type):
     if article_type == "season_so_far":
         current_record_summary = _record_summary_hint(kb)
         return (
-            f"You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media\n"
-            f"Team), the DMV's premier independent sports media outlet covering Washington\n"
-            f"DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers\n"
-            f"know your byline is AI-authored. Your voice: {persona_voice}.\n"
+            f"You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.\n"
             f"{kb_block}\n"
-            f"Write a 700-900 word season-so-far feature on the {team['name']}. This is the\n"
-            f"first article you've published this season — it's a foundation piece. Future\n"
-            f"recaps will build on it.\n\n"
+            f"Write a 700-900 word season-so-far feature on the {team['name']}. Open with the actual sports story — a specific game, a recent stretch, a player on a tear — not with any framing about coverage or first articles.\n\n"
             f"Cover:\n"
             f"- Where the team stands right now ({current_record_summary})\n"
             f"- Key storylines from the season so far — what's working, what isn't\n"
             f"- Standout players and performances\n"
             f"- What to watch in the coming weeks\n"
             f"- Honest assessment, in your voice\n\n"
-            f"Guidelines:\n"
-            f"- Stay in your voice ({persona_voice}) but keep it professional, written for\n"
-            f"  DC/MD/VA sports fans.\n"
-            f"- Use specific players, coaches, and recent game results from the verified\n"
-            f"  team context above. Do NOT fabricate stats, dates, or quotes.\n"
-            f"- Do NOT refer to yourself in first person or call attention to being AI in\n"
-            f"  the article body — the byline handles disclosure.\n"
+            f"{NO_META_COMMENTARY}\n\n"
+            f"{AI_TELLS_AVOIDANCE}\n\n"
+            f"Voice + sourcing guidelines:\n"
+            f"- Stay in your voice ({persona_voice}) — written for DC/MD/VA sports fans.\n"
+            f"- Use specific players, coaches, and recent game results from the verified team context above. Do NOT fabricate stats, dates, or quotes.\n"
             f"- Format: plain paragraphs only. No headers, no bullet points.\n\n"
             f"Editorial guardrails (HARD requirements):\n"
             f"{_BASELINE_GUARDRAILS}\n\n"
@@ -137,30 +131,20 @@ def build_prompt(team, article_type):
 
     if article_type == "offseason_outlook":
         return (
-            f"You are {persona_name}, an AI sports writer for NSMT (Nova Sports Media\n"
-            f"Team), the DMV's premier independent sports media outlet covering Washington\n"
-            f"DC, Maryland, and Virginia. NSMT is transparent that you are an AI — readers\n"
-            f"know your byline is AI-authored. Your voice: {persona_voice}.\n"
+            f"You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.\n"
             f"{kb_block}\n"
-            f"Write a 700-900 word season recap + offseason outlook on the {team['name']}.\n"
-            f"This is NSMT's first article on this team — it establishes that we're\n"
-            f"covering them and orients readers on the state of the program.\n\n"
+            f"Write a 700-900 word season recap + offseason outlook on the {team['name']}. Open with the actual sports story — the moment that defined the season, the storyline that matters most heading into next year, a specific decision or player — not with any framing about coverage or first articles.\n\n"
             f"Cover:\n"
-            f"- How the just-completed season went (final record, key moments,\n"
-            f"  high/low points)\n"
+            f"- How the just-completed season went (final record, key moments, high/low points)\n"
             f"- Coaching, roster, or front-office changes since the season ended\n"
-            f"- What's known about the upcoming season — schedule, roster expectations,\n"
-            f"  storylines\n"
+            f"- What's known about the upcoming season — schedule, roster expectations, storylines\n"
             f"- Honest assessment in your voice\n\n"
-            f"Guidelines:\n"
-            f"- Stay in your voice ({persona_voice}) but keep it professional, written for\n"
-            f"  DC/MD/VA sports fans.\n"
-            f"- Use specific players, coaches, and recent results from the verified team\n"
-            f"  context above. Do NOT fabricate stats, dates, or quotes.\n"
-            f"- Acknowledge uncertainty where the KB doesn't have data (e.g., 2026-27\n"
-            f"  schedule). Don't speculate beyond what's verified.\n"
-            f"- Do NOT refer to yourself in first person or call attention to being AI in\n"
-            f"  the article body.\n"
+            f"{NO_META_COMMENTARY}\n\n"
+            f"{AI_TELLS_AVOIDANCE}\n\n"
+            f"Voice + sourcing guidelines:\n"
+            f"- Stay in your voice ({persona_voice}) — written for DC/MD/VA sports fans.\n"
+            f"- Use specific players, coaches, and recent results from the verified team context above. Do NOT fabricate stats, dates, or quotes.\n"
+            f"- Acknowledge uncertainty where the KB doesn't have data (e.g., 2026-27 schedule). Don't speculate beyond what's verified.\n"
             f"- Format: plain paragraphs only. No headers, no bullet points.\n\n"
             f"Editorial guardrails (HARD requirements):\n"
             f"{_BASELINE_GUARDRAILS}\n\n"

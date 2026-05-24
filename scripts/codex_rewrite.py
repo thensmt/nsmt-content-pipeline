@@ -205,11 +205,15 @@ Inputs:
 2. A fact-check report listing each factual claim with a grading symbol.
 
 For each claim graded:
-  ❌ FALSE                       → REWRITE that sentence/phrase to match the evidence cited in the fact-check report
-  ❓ UNVERIFIED                  → SOFTEN the claim ("according to reports", "appears to", "early indication") OR drop it if it can't be softened gracefully
+  ❌ FALSE                       → REWRITE every flagged instance to match the evidence cited in the fact-check report
+  ❓ UNVERIFIED                  → SOFTEN every flagged instance ("according to reports", "appears to", "early indication") OR drop them if they can't be softened gracefully
   ⚠️ OUT_OF_SOURCE_BUT_VERIFIED  → LEAVE ALONE (verified true, just not in source data)
   💬 EDITORIAL                   → LEAVE ALONE (subjective judgment)
   ✅ SUPPORTED                   → LEAVE ALONE
+
+**CRITICAL — RESTATED FACTS:** The fact-check report groups each underlying fact under ONE claim with multiple INSTANCES listed (e.g. a single ❌ FALSE claim about "Quinn's tenure" may list both "second-year head coach" AND "his second year running this operation" as instances). When you fix a ❌ or ❓ claim, you MUST edit EVERY listed instance — not just the first one quoted. Search the full article for each instance and apply the same correction to all of them. A correction that fixes one mention but leaves the same fact restated elsewhere is a failure.
+
+**CRITICAL — REMOVE SELF-REFERENTIAL CONTENT:** Independently of the fact-check report, scrub the article for ANY meta-commentary about the publication, the byline, the act of writing, or future coverage plans. Phrases like "NSMT is adding this team to coverage," "this is our first piece," "we'll be following," "at the time of this writing," "in this article," "stay tuned for more from NSMT" — REMOVE the sentence entirely. Do NOT soften ("NSMT appears to be adding..."). REMOVE. The article should read as pure sports content that could appear on ESPN.com — no mention of the outlet, the writer, or the writing process. Open the article with the actual sports story, not with framing about coverage.
 
 Output FORMAT — return BOTH sections in this exact structure, with the literal markers:
 
