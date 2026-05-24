@@ -10,14 +10,21 @@
          triggers .github/workflows/publish-corrected.yml on CI to do the
          actual admin POST and #recap-pipeline post.
 
-         Schedule: fires at 06:30 + 07:30 local time, polls for 90 min
-         each window. Covers the typical CI draft landing time (06:00-08:00
-         local after GH Actions cron delay).                              -->
+         Schedule: fires at 06:30 local, polls for up to 120 min (covers
+         GH Actions cron 10 UTC drafts that land 06:00-08:00 local with
+         the usual CI delay; 120 min covers slow runs up to ~08:30).
+
+         Single window only (was 06:30 + 07:30 — could overlap because
+         each poll ran 90 min). codex_rewrite.py also takes an exclusive
+         fcntl lock on .codex-rewrite.lock so even a manual run during a
+         launchd window exits cleanly instead of racing.                 -->
 
     <key>ProgramArguments</key>
     <array>
         <string>/Users/david/Downloads/Claude/NSMT/content-pipeline/.venv/bin/python</string>
         <string>/Users/david/Downloads/Claude/NSMT/content-pipeline/scripts/codex_rewrite.py</string>
+        <string>--wait-minutes</string>
+        <string>120</string>
     </array>
 
     <key>WorkingDirectory</key>
@@ -30,20 +37,12 @@
     </dict>
 
     <key>StartCalendarInterval</key>
-    <array>
-        <dict>
-            <key>Hour</key>
-            <integer>6</integer>
-            <key>Minute</key>
-            <integer>30</integer>
-        </dict>
-        <dict>
-            <key>Hour</key>
-            <integer>7</integer>
-            <key>Minute</key>
-            <integer>30</integer>
-        </dict>
-    </array>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
 
     <key>RunAtLoad</key>
     <false/>

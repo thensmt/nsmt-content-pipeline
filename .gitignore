@@ -7,6 +7,10 @@ drafts/*.md
 !drafts/.gitkeep
 cache/
 .codex-review-state.json
+.codex-rewrite-state.json
+.codex-rewrite.lock
+data/published_articles.json
+data/blocked/
 data/fact_check_log.jsonl
 data/packets/*.json
 !data/packets/.gitkeep

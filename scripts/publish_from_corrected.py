@@ -87,7 +87,11 @@ def _build_direct_baseline_embed(team: dict, title: str, excerpt: str, date_: da
     byline = build_byline(team)
 
     # Description: body first, then metadata footer with admin link.
-    MAX_BODY = 3600          # leave ~500 chars headroom for the footer line
+    # Articles are now prompted at 500-600 words (~2.7-3.3k chars) to fit
+    # comfortably under Discord's 4096 hard cap. This MAX_BODY is a defensive
+    # safety net, not the planned truncation point — Sonnet overshoots shouldn't
+    # blow up the publish.
+    MAX_BODY = 4000
     body_text = (body or "").strip()
     if not body_text:
         body_text = "(no body provided)"
@@ -169,6 +173,14 @@ def main() -> int:
 
     direct_webhook = _team_webhook_url(team)
 
+    # Track Discord outcome separately from admin outcome. Admin save is the
+    # important publish event; Discord is just the reviewer-notification fan-out.
+    # If Discord fails AFTER admin succeeded, we still exit non-zero so the
+    # workflow surfaces the failure (GH email + Actions tab), but the admin
+    # draft is preserved — operator can post manually.
+    discord_failed = False
+    discord_error: Exception | None = None
+
     if args.type == "baseline":
         article_slug = build_baseline_slug(team, target_date)
         html_body = paragraphs_to_html(body)
@@ -192,7 +204,8 @@ def main() -> int:
                 post_baseline_to_discord(args.title, args.excerpt, team, "offseason_outlook", target_date)
                 print(f"  ✓ Posted to worker target {team.get('channel_target', 'RECAPS')!r}")
         except Exception as exc:
-            print(f"  ✗ Discord notification failed (non-fatal): {exc!r}")
+            discord_failed = True
+            discord_error = exc
     else:  # recap
         article_slug = slugify(f"{team['name']}-recap-{target_date.isoformat()}")
         html_body = "".join(f"<p>{p.strip()}</p>" for p in body.split("\n\n") if p.strip())
@@ -220,7 +233,20 @@ def main() -> int:
                 )
                 print(f"  ✓ Posted to worker target {team.get('channel_target', 'RECAPS')!r}")
         except Exception as exc:
-            print(f"  ✗ Discord notification failed (non-fatal): {exc!r}")
+            discord_failed = True
+            discord_error = exc
+
+    if discord_failed:
+        print("", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        print(f"⚠️  DISCORD NOTIFICATION FAILED — manual post required", file=sys.stderr)
+        print(f"   Article: {args.title}", file=sys.stderr)
+        print(f"   Team:    {team['name']}", file=sys.stderr)
+        print(f"   Date:    {target_date.isoformat()}", file=sys.stderr)
+        print(f"   Admin:   draft saved successfully (is_active=False)", file=sys.stderr)
+        print(f"   Error:   {discord_error!r}", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        return 5
 
     return 0
 

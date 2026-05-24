@@ -144,7 +144,71 @@ def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(item, str):
                 errors.append(f"{field}[{i}] must be a string")
 
+    for field in ("boxscore", "opponent_boxscore"):
+        if field in packet and packet.get(field) is not None:
+            _validate_boxscore(field, packet[field], errors)
+
     if errors:
         raise ValueError("Invalid story packet:\n- " + "\n- ".join(errors))
     return packet
+
+
+# ── Boxscore validation ───────────────────────────────────────────────────────
+#
+# The boxscore fields are optional but, when present, are injected into the
+# writer prompt as authoritative source material the model is told to trust
+# verbatim. So if a fetcher emits malformed structure (ESPN shape change,
+# bad regex, etc.) we want to fail fast — better to lose the packet than
+# pass bogus stats through to the writer.
+
+_BOXSCORE_OPTIONAL_STR_KEYS = ("team_name", "team_abbr", "home_away", "sport", "league")
+
+
+def _validate_boxscore(path: str, boxscore: Any, errors: list[str]) -> None:
+    if not isinstance(boxscore, dict):
+        errors.append(f"{path} must be a dict or null")
+        return
+
+    for key in _BOXSCORE_OPTIONAL_STR_KEYS:
+        if key in boxscore and not isinstance(boxscore[key], str):
+            errors.append(f"{path}.{key} must be a string")
+
+    has_rows = "rows" in boxscore and boxscore["rows"] is not None
+    has_entries = "entries" in boxscore and boxscore["entries"] is not None
+    if has_rows and has_entries:
+        errors.append(f"{path}: rows and entries are mutually exclusive (got both)")
+    if not has_rows and not has_entries:
+        errors.append(f"{path}: must have either rows or entries (got neither)")
+
+    if has_rows:
+        if not isinstance(boxscore["rows"], list):
+            errors.append(f"{path}.rows must be a list")
+        else:
+            for i, row in enumerate(boxscore["rows"]):
+                if not isinstance(row, dict):
+                    errors.append(f"{path}.rows[{i}] must be a dict")
+                    continue
+                if "player" not in row or not isinstance(row.get("player"), str) or not row["player"].strip():
+                    errors.append(f"{path}.rows[{i}].player must be a non-empty string")
+
+    if has_entries:
+        if not isinstance(boxscore["entries"], list):
+            errors.append(f"{path}.entries must be a list")
+        else:
+            for i, entry in enumerate(boxscore["entries"]):
+                if not isinstance(entry, dict):
+                    errors.append(f"{path}.entries[{i}] must be a dict")
+                    continue
+                if "player" not in entry or not isinstance(entry.get("player"), str) or not entry["player"].strip():
+                    errors.append(f"{path}.entries[{i}].player must be a non-empty string")
+                if "stats" in entry:
+                    stats = entry.get("stats")
+                    if not isinstance(stats, dict):
+                        errors.append(f"{path}.entries[{i}].stats must be a dict")
+                    else:
+                        for stat_key, stat_val in stats.items():
+                            if not isinstance(stat_key, str) or not stat_key.strip():
+                                errors.append(f"{path}.entries[{i}].stats has a non-string label")
+                            if not isinstance(stat_val, str):
+                                errors.append(f"{path}.entries[{i}].stats[{stat_key!r}] must be a string")
 

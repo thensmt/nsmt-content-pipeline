@@ -1,4 +1,21 @@
 """
+OBSOLETE — DO NOT RUN.
+
+This script set up a Contentful "Article" content type back when the pipeline
+planned to publish through Contentful. That plan was abandoned. Production
+publishes directly to the NSMT admin backend (admin.thensmt.com). See FOR_QUINCY.md
+for the current architecture.
+
+Kept under archive/ for reference only. Will be deleted once no one needs to
+look back at the original Contentful schema.
+"""
+raise SystemExit(
+    "setup_contentful.py is obsolete. The pipeline no longer uses Contentful. "
+    "See README.md and FOR_QUINCY.md for the current admin-backend flow."
+)
+
+# --- original script preserved below for reference ---
+"""
 NSMT Content Pipeline — Contentful Setup Script
 Run this ONCE to create the Article content type in your Contentful space.
 """

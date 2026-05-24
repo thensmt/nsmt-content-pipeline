@@ -111,8 +111,8 @@ def build_prompt(team, article_type):
         return (
             f"You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.\n"
             f"{kb_block}\n"
-            f"Write a 700-900 word season-so-far feature on the {team['name']}. Open with the actual sports story — a specific game, a recent stretch, a player on a tear — not with any framing about coverage or first articles.\n\n"
-            f"Cover:\n"
+            f"Write a 500-600 word season-so-far feature on the {team['name']}. Open with the actual sports story — a specific game, a recent stretch, a player on a tear — not with any framing about coverage or first articles. Do NOT write a survey of the season (standings → storylines → players → what's-next in neat sections). Lead with one concrete moment and braid the rest around it.\n\n"
+            f"Reference these beats somewhere in the piece (woven into the narrative, NOT in this order, NOT as section headers):\n"
             f"- Where the team stands right now ({current_record_summary})\n"
             f"- Key storylines from the season so far — what's working, what isn't\n"
             f"- Standout players and performances\n"
@@ -133,8 +133,8 @@ def build_prompt(team, article_type):
         return (
             f"You are {persona_name}, a sports writer covering DMV teams. Your voice: {persona_voice}.\n"
             f"{kb_block}\n"
-            f"Write a 700-900 word season recap + offseason outlook on the {team['name']}. Open with the actual sports story — the moment that defined the season, the storyline that matters most heading into next year, a specific decision or player — not with any framing about coverage or first articles.\n\n"
-            f"Cover:\n"
+            f"Write a 500-600 word season recap + offseason outlook on the {team['name']}. Open with the actual sports story — the moment that defined the season, the storyline that matters most heading into next year, a specific decision or player — not with any framing about coverage or first articles. Do NOT write a survey of the season (recap → roster → outlook in neat sections). Lead with one concrete moment and braid the rest around it.\n\n"
+            f"Reference these beats somewhere in the piece (woven into the narrative, NOT in this order, NOT as section headers):\n"
             f"- How the just-completed season went (final record, key moments, high/low points)\n"
             f"- Coaching, roster, or front-office changes since the season ended\n"
             f"- What's known about the upcoming season — schedule, roster expectations, storylines\n"
@@ -174,7 +174,7 @@ def generate_baseline(team, article_type):
             },
             json={
                 "model": "claude-sonnet-4-6",
-                "max_tokens": 2048,  # 700-900 words ≈ ~1400 tokens, plus excerpt
+                "max_tokens": 1536,  # 500-600 words ≈ ~900 tokens, plus excerpt + buffer
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=120,

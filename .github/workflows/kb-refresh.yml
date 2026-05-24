@@ -59,6 +59,12 @@ jobs:
           fi
           python scripts/refresh_kb.py "${ARGS[@]}"
 
+      - name: Run unit tests before committing
+        # Gate: if the test suite doesn't pass against the refreshed KBs,
+        # don't commit. Prevents a bad ESPN payload or shape change from
+        # auto-pushing broken data into main.
+        run: python -m unittest discover -s tests -v
+
       - name: Commit + push if KBs changed
         run: |
           if git diff --quiet data/teams/; then

@@ -51,8 +51,18 @@ jobs:
             PACKET_DATE=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
           fi
           echo "Generating packet for team=$INPUT_TEAM_SLUG date=$PACKET_DATE"
-          python -m ingestion.generate_story_packet --team "$INPUT_TEAM_SLUG" --date "$PACKET_DATE" || \
-            echo "Packet generation failed for $INPUT_TEAM_SLUG on $PACKET_DATE — writer will fall back to web_search."
+          if python -m ingestion.generate_story_packet --team "$INPUT_TEAM_SLUG" --date "$PACKET_DATE"; then
+            echo "PACKET_STATUS=ok" >> "$GITHUB_ENV"
+          else
+            # Don't fail the workflow — the writer can still produce an article
+            # using web_search and the team KB. But the v2 PASS gate (Codex
+            # fact-check) is now load-bearing here: a hallucinated article
+            # without packet grounding will likely fail v2 and get blocked.
+            # Tag the run so the reviewer knows packet was missing.
+            echo ""
+            echo "::warning title=Packet generation failed::Story packet failed for $INPUT_TEAM_SLUG on $PACKET_DATE. Writer will fall back to web_search; rely on Codex v2 gate to catch hallucinations."
+            echo "PACKET_STATUS=missing" >> "$GITHUB_ENV"
+          fi
 
       - name: Run content pipeline
         env:

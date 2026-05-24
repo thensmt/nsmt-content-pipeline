@@ -31,6 +31,8 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import json
 import os
 import re
@@ -45,9 +47,34 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 STATE_FILE     = PROJECT_ROOT / ".codex-rewrite-state.json"
+LOCK_FILE      = PROJECT_ROOT / ".codex-rewrite.lock"
 DEFAULT_REPO   = "thensmt/nsmt-content-pipeline"
 PUBLISH_WF     = "publish-corrected.yml"
 SOURCE_WORKFLOWS = ("draft-baseline.yml",)   # workflows to watch for new drafts
+
+
+@contextlib.contextmanager
+def acquire_lock():
+    """Exclusive non-blocking file lock so two codex_rewrite processes
+    (launchd overlap, manual re-run while a launchd run is in flight) can't
+    race against the same .codex-rewrite-state.json. If the lock is already
+    held, the second process exits cleanly with a message — no double-publish."""
+    fd = os.open(LOCK_FILE, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(fd)
+            raise SystemExit(
+                "[codex-rewrite] another instance is already running "
+                f"(lock held: {LOCK_FILE}). Exiting cleanly."
+            )
+        try:
+            yield
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
 
 
 def _load_env() -> None:
@@ -90,6 +117,47 @@ def load_state() -> set[str]:
 
 def save_state(run_ids: set[str]) -> None:
     STATE_FILE.write_text(json.dumps({"processed_run_ids": sorted(run_ids)}, indent=2))
+
+
+# ── Published-articles dedup (Mac-side idempotency for admin POST) ────────────
+#
+# Keyed by stable article_id = "{team_slug}-{article_type}-{date}". Mirrors the
+# slug shape generate_baselines.py / generate_content.py use, so a duplicate
+# trigger from a re-run gets caught before it fires another admin POST.
+#
+# Doesn't protect against a manual `gh workflow run publish-corrected.yml`
+# bypassing this script — that path is not realistic in production but
+# operators should be aware. A real ledger (Phase B) would close that gap.
+
+PUBLISHED_FILE = PROJECT_ROOT / "data" / "published_articles.json"
+
+
+def _article_key(team_slug_: str, article_type: str, article_date: str) -> str:
+    return f"{team_slug_}-{article_type}-{article_date}"
+
+
+def load_published() -> dict[str, dict]:
+    if not PUBLISHED_FILE.exists():
+        return {}
+    try:
+        return json.loads(PUBLISHED_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def mark_published(article_id: str, *, team_slug_: str, article_type: str,
+                   article_date: str, title: str, run_id: str) -> None:
+    PUBLISHED_FILE.parent.mkdir(parents=True, exist_ok=True)
+    data = load_published()
+    data[article_id] = {
+        "team": team_slug_,
+        "type": article_type,
+        "date": article_date,
+        "title": title,
+        "source_run_id": run_id,
+        "published_at": datetime.now(timezone.utc).isoformat(),
+    }
+    PUBLISHED_FILE.write_text(json.dumps(data, indent=2, sort_keys=True))
 
 
 # ── GH Actions polling ────────────────────────────────────────────────────────
@@ -295,7 +363,10 @@ def find_team_by_slug(slug: str) -> dict | None:
     return None
 
 
-def process_run(run: dict, *, dry_run: bool) -> str:
+BLOCKED_DIR = PROJECT_ROOT / "data" / "blocked"
+
+
+def process_run(run: dict, *, dry_run: bool, allow_v2_fail: bool = False) -> str:
     run_id = str(run["databaseId"])
     label = f"run {run_id} ({run['_workflow']})"
     print(f"  · {label}: downloading artifact…")
@@ -396,6 +467,32 @@ def process_run(run: dict, *, dry_run: bool) -> str:
             print(f"----- (truncated at 3000 chars) -----\n")
             return f"  ✓ {label}: dry-run, publish skipped (v1={v1_verdict}, v2={v2_verdict})"
 
+        # v2 PASS gate — block publish on anything other than PASS unless the
+        # operator explicitly overrides with --allow-v2-fail. Blocked review
+        # trails are copied to data/blocked/ so they're not lost when the
+        # tempdir is cleaned up.
+        if v2_verdict != "PASS" and not allow_v2_fail:
+            BLOCKED_DIR.mkdir(parents=True, exist_ok=True)
+            blocked_path = BLOCKED_DIR / f"{meta['team_slug']}-{meta['article_date']}-{run_id}.md"
+            blocked_path.write_text(trail_path.read_text())
+            print(f"  ⛔ {label}: v2={v2_verdict} — PUBLISH BLOCKED")
+            print(f"     review trail saved to {blocked_path}")
+            print(f"     to override: python scripts/codex_rewrite.py --run-id {run_id} --allow-v2-fail")
+            return f"  ⛔ {label}: blocked (v1={v1_verdict} → v2={v2_verdict}); see {blocked_path}"
+
+        # Mac-side idempotency: skip the publish workflow trigger if this
+        # team+date+type was already published by an earlier run. Prevents
+        # duplicate admin draft POSTs when an operator re-runs --run-id or
+        # the launchd window catches a draft already processed.
+        article_id = _article_key(meta["team_slug"], meta["article_type"], meta["article_date"])
+        published = load_published()
+        if article_id in published:
+            prior = published[article_id]
+            print(f"  ⊘ {label}: '{article_id}' already published "
+                  f"(source run {prior.get('source_run_id')} at {prior.get('published_at')}). Skipping.")
+            return (f"  ⊘ {label}: skipped — '{article_id}' already published "
+                    f"(was source run {prior.get('source_run_id')})")
+
         print(f"  · {label}: triggering {PUBLISH_WF}…")
         trigger_publish(
             team=meta["team_slug"],
@@ -408,6 +505,14 @@ def process_run(run: dict, *, dry_run: bool) -> str:
             v2_verdict=v2_verdict,
             corrections_summary_path=corrections_path,
             review_trail_path=trail_path,
+        )
+        mark_published(
+            article_id,
+            team_slug_=meta["team_slug"],
+            article_type=meta["article_type"],
+            article_date=meta["article_date"],
+            title=title,
+            run_id=run_id,
         )
         return f"  ✓ {label}: published (v1={v1_verdict} → v2={v2_verdict})"
 
@@ -424,8 +529,15 @@ def main() -> int:
                     help="Process one specific GH run_id and exit.")
     ap.add_argument("--seed-state", action="store_true",
                     help="Mark all currently-visible draft runs as done without processing.")
+    ap.add_argument("--allow-v2-fail", action="store_true",
+                    help="Override the v2 PASS gate. Publish even if Codex's v2 fact-check did not PASS.")
     args = ap.parse_args()
 
+    with acquire_lock():
+        return _run(args)
+
+
+def _run(args: argparse.Namespace) -> int:
     print(f"[codex-rewrite] polling {REPO} for {', '.join(SOURCE_WORKFLOWS)}")
 
     processed = load_state()
@@ -442,7 +554,7 @@ def main() -> int:
         print(f"[codex-rewrite] processing one-off run_id={args.run_id}")
         # Build a minimal run dict so process_run can use it
         run = {"databaseId": args.run_id, "_workflow": "draft-baseline.yml"}
-        print(process_run(run, dry_run=args.dry_run))
+        print(process_run(run, dry_run=args.dry_run, allow_v2_fail=args.allow_v2_fail))
         if not args.dry_run:
             processed.add(str(args.run_id))
             save_state(processed)
@@ -458,8 +570,11 @@ def main() -> int:
             for r in reversed(pending):                       # oldest first
                 run_id = str(r["databaseId"])
                 try:
-                    print(process_run(r, dry_run=args.dry_run))
+                    print(process_run(r, dry_run=args.dry_run, allow_v2_fail=args.allow_v2_fail))
                     if not args.dry_run:
+                        # Mark processed regardless of gate outcome — a v2-blocked
+                        # run is intentionally "done" by the cron. User can re-trigger
+                        # with --run-id ... --allow-v2-fail if they want to push through.
                         processed.add(run_id)
                         save_state(processed)
                 except subprocess.CalledProcessError as exc:
