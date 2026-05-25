@@ -1,0 +1,58 @@
+{
+  "overall_verdict": "approve_with_minor_edits",
+  "article_notes": [
+    "The article is grounded in the final score, quarter sheet, team stats, and named box-score lines.",
+    "Consider trimming a few repeated possession-math phrases so the second half of the recap feels less template-driven."
+  ],
+  "asset_notes": {
+    "short_recap": [
+      "Clear and fact-safe, with appropriate emphasis on score and team categories."
+    ],
+    "takeaways": [
+      "The three takeaways are useful, but the first two overlap on possession language."
+    ],
+    "push_alert": [
+      "Safe and concise."
+    ],
+    "newsletter_blurb": [
+      "Conversational without overpromising."
+    ],
+    "seo_summary": [
+      "Readable and not keyword-stuffed."
+    ],
+    "social_caption": [
+      "Includes final score and keeps hashtags restrained."
+    ],
+    "headline_candidates": [
+      "The top headline is usable; the box-score headline is weaker and generic."
+    ]
+  },
+  "factual_risks": [
+    "The phrase about Washington needing to win too many recovery possessions should remain tied to turnovers and rebounds, not treated as tracked possession data."
+  ],
+  "unsupported_claims": [],
+  "headline_feedback": [
+    "Prefer the possession-gap headline over the generic box-score option."
+  ],
+  "voice_feedback": [
+    "Maya Brooks' voice is mostly intact: measured, basketball-literate, and cautious.",
+    "Reduce repeated use of possession framing where possible."
+  ],
+  "recommended_edits": [
+    {
+      "target": "main_article",
+      "issue": "Repeated possession framing",
+      "suggested_edit": "Vary one late reference to possession math with a more specific mention of turnovers, rebounds, or bench scoring.",
+      "priority": "medium"
+    },
+    {
+      "target": "headline_candidates",
+      "issue": "Generic final candidate",
+      "suggested_edit": "Replace the box-score headline with a more specific option tied to turnovers or the third quarter.",
+      "priority": "low"
+    }
+  ],
+  "suggested_headline": "Mystics' possession gap defines loss to Wings",
+  "publish_blockers": [],
+  "confidence": 0.86
+}

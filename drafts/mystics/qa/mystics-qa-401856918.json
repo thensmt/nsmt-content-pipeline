@@ -1,0 +1,270 @@
+{
+  "advisory_only": true,
+  "article_markdown_path": "drafts/mystics/mystics-postgame-2026-05-19-401856918.md",
+  "asset_paths": {
+    "headline_candidates": "drafts/mystics/assets/mystics-headlines-401856918.json",
+    "newsletter_blurb": "drafts/mystics/assets/mystics-newsletter-blurb-401856918.md",
+    "push_alert": "drafts/mystics/assets/mystics-push-alert-401856918.txt",
+    "seo_summary": "drafts/mystics/assets/mystics-seo-summary-401856918.md",
+    "short_recap": "drafts/mystics/assets/mystics-short-recap-401856918.md",
+    "social_caption": "drafts/mystics/assets/mystics-social-401856918.txt",
+    "takeaways": "drafts/mystics/assets/mystics-takeaways-401856918.md"
+  },
+  "event_id": "401856918",
+  "generation_timestamp": "2026-05-24T23:41:40Z",
+  "item_reports": {
+    "headline_candidates": {
+      "character_count": 279,
+      "issue_flags": [
+        "headline_weak"
+      ],
+      "item_key": "headline_candidates",
+      "label": "Headline candidates",
+      "notes": [
+        "Review headline weak before editor handoff."
+      ],
+      "overall_score": 87,
+      "path": "drafts/mystics/assets/mystics-headlines-401856918.json",
+      "scores": {
+        "clarity": 80,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 80,
+        "publish_readiness": 80,
+        "repetition_risk": 88,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 46
+    },
+    "main_article": {
+      "character_count": 6719,
+      "issue_flags": [],
+      "item_key": "main_article",
+      "label": "Main article draft",
+      "notes": [
+        "Main article draft is ready for normal human review."
+      ],
+      "overall_score": 87,
+      "path": "drafts/mystics/mystics-postgame-2026-05-19-401856918.md",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 90,
+        "publish_readiness": 88,
+        "repetition_risk": 64,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 662
+    },
+    "newsletter_blurb": {
+      "character_count": 562,
+      "issue_flags": [],
+      "item_key": "newsletter_blurb",
+      "label": "Newsletter blurb",
+      "notes": [
+        "Newsletter blurb is ready for normal human review."
+      ],
+      "overall_score": 91,
+      "path": "drafts/mystics/assets/mystics-newsletter-blurb-401856918.md",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 92,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 89
+    },
+    "push_alert": {
+      "character_count": 88,
+      "issue_flags": [],
+      "item_key": "push_alert",
+      "label": "Push alert",
+      "notes": [
+        "Push alert is ready for normal human review."
+      ],
+      "overall_score": 90,
+      "path": "drafts/mystics/assets/mystics-push-alert-401856918.txt",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 88,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 12
+    },
+    "seo_summary": {
+      "character_count": 407,
+      "issue_flags": [],
+      "item_key": "seo_summary",
+      "label": "SEO summary",
+      "notes": [
+        "SEO summary is ready for normal human review."
+      ],
+      "overall_score": 90,
+      "path": "drafts/mystics/assets/mystics-seo-summary-401856918.md",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 88,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 56
+    },
+    "short_recap": {
+      "character_count": 832,
+      "issue_flags": [],
+      "item_key": "short_recap",
+      "label": "Short recap",
+      "notes": [
+        "Short recap is ready for normal human review."
+      ],
+      "overall_score": 91,
+      "path": "drafts/mystics/assets/mystics-short-recap-401856918.md",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 92,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 132
+    },
+    "social_caption": {
+      "character_count": 130,
+      "issue_flags": [],
+      "item_key": "social_caption",
+      "label": "Social caption",
+      "notes": [
+        "Social caption is ready for normal human review."
+      ],
+      "overall_score": 90,
+      "path": "drafts/mystics/assets/mystics-social-401856918.txt",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 88,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 18
+    },
+    "takeaways": {
+      "character_count": 791,
+      "issue_flags": [],
+      "item_key": "takeaways",
+      "label": "3 takeaways",
+      "notes": [
+        "3 takeaways is ready for normal human review."
+      ],
+      "overall_score": 91,
+      "path": "drafts/mystics/assets/mystics-takeaways-401856918.md",
+      "scores": {
+        "clarity": 90,
+        "factual_safety": 94,
+        "nsmt_voice_fit": 88,
+        "publish_readiness": 88,
+        "repetition_risk": 92,
+        "source_support": 92,
+        "unsupported_claim_risk": 92
+      },
+      "word_count": 131
+    }
+  },
+  "overall_recommendation": "approve_for_editor_review",
+  "packet_path": "data/packets/mystics_postgame_401856918.json",
+  "schema_version": "mystics-editorial-qa/v0.1",
+  "score_categories": [
+    "factual_safety",
+    "source_support",
+    "clarity",
+    "nsmt_voice_fit",
+    "repetition_risk",
+    "unsupported_claim_risk",
+    "publish_readiness"
+  ],
+  "score_scale": "0-100, where 100 means strongest editorial readiness; risk categories score lower when risk is higher.",
+  "selected_story_angle": {
+    "angle_summary": "This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game.",
+    "angle_title": "Possession gap defined Washington's chase",
+    "confidence": 0.85,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "supporting_signals": [
+      "Final score: Dallas Wings 92, Washington Mystics 69",
+      "Scoring margin: 23",
+      "Rebounds: Washington 24 vs opponent 31 (edge: Dallas Wings)",
+      "Turnovers: Washington 19 vs opponent 9 (edge: Dallas Wings)",
+      "Bench points: Washington 21 vs opponent 31 (edge: Dallas Wings)",
+      "3PT: Washington 5-12 vs opponent 11-24 (edge: Dallas Wings)",
+      "Memory context: Possession discipline - When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes."
+    ]
+  },
+  "summary": {
+    "item_count": 8,
+    "lowest_scoring_items": [
+      {
+        "issue_flags": [
+          "headline_weak"
+        ],
+        "item_key": "headline_candidates",
+        "label": "Headline candidates",
+        "overall_score": 87,
+        "publish_readiness": 80
+      },
+      {
+        "issue_flags": [],
+        "item_key": "main_article",
+        "label": "Main article draft",
+        "overall_score": 87,
+        "publish_readiness": 88
+      },
+      {
+        "issue_flags": [],
+        "item_key": "push_alert",
+        "label": "Push alert",
+        "overall_score": 90,
+        "publish_readiness": 88
+      }
+    ],
+    "overall_recommendation": "approve_for_editor_review",
+    "top_issue_flags": [
+      {
+        "count": 1,
+        "flag": "headline_weak"
+      }
+    ]
+  },
+  "supported_issue_flags": [
+    "missing_score",
+    "missing_opponent",
+    "missing_top_performers",
+    "unsupported_causality",
+    "fake_quote_risk",
+    "too_generic",
+    "too_clickbaity",
+    "too_long",
+    "too_short",
+    "headline_weak",
+    "social_caption_weak",
+    "memory_overreach"
+  ]
+}

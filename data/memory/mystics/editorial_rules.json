@@ -1,0 +1,16 @@
+{
+  "schema_version": "mystics-memory/v0.1",
+  "rules": [
+    "Do not invent quotes.",
+    "Do not invent injuries or availability details.",
+    "Do not invent locker-room, huddle, halftime, or practice details.",
+    "Do not make claims that require reporting access.",
+    "Do not call any stat a season high, career high, first, or worst unless the packet explicitly supports it.",
+    "Use memory as editorial context only; current-game facts must come from ESPN payloads or another named source.",
+    "Prefer possession, quarter, and lineup framing over personality or motivation claims."
+  ],
+  "default_risk_flags": [
+    "Memory is contextual and not a hard-news source.",
+    "Avoid causality claims beyond what the game data supports."
+  ]
+}

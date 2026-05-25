@@ -1,0 +1,126 @@
+{
+  "alternate_angles": [
+    {
+      "angle_summary": "The scoring run and the key quarter stretched the game, then Washington spent the rest of the night chasing against the Dallas Wings.",
+      "angle_title": "Dallas Wings run turned the recap into a recovery story",
+      "confidence": 0.82,
+      "risk_flags": [
+        "Memory is contextual and not a hard-news source.",
+        "Avoid causality claims beyond what the game data supports.",
+        "Avoid calling a quarter a coaching failure without sourced reporting.",
+        "Avoid locker-room or halftime-causality claims.",
+        "Do not describe body language, huddles, or mood."
+      ],
+      "supporting_signals": [
+        "Final score: Dallas Wings 92, Washington Mystics 69",
+        "Scoring margin: 23",
+        "Biggest run: Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter.",
+        "Key quarter: The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17.",
+        "Gamecast/play-by-play available: True",
+        "Win probability samples: 2",
+        "Memory context: Quarter-to-quarter response - Use quarter scoring to identify where the recap should live when one period changes the game shape."
+      ]
+    },
+    {
+      "angle_summary": "Use Georgia Amoore's verified box-score line as the way into the recap, while keeping the team result and possession gaps in control of the conclusion.",
+      "angle_title": "Georgia Amoore's production as the human-scale entry point",
+      "confidence": 0.52,
+      "risk_flags": [
+        "Memory is contextual and not a hard-news source.",
+        "Avoid causality claims beyond what the game data supports.",
+        "unsourced leadership claims",
+        "college background unless separately sourced",
+        "Individual-performance angle is secondary because Washington lost by double digits."
+      ],
+      "supporting_signals": [
+        "Final score: Dallas Wings 92, Washington Mystics 69",
+        "Top Mystics performer: Georgia Amoore - 14 points, 2 rebounds, 3 assists",
+        "Top opponent performer: Jessica Shepard - 12 points, 16 rebounds, 6 assists",
+        "Memory context: Use current-game numbers to frame guard creation, shot profile, and late-clock pressure."
+      ]
+    }
+  ],
+  "article_markdown_path": "drafts/mystics/mystics-postgame-2026-05-19-401856918.md",
+  "editor_checklist": [
+    "Verify final score",
+    "Verify player stats",
+    "Check selected angle",
+    "Remove unsupported claims",
+    "Confirm no fake quotes",
+    "Confirm headline fits NSMT voice",
+    "Approve for Contentful draft creation"
+  ],
+  "external_editor_confidence": 0.86,
+  "external_editor_decision_path": "drafts/mystics/external_review/mystics-external-editor-decision-401856918.json",
+  "external_editor_needs_revision": false,
+  "external_editor_packet_path": "drafts/mystics/external_review/mystics-external-review-401856918.json",
+  "external_editor_publish_blockers_count": 0,
+  "external_editor_verdict": "approve_with_minor_edits",
+  "human_editor_required": true,
+  "lowest_scoring_items": [
+    {
+      "issue_flags": [
+        "headline_weak"
+      ],
+      "item_key": "headline_candidates",
+      "label": "Headline candidates",
+      "overall_score": 87,
+      "publish_readiness": 80
+    },
+    {
+      "issue_flags": [],
+      "item_key": "main_article",
+      "label": "Main article draft",
+      "overall_score": 87,
+      "publish_readiness": 88
+    },
+    {
+      "issue_flags": [],
+      "item_key": "push_alert",
+      "label": "Push alert",
+      "overall_score": 90,
+      "publish_readiness": 88
+    }
+  ],
+  "overall_recommendation": "approve_for_editor_review",
+  "packet_path": "data/packets/mystics_postgame_401856918.json",
+  "qa_report_path": "drafts/mystics/qa/mystics-qa-401856918.json",
+  "recommended_external_review": true,
+  "recommended_status": "human_review_required",
+  "risk_flags": [
+    "Memory is contextual and not a hard-news source.",
+    "Avoid causality claims beyond what the game data supports.",
+    "Do not claim a season-long turnover trend from one game.",
+    "Do not assign blame to a player without direct game data.",
+    "Avoid trend language unless multiple games are included in the packet."
+  ],
+  "selected_angle": {
+    "angle_summary": "This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game.",
+    "angle_title": "Possession gap defined Washington's chase",
+    "confidence": 0.85,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "supporting_signals": [
+      "Final score: Dallas Wings 92, Washington Mystics 69",
+      "Scoring margin: 23",
+      "Rebounds: Washington 24 vs opponent 31 (edge: Dallas Wings)",
+      "Turnovers: Washington 19 vs opponent 9 (edge: Dallas Wings)",
+      "Bench points: Washington 21 vs opponent 31 (edge: Dallas Wings)",
+      "3PT: Washington 5-12 vs opponent 11-24 (edge: Dallas Wings)",
+      "Memory context: Possession discipline - When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes."
+    ]
+  },
+  "summary_message": "Final score: Dallas Wings 92, Washington Mystics 69\nTop-ranked story angle: Possession gap defined Washington's chase\nTop performers: Jessica Shepard (Dallas Wings) - 12 points, 16 rebounds, 6 assists; Paige Bueckers (Dallas Wings) - 18 points, 3 rebounds, 7 assists; Aziaha James (Dallas Wings) - 17 points, 4 rebounds, 2 assists; Arike Ogunbowale (Dallas Wings) - 15 points, 2 rebounds, 4 assists\nBiggest risk flags: Memory is contextual and not a hard-news source.; Avoid causality claims beyond what the game data supports.; Do not claim a season-long turnover trend from one game.; Do not assign blame to a player without direct game data.\nDraft path: drafts/mystics/mystics-postgame-2026-05-19-401856918.md\nPacket path: data/packets/mystics_postgame_401856918.json\nQA report path: drafts/mystics/qa/mystics-qa-401856918.json\nQA recommendation: approve_for_editor_review\nExternal editor packet: drafts/mystics/external_review/mystics-external-review-401856918.json\nExternal editor decision: drafts/mystics/external_review/mystics-external-editor-decision-401856918.json\nExternal editor verdict: approve_with_minor_edits\nHuman review required before publishing.",
+  "thread_title": "[Mystics Recap] Dallas Wings vs Washington - 2026-05-19 - 401856918",
+  "top_issue_flags": [
+    {
+      "count": 1,
+      "flag": "headline_weak"
+    }
+  ]
+}

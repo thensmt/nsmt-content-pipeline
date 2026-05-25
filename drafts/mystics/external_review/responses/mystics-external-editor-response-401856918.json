@@ -1,0 +1,68 @@
+{
+  "advisory_only": true,
+  "event_id": "401856918",
+  "generated_timestamp": "2026-05-24T23:50:01Z",
+  "human_editor_required": true,
+  "no_auto_publish": true,
+  "no_auto_rewrite": true,
+  "response": {
+    "article_notes": [
+      "The article is grounded in the final score, quarter sheet, team stats, and named box-score lines.",
+      "Consider trimming a few repeated possession-math phrases so the second half of the recap feels less template-driven."
+    ],
+    "asset_notes": {
+      "headline_candidates": [
+        "The top headline is usable; the box-score headline is weaker and generic."
+      ],
+      "newsletter_blurb": [
+        "Conversational without overpromising."
+      ],
+      "push_alert": [
+        "Safe and concise."
+      ],
+      "seo_summary": [
+        "Readable and not keyword-stuffed."
+      ],
+      "short_recap": [
+        "Clear and fact-safe, with appropriate emphasis on score and team categories."
+      ],
+      "social_caption": [
+        "Includes final score and keeps hashtags restrained."
+      ],
+      "takeaways": [
+        "The three takeaways are useful, but the first two overlap on possession language."
+      ]
+    },
+    "confidence": 0.86,
+    "factual_risks": [
+      "The phrase about Washington needing to win too many recovery possessions should remain tied to turnovers and rebounds, not treated as tracked possession data."
+    ],
+    "headline_feedback": [
+      "Prefer the possession-gap headline over the generic box-score option."
+    ],
+    "overall_verdict": "approve_with_minor_edits",
+    "publish_blockers": [],
+    "recommended_edits": [
+      {
+        "issue": "Repeated possession framing",
+        "priority": "medium",
+        "suggested_edit": "Vary one late reference to possession math with a more specific mention of turnovers, rebounds, or bench scoring.",
+        "target": "main_article"
+      },
+      {
+        "issue": "Generic final candidate",
+        "priority": "low",
+        "suggested_edit": "Replace the box-score headline with a more specific option tied to turnovers or the third quarter.",
+        "target": "headline_candidates"
+      }
+    ],
+    "suggested_headline": "Mystics' possession gap defines loss to Wings",
+    "unsupported_claims": [],
+    "voice_feedback": [
+      "Maya Brooks' voice is mostly intact: measured, basketball-literate, and cautious.",
+      "Reduce repeated use of possession framing where possible."
+    ]
+  },
+  "schema_version": "mystics-external-editor-response/v0.1",
+  "source_response_path": "tests/fixtures/claude_external_editor_response_401856918.json"
+}

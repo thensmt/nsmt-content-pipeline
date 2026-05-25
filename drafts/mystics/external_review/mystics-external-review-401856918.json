@@ -1,0 +1,770 @@
+{
+  "editor_prompt": "# Claude External Editor Prompt\n\nYou are a senior sports editor reviewing a Washington Mystics postgame package for NSMT.\n\nReview the provided article, generated editorial assets, normalized game packet summary, story angles, memory context summary, internal QA summary, editorial rules, and source event ID.\n\nYour job:\n\n- Check factual safety against the packet summary and source event ID.\n- Flag unsupported claims, unsupported causality, and any language that goes beyond the available game data.\n- Flag weak headlines, generic AI language, repetitive phrasing, and social/newsletter/SEO copy that feels thin.\n- Flag overreach from memory context. Treat memory as editorial context only, never as hard-news fact.\n- Preserve Maya Brooks' voice: clear, observant, basketball-literate, grounded in possessions, lineups, pressure points, and restraint.\n- Avoid inventing quotes, injuries, availability details, locker-room details, huddle details, halftime details, practice details, coach intent, player motivation, or private communication.\n- Recommend edits and revision priorities only.\n- Do not publish, approve publication, post to Discord, create CMS drafts, call APIs, or rewrite/replace the source draft automatically.\n- Return structured JSON only. Do not include markdown, prose outside JSON, code fences, or explanations outside the JSON object.\n\nExpected JSON response schema:\n\n{\n  \"overall_verdict\": \"approve | approve_with_minor_edits | needs_revision | reject\",\n  \"article_notes\": [\n    \"string\"\n  ],\n  \"asset_notes\": {\n    \"short_recap\": [\n      \"string\"\n    ],\n    \"takeaways\": [\n      \"string\"\n    ],\n    \"push_alert\": [\n      \"string\"\n    ],\n    \"newsletter_blurb\": [\n      \"string\"\n    ],\n    \"seo_summary\": [\n      \"string\"\n    ],\n    \"social_caption\": [\n      \"string\"\n    ],\n    \"headline_candidates\": [\n      \"string\"\n    ]\n  },\n  \"factual_risks\": [\n    \"string\"\n  ],\n  \"unsupported_claims\": [\n    \"string\"\n  ],\n  \"headline_feedback\": [\n    \"string\"\n  ],\n  \"voice_feedback\": [\n    \"string\"\n  ],\n  \"recommended_edits\": [\n    {\n      \"target\": \"main_article | short_recap | takeaways | push_alert | newsletter_blurb | seo_summary | social_caption | headline_candidates\",\n      \"issue\": \"string\",\n      \"suggested_edit\": \"string\",\n      \"priority\": \"low | medium | high\"\n    }\n  ],\n  \"suggested_headline\": \"string\",\n  \"publish_blockers\": [\n    \"string\"\n  ],\n  \"confidence\": 0.0\n}\n\nUse an empty array when a category has no issues. Use `null` for `suggested_headline` if no better headline is recommended. Confidence must be a number from 0.0 to 1.0.\n",
+  "editorial_rules": [
+    "Do not invent quotes.",
+    "Do not invent injuries or availability details.",
+    "Do not invent locker-room, huddle, halftime, or practice details.",
+    "Do not make claims that require reporting access.",
+    "Do not call any stat a season high, career high, first, or worst unless the packet explicitly supports it.",
+    "Use memory as editorial context only; current-game facts must come from ESPN payloads or another named source.",
+    "Prefer possession, quarter, and lineup framing over personality or motivation claims."
+  ],
+  "external_review_only": true,
+  "generated_assets": {
+    "headline_candidates": [
+      {
+        "confidence": 0.88,
+        "headline": "Mystics' possession gap defines loss to Dallas Wings",
+        "rank": 1,
+        "risk_flags": [
+          "Memory is contextual and not a hard-news source.",
+          "Avoid causality claims beyond what the game data supports.",
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data.",
+          "Avoid trend language unless multiple games are included in the packet."
+        ],
+        "tone": "direct postgame analysis"
+      },
+      {
+        "confidence": 0.85,
+        "headline": "Mystics' possession math catches up in loss to Dallas Wings",
+        "rank": 2,
+        "risk_flags": [
+          "Memory is contextual and not a hard-news source.",
+          "Avoid causality claims beyond what the game data supports.",
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data.",
+          "Avoid trend language unless multiple games are included in the packet."
+        ],
+        "tone": "clear explanatory"
+      },
+      {
+        "confidence": 0.81,
+        "headline": "Mystics fall to Dallas Wings as key quarter widens gap",
+        "rank": 3,
+        "risk_flags": [
+          "Memory is contextual and not a hard-news source.",
+          "Avoid causality claims beyond what the game data supports.",
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data.",
+          "Avoid trend language unless multiple games are included in the packet."
+        ],
+        "tone": "scoreboard-driven"
+      },
+      {
+        "confidence": 0.77,
+        "headline": "Georgia Amoore's line gives Mystics a starting point in loss",
+        "rank": 4,
+        "risk_flags": [
+          "Memory is contextual and not a hard-news source.",
+          "Avoid causality claims beyond what the game data supports.",
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data.",
+          "Avoid trend language unless multiple games are included in the packet."
+        ],
+        "tone": "player entry point"
+      },
+      {
+        "confidence": 0.73,
+        "headline": "What the box score says about Mystics-Dallas Wings",
+        "rank": 5,
+        "risk_flags": [
+          "Memory is contextual and not a hard-news source.",
+          "Avoid causality claims beyond what the game data supports.",
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data.",
+          "Avoid trend language unless multiple games are included in the packet."
+        ],
+        "tone": "analytical"
+      }
+    ],
+    "newsletter_blurb": "The fast read from Mystics-Dallas Wings: Dallas Wings 92, Washington Mystics 69. Maya Brooks' full recap starts with the same careful frame as the packet's top story angle: Possession gap defined Washington's chase. That means the piece leans into the scoreboard, possession categories, and Georgia Amoore's verified line without stretching into locker-room guesses or fake certainty. It is built for readers who want the postgame feel, but still need the claims to stay attached to the available data. Read it for the cleanest explanation of how the game moved.",
+    "push_alert": "Final: Dallas Wings 92, Washington Mystics 69. Possession gaps shaped Washington's loss.",
+    "seo_summary": "Washington Mystics postgame recap: the Mystics and Dallas Wings finished at Dallas Wings 92, Washington Mystics 69, with the verified ESPN packet pointing the story toward possession gap defined washington's chase. This WNBA recap focuses on final score context, quarter scoring, turnovers, rebounds, bench production, and top performers while avoiding unsupported injury, motivation, or locker-room claims.",
+    "short_recap": "Washington lost to the Dallas Wings 92-69 on May 19, 2026 at College Park Center, and the top-ranked read from the packet is direct: This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game. The final was Dallas Wings 92, Washington Mystics 69, with The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17. Washington got verified production from Georgia Amoore, who finished with 14 points, 2 rebounds, 3 assists, but the team-level categories kept pulling the recap back to the same place: 19 Mystics turnovers, a 24-31 rebounding split, and a bench-scoring line of 21-31 from Washington's side. The tone should stay fast and careful: scoreboard, box score, and available play-by-play, without invented intent.",
+    "social_caption": "Final: Dallas Wings 92, Washington Mystics 69. Possession gaps shaped Washington's loss without needing extra spin. #Mystics #WNBA",
+    "takeaways": [
+      {
+        "explanation": "This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game. Keep the point tied to rebounds, turnovers, bench scoring, and 3-point volume rather than mood or motivation.",
+        "title": "Possession math set the frame"
+      },
+      {
+        "explanation": "The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17. Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter. Use this as a scoreboard hinge only; do not add halftime, huddle, or intent reporting.",
+        "title": "The key stretch needs careful language"
+      },
+      {
+        "explanation": "Georgia Amoore finished with 14 points, 2 rebounds, 3 assists. That gives the recap a human entry point, but the final score and team gaps should keep the framing balanced.",
+        "title": "Washington's best line still needs context"
+      }
+    ]
+  },
+  "generated_timestamp": "2026-05-24T23:41:40Z",
+  "internal_qa_summary": {
+    "advisory_only": true,
+    "available": true,
+    "item_reports": {
+      "headline_candidates": {
+        "character_count": 279,
+        "issue_flags": [
+          "headline_weak"
+        ],
+        "item_key": "headline_candidates",
+        "label": "Headline candidates",
+        "notes": [
+          "Review headline weak before editor handoff."
+        ],
+        "overall_score": 87,
+        "path": "drafts/mystics/assets/mystics-headlines-401856918.json",
+        "scores": {
+          "clarity": 80,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 80,
+          "publish_readiness": 80,
+          "repetition_risk": 88,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 46
+      },
+      "main_article": {
+        "character_count": 6719,
+        "issue_flags": [],
+        "item_key": "main_article",
+        "label": "Main article draft",
+        "notes": [
+          "Main article draft is ready for normal human review."
+        ],
+        "overall_score": 87,
+        "path": "drafts/mystics/mystics-postgame-2026-05-19-401856918.md",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 90,
+          "publish_readiness": 88,
+          "repetition_risk": 64,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 662
+      },
+      "newsletter_blurb": {
+        "character_count": 562,
+        "issue_flags": [],
+        "item_key": "newsletter_blurb",
+        "label": "Newsletter blurb",
+        "notes": [
+          "Newsletter blurb is ready for normal human review."
+        ],
+        "overall_score": 91,
+        "path": "drafts/mystics/assets/mystics-newsletter-blurb-401856918.md",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 92,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 89
+      },
+      "push_alert": {
+        "character_count": 88,
+        "issue_flags": [],
+        "item_key": "push_alert",
+        "label": "Push alert",
+        "notes": [
+          "Push alert is ready for normal human review."
+        ],
+        "overall_score": 90,
+        "path": "drafts/mystics/assets/mystics-push-alert-401856918.txt",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 88,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 12
+      },
+      "seo_summary": {
+        "character_count": 407,
+        "issue_flags": [],
+        "item_key": "seo_summary",
+        "label": "SEO summary",
+        "notes": [
+          "SEO summary is ready for normal human review."
+        ],
+        "overall_score": 90,
+        "path": "drafts/mystics/assets/mystics-seo-summary-401856918.md",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 88,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 56
+      },
+      "short_recap": {
+        "character_count": 832,
+        "issue_flags": [],
+        "item_key": "short_recap",
+        "label": "Short recap",
+        "notes": [
+          "Short recap is ready for normal human review."
+        ],
+        "overall_score": 91,
+        "path": "drafts/mystics/assets/mystics-short-recap-401856918.md",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 92,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 132
+      },
+      "social_caption": {
+        "character_count": 130,
+        "issue_flags": [],
+        "item_key": "social_caption",
+        "label": "Social caption",
+        "notes": [
+          "Social caption is ready for normal human review."
+        ],
+        "overall_score": 90,
+        "path": "drafts/mystics/assets/mystics-social-401856918.txt",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 88,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 18
+      },
+      "takeaways": {
+        "character_count": 791,
+        "issue_flags": [],
+        "item_key": "takeaways",
+        "label": "3 takeaways",
+        "notes": [
+          "3 takeaways is ready for normal human review."
+        ],
+        "overall_score": 91,
+        "path": "drafts/mystics/assets/mystics-takeaways-401856918.md",
+        "scores": {
+          "clarity": 90,
+          "factual_safety": 94,
+          "nsmt_voice_fit": 88,
+          "publish_readiness": 88,
+          "repetition_risk": 92,
+          "source_support": 92,
+          "unsupported_claim_risk": 92
+        },
+        "word_count": 131
+      }
+    },
+    "overall_recommendation": "approve_for_editor_review",
+    "qa_report_path": "drafts/mystics/qa/mystics-qa-401856918.json",
+    "summary": {
+      "item_count": 8,
+      "lowest_scoring_items": [
+        {
+          "issue_flags": [
+            "headline_weak"
+          ],
+          "item_key": "headline_candidates",
+          "label": "Headline candidates",
+          "overall_score": 87,
+          "publish_readiness": 80
+        },
+        {
+          "issue_flags": [],
+          "item_key": "main_article",
+          "label": "Main article draft",
+          "overall_score": 87,
+          "publish_readiness": 88
+        },
+        {
+          "issue_flags": [],
+          "item_key": "push_alert",
+          "label": "Push alert",
+          "overall_score": 90,
+          "publish_readiness": 88
+        }
+      ],
+      "overall_recommendation": "approve_for_editor_review",
+      "top_issue_flags": [
+        {
+          "count": 1,
+          "flag": "headline_weak"
+        }
+      ]
+    }
+  },
+  "main_article_markdown": "---\ntitle: \"Mystics' possession gap defines loss to Dallas Wings\"\ndate: \"2026-05-19\"\nteam: \"Washington Mystics\"\nopponent: \"Dallas Wings\"\ngame_id: \"401856918\"\nauthor: \"Maya Brooks\"\nstatus: \"draft\"\narticle_type: \"postgame_recap\"\nfinal_score: \"Dallas Wings 92, Washington Mystics 69\"\nresult: \"loss\"\nsource: \"ESPN site API\"\n---\n\n# Mystics' possession gap defines loss to Dallas Wings\n\n**By Maya Brooks, NSMT Washington Mystics AI beat writer**\n\nWashington lost to the Dallas Wings 92-69 on May 19, 2026 at College Park Center, a postgame box score that reads less like a mystery than a possession ledger. The official final was Dallas Wings 92, Washington Mystics 69, but the useful way into the game is this: This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game. That means the cleanest summary is that the Mystics spent too much of the night trying to repair the shape of the game. ESPN's play-by-play feed was available, and its loudest entry was the game's biggest run: Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter. That stretch did not decide every detail, but it established the terms of the night. From there, Washington had to answer not just the score, but the mistakes that turn a manageable deficit into a long chase.\n\nThe quarter sheet tells the same story from another angle: Q1 19-9, Q2 19-20, Q3 28-17, Q4 26-23. The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17. For a team trying to build steadier half-court habits, that quarter matters because it compressed several problems into one segment. The Mystics did find pockets of offense, but they were working from behind the scoreboard and behind the possession count. When a game has that profile, every empty trip carries extra weight, and every opponent second chance feels larger than the raw number beside it.\n\nThe play-by-play detail gives the opening stretch some needed texture. The run was not one spectacular swing; it was a stack of normal basketball plays that became damaging because Washington did not break the sequence quickly enough. A layup, a perimeter make, another paint touch, and another three made the scoreboard move before the Mystics had established their own rhythm. That is the kind of sequence a recap should treat with care. It is not proof of a permanent flaw, and it does not reduce the game to one bad minute. It does, however, show how thin the margin became once Washington had to chase, especially on a night when the team stats later confirmed the same pressure points.\n\nThe best Washington line belonged to Georgia Amoore, who finished with 14 points, 2 rebounds, 3 assists while shooting 5-11. Kiki Iriafen added 9 points, 10 rebounds, 2 assists on 2-6 shooting. Those numbers gave the recap some individual substance, but they could not fully counter the broader split in team categories. The Dallas Wings got a leading line from Jessica Shepard, who posted 12 points, 16 rebounds, 6 assists on 4-7 shooting, and the opponent's best stretches came with multiple actions linked together rather than isolated makes.\n\nThe edges explain why the game leaned the way it did. On the glass, the packet shows the Dallas Wings with 31 rebounds to Washington's 24. The turnover column was sharper: Washington had 19 total turnovers, while the Dallas Wings had 9. Bench scoring was 21-31 from the Mystics' perspective, and the three-point line was 5-12 for Washington against 11-24 for the Dallas Wings. None of those numbers needs embellishment. Together, they show a game in which Washington had to win too many recovery possessions just to get back to neutral.\n\nFor Washington, the most useful angle is not panic and not spin. It is the way the possession math shaped the tone of the night. The Mystics had individual production worth noting, especially from Georgia Amoore, but the team-level gaps made that production feel like resistance rather than control. That is the difference between a competitive box score and a convincing one. Washington can pull teaching points from the run that hurt, the quarter that stretched the margin, and the categories that refused to balance out. The schedule context in the packet lists the next Mystics game as Washington Mystics at Seattle Storm on May 24, 2026.\n\n**Excerpt:** Dallas Wings 92, Washington Mystics 69 as Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter. Washington now turns to the next correction.\n\n## Editorial Notes\n\n- Selected angle: Possession gap defined Washington's chase (confidence 0.85)\n- Alternate angles: Dallas Wings run turned the recap into a recovery story (confidence 0.82); Georgia Amoore's production as the human-scale entry point (confidence 0.52)\n- Key supporting signals: Final score: Dallas Wings 92, Washington Mystics 69; Scoring margin: 23; Rebounds: Washington 24 vs opponent 31 (edge: Dallas Wings); Turnovers: Washington 19 vs opponent 9 (edge: Dallas Wings); Bench points: Washington 21 vs opponent 31 (edge: Dallas Wings); 3PT: Washington 5-12 vs opponent 11-24 (edge: Dallas Wings); Memory context: Possession discipline - When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes.\n- Risk flags: Memory is contextual and not a hard-news source.; Avoid causality claims beyond what the game data supports.; Do not claim a season-long turnover trend from one game.; Do not assign blame to a player without direct game data.; Avoid trend language unless multiple games are included in the packet.\n- Source event ID: 401856918\n- Generated timestamp: 2026-05-24T22:30:00Z\n\n## Narrative Signals\n\n- Final score: Dallas Wings 92, Washington Mystics 69\n- Biggest scoring run: Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter.\n- Key quarter/turning point: The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17.\n- Rebounding/turnover/bench edge: REB edge Dallas Wings (24-31 WSH-opponent); TO edge Dallas Wings (19-9); bench points 21-31.\n\n## Likely Article Angles\n\n- Possession gap defined Washington's chase (confidence 0.85)\n- Dallas Wings run turned the recap into a recovery story (confidence 0.82)\n- Georgia Amoore's production as the human-scale entry point (confidence 0.52)\n\n## Sources\n\n- ESPN Mystics schedule: https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/16/schedule?season=2026\n- ESPN WNBA scoreboard: https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=20260518&limit=100\n- ESPN WNBA summary/gamecast: https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/summary?event=401856918\n\n",
+  "memory_context_summary": {
+    "default_risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports."
+    ],
+    "load_errors": [],
+    "memory_dir": "/Users/david/Downloads/Claude/NSMT/content-pipeline/data/memory/mystics",
+    "missing_files": [],
+    "player_profile_lenses": [
+      {
+        "avoid": [
+          "career-stage labels unless present in verified context",
+          "claims about development conversations",
+          "unsourced role-change language"
+        ],
+        "editorial_lens": "Use verified box-score production to discuss rebounding, paint involvement, and two-way workload.",
+        "player": "Kiki Iriafen"
+      },
+      {
+        "avoid": [
+          "health or availability speculation",
+          "comparison to prior seasons unless supplied in packet"
+        ],
+        "editorial_lens": "Use game data to describe interior scoring, defensive activity, and frontcourt balance.",
+        "player": "Shakira Austin"
+      },
+      {
+        "avoid": [
+          "unsourced leadership claims",
+          "college background unless separately sourced"
+        ],
+        "editorial_lens": "Use current-game numbers to frame guard creation, shot profile, and late-clock pressure.",
+        "player": "Georgia Amoore"
+      },
+      {
+        "avoid": [
+          "rookie or draft framing unless present in verified context",
+          "off-court motivation or locker-room detail"
+        ],
+        "editorial_lens": "Use current-game efficiency and possession decisions only when visible in the box score or play-by-play.",
+        "player": "Sonia Citron"
+      }
+    ],
+    "recent_storylines": [
+      {
+        "context": null,
+        "id": "bench-texture",
+        "label": "Bench texture",
+        "risk_flags": [
+          "Bench impact should be described through points/minutes only unless play-by-play supports more."
+        ]
+      },
+      {
+        "context": null,
+        "id": "chase-game",
+        "label": "Chasing the game",
+        "risk_flags": [
+          "Do not describe body language, huddles, or mood."
+        ]
+      },
+      {
+        "context": null,
+        "id": "stat-with-restraint",
+        "label": "Stat with restraint",
+        "risk_flags": [
+          "Avoid trend language unless multiple games are included in the packet."
+        ]
+      }
+    ],
+    "season_narratives": [
+      {
+        "context": "When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes.",
+        "id": "possession-discipline",
+        "label": "Possession discipline",
+        "risk_flags": [
+          "Do not claim a season-long turnover trend from one game.",
+          "Do not assign blame to a player without direct game data."
+        ]
+      },
+      {
+        "context": "Use quarter scoring to identify where the recap should live when one period changes the game shape.",
+        "id": "quarter-response",
+        "label": "Quarter-to-quarter response",
+        "risk_flags": [
+          "Avoid calling a quarter a coaching failure without sourced reporting.",
+          "Avoid locker-room or halftime-causality claims."
+        ]
+      },
+      {
+        "context": "If the box score supports it, connect frontcourt production to rebounding, paint touches, and lineup balance.",
+        "id": "frontcourt-glass",
+        "label": "Frontcourt and glass",
+        "risk_flags": [
+          "Do not infer injury, fatigue, or availability reasons.",
+          "Do not claim a role change unless the game data or official source states it."
+        ]
+      }
+    ]
+  },
+  "no_auto_publish": true,
+  "no_auto_rewrite": true,
+  "normalized_game_packet_summary": {
+    "biggest_scoring_run": {
+      "end_clock": "7:36",
+      "end_period": 1,
+      "plays": [
+        {
+          "away_score": 0,
+          "clock": "9:12",
+          "home_score": 2,
+          "id": "4018569181",
+          "period": 1,
+          "period_label": "1st Quarter",
+          "score_value": 2,
+          "scoring_play": true,
+          "short_description": "+2 Points",
+          "team_id": "3",
+          "text": "Paige Bueckers makes driving layup",
+          "wallclock": ""
+        },
+        {
+          "away_score": 0,
+          "clock": "8:51",
+          "home_score": 5,
+          "id": "4018569182",
+          "period": 1,
+          "period_label": "1st Quarter",
+          "score_value": 3,
+          "scoring_play": true,
+          "short_description": "+3 Points",
+          "team_id": "3",
+          "text": "Paige Bueckers makes 24-foot three point jumper",
+          "wallclock": ""
+        },
+        {
+          "away_score": 0,
+          "clock": "8:09",
+          "home_score": 7,
+          "id": "4018569183",
+          "period": 1,
+          "period_label": "1st Quarter",
+          "score_value": 2,
+          "scoring_play": true,
+          "short_description": "+2 Points",
+          "team_id": "3",
+          "text": "Jessica Shepard makes layup",
+          "wallclock": ""
+        },
+        {
+          "away_score": 0,
+          "clock": "7:36",
+          "home_score": 10,
+          "id": "4018569184",
+          "period": 1,
+          "period_label": "1st Quarter",
+          "score_value": 3,
+          "scoring_play": true,
+          "short_description": "+3 Points",
+          "team_id": "3",
+          "text": "Aziaha James makes 25-foot three point jumper",
+          "wallclock": ""
+        }
+      ],
+      "points": 10,
+      "start_clock": "9:12",
+      "start_period": 1,
+      "summary": "Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter.",
+      "team": "Dallas Wings",
+      "team_id": "3"
+    },
+    "date": "2026-05-19T00:00:00Z",
+    "event_id": "401856918",
+    "final_score": "Dallas Wings 92, Washington Mystics 69",
+    "key_quarter_or_turning_point": {
+      "impact": 11,
+      "label": "Q3",
+      "margin": -11,
+      "mystics_points": 17,
+      "opponent": "Dallas Wings",
+      "opponent_points": 28,
+      "period": 3,
+      "summary": "The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17."
+    },
+    "play_by_play_available": true,
+    "result": "loss",
+    "scoring_by_quarter": [
+      {
+        "DAL": 19,
+        "Dallas Wings": 19,
+        "WSH": 9,
+        "Washington Mystics": 9,
+        "label": "Q1",
+        "period": 1
+      },
+      {
+        "DAL": 19,
+        "Dallas Wings": 19,
+        "WSH": 20,
+        "Washington Mystics": 20,
+        "label": "Q2",
+        "period": 2
+      },
+      {
+        "DAL": 28,
+        "Dallas Wings": 28,
+        "WSH": 17,
+        "Washington Mystics": 17,
+        "label": "Q3",
+        "period": 3
+      },
+      {
+        "DAL": 26,
+        "Dallas Wings": 26,
+        "WSH": 23,
+        "Washington Mystics": 23,
+        "label": "Q4",
+        "period": 4
+      }
+    ],
+    "sources": [
+      {
+        "name": "ESPN Mystics schedule",
+        "retrieved_at": "2026-05-24T22:30:00Z",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/16/schedule?season=2026"
+      },
+      {
+        "name": "ESPN WNBA scoreboard",
+        "retrieved_at": "2026-05-24T22:30:00Z",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=20260518&limit=100"
+      },
+      {
+        "name": "ESPN WNBA summary/gamecast",
+        "retrieved_at": "2026-05-24T22:30:00Z",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/summary?event=401856918"
+      }
+    ],
+    "stat_edges": {
+      "bench_points": {
+        "edge": "Dallas Wings",
+        "mystics": 21,
+        "opponent": 31
+      },
+      "points_in_paint": {
+        "edge": "Dallas Wings",
+        "mystics": 34,
+        "opponent": 36
+      },
+      "rebounds": {
+        "edge": "Dallas Wings",
+        "mystics": 24,
+        "opponent": 31
+      },
+      "three_point_makes": {
+        "edge": "Dallas Wings",
+        "mystics": "5-12",
+        "opponent": "11-24"
+      },
+      "turnovers": {
+        "edge": "Dallas Wings",
+        "lower_is_better": true,
+        "mystics": 19,
+        "opponent": 9
+      }
+    },
+    "status": {
+      "completed": true,
+      "description": "Final",
+      "name": "STATUS_FINAL"
+    },
+    "teams": [
+      {
+        "abbreviation": "WSH",
+        "home_away": "away",
+        "id": "16",
+        "name": "Washington Mystics",
+        "score": 69,
+        "team_stats": {
+          "3PT": "5-12",
+          "Assists": "16",
+          "FG": "24-49",
+          "FT": "16-20",
+          "Points in Paint": "34",
+          "Rebounds": "24",
+          "Total Turnovers": "19",
+          "Turnovers": "18"
+        },
+        "winner": false
+      },
+      {
+        "abbreviation": "DAL",
+        "home_away": "home",
+        "id": "3",
+        "name": "Dallas Wings",
+        "score": 92,
+        "team_stats": {
+          "3PT": "11-24",
+          "Assists": "30",
+          "FG": "33-70",
+          "FT": "15-17",
+          "Points in Paint": "36",
+          "Rebounds": "31",
+          "Total Turnovers": "9",
+          "Turnovers": "8"
+        },
+        "winner": true
+      }
+    ],
+    "top_performers": [
+      {
+        "assists": 6,
+        "fg": "4-7",
+        "player": "Jessica Shepard",
+        "points": 12,
+        "rebounds": 16,
+        "starter": true,
+        "stat_line": "12 points, 16 rebounds, 6 assists",
+        "team": "Dallas Wings",
+        "three_pt": "0-0"
+      },
+      {
+        "assists": 7,
+        "fg": "7-12",
+        "player": "Paige Bueckers",
+        "points": 18,
+        "rebounds": 3,
+        "starter": true,
+        "stat_line": "18 points, 3 rebounds, 7 assists",
+        "team": "Dallas Wings",
+        "three_pt": "4-6"
+      },
+      {
+        "assists": 2,
+        "fg": "6-10",
+        "player": "Aziaha James",
+        "points": 17,
+        "rebounds": 4,
+        "starter": false,
+        "stat_line": "17 points, 4 rebounds, 2 assists",
+        "team": "Dallas Wings",
+        "three_pt": "3-5"
+      },
+      {
+        "assists": 4,
+        "fg": "5-14",
+        "player": "Arike Ogunbowale",
+        "points": 15,
+        "rebounds": 2,
+        "starter": true,
+        "stat_line": "15 points, 2 rebounds, 4 assists",
+        "team": "Dallas Wings",
+        "three_pt": "2-6"
+      },
+      {
+        "assists": 3,
+        "fg": "5-11",
+        "player": "Georgia Amoore",
+        "points": 14,
+        "rebounds": 2,
+        "starter": true,
+        "stat_line": "14 points, 2 rebounds, 3 assists",
+        "team": "Washington Mystics",
+        "three_pt": "2-5"
+      },
+      {
+        "assists": 2,
+        "fg": "2-6",
+        "player": "Kiki Iriafen",
+        "points": 9,
+        "rebounds": 10,
+        "starter": true,
+        "stat_line": "9 points, 10 rebounds, 2 assists",
+        "team": "Washington Mystics",
+        "three_pt": "1-1"
+      }
+    ],
+    "venue": "College Park Center"
+  },
+  "schema_version": "mystics-external-editor-review/v0.1",
+  "source_event_id": "401856918",
+  "source_paths": {
+    "article_markdown_path": "drafts/mystics/mystics-postgame-2026-05-19-401856918.md",
+    "asset_paths": {
+      "headline_candidates": "drafts/mystics/assets/mystics-headlines-401856918.json",
+      "newsletter_blurb": "drafts/mystics/assets/mystics-newsletter-blurb-401856918.md",
+      "push_alert": "drafts/mystics/assets/mystics-push-alert-401856918.txt",
+      "seo_summary": "drafts/mystics/assets/mystics-seo-summary-401856918.md",
+      "short_recap": "drafts/mystics/assets/mystics-short-recap-401856918.md",
+      "social_caption": "drafts/mystics/assets/mystics-social-401856918.txt",
+      "takeaways": "drafts/mystics/assets/mystics-takeaways-401856918.md"
+    },
+    "qa_report_path": "drafts/mystics/qa/mystics-qa-401856918.json"
+  },
+  "story_angles": [
+    {
+      "angle_summary": "This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game.",
+      "angle_title": "Possession gap defined Washington's chase",
+      "confidence": 0.85,
+      "risk_flags": [
+        "Memory is contextual and not a hard-news source.",
+        "Avoid causality claims beyond what the game data supports.",
+        "Do not claim a season-long turnover trend from one game.",
+        "Do not assign blame to a player without direct game data.",
+        "Avoid trend language unless multiple games are included in the packet."
+      ],
+      "supporting_signals": [
+        "Final score: Dallas Wings 92, Washington Mystics 69",
+        "Scoring margin: 23",
+        "Rebounds: Washington 24 vs opponent 31 (edge: Dallas Wings)",
+        "Turnovers: Washington 19 vs opponent 9 (edge: Dallas Wings)",
+        "Bench points: Washington 21 vs opponent 31 (edge: Dallas Wings)",
+        "3PT: Washington 5-12 vs opponent 11-24 (edge: Dallas Wings)",
+        "Memory context: Possession discipline - When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes."
+      ]
+    },
+    {
+      "angle_summary": "The scoring run and the key quarter stretched the game, then Washington spent the rest of the night chasing against the Dallas Wings.",
+      "angle_title": "Dallas Wings run turned the recap into a recovery story",
+      "confidence": 0.82,
+      "risk_flags": [
+        "Memory is contextual and not a hard-news source.",
+        "Avoid causality claims beyond what the game data supports.",
+        "Avoid calling a quarter a coaching failure without sourced reporting.",
+        "Avoid locker-room or halftime-causality claims.",
+        "Do not describe body language, huddles, or mood."
+      ],
+      "supporting_signals": [
+        "Final score: Dallas Wings 92, Washington Mystics 69",
+        "Scoring margin: 23",
+        "Biggest run: Dallas Wings scored 10 unanswered from 9:12 to 7:36 of the 1st Quarter.",
+        "Key quarter: The game tilted hardest in Q3, when Dallas Wings outscored Washington 28-17.",
+        "Gamecast/play-by-play available: True",
+        "Win probability samples: 2",
+        "Memory context: Quarter-to-quarter response - Use quarter scoring to identify where the recap should live when one period changes the game shape."
+      ]
+    },
+    {
+      "angle_summary": "Use Georgia Amoore's verified box-score line as the way into the recap, while keeping the team result and possession gaps in control of the conclusion.",
+      "angle_title": "Georgia Amoore's production as the human-scale entry point",
+      "confidence": 0.52,
+      "risk_flags": [
+        "Memory is contextual and not a hard-news source.",
+        "Avoid causality claims beyond what the game data supports.",
+        "unsourced leadership claims",
+        "college background unless separately sourced",
+        "Individual-performance angle is secondary because Washington lost by double digits."
+      ],
+      "supporting_signals": [
+        "Final score: Dallas Wings 92, Washington Mystics 69",
+        "Top Mystics performer: Georgia Amoore - 14 points, 2 rebounds, 3 assists",
+        "Top opponent performer: Jessica Shepard - 12 points, 16 rebounds, 6 assists",
+        "Memory context: Use current-game numbers to frame guard creation, shot profile, and late-clock pressure."
+      ]
+    }
+  ]
+}

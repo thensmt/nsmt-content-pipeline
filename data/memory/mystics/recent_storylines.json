@@ -1,0 +1,41 @@
+{
+  "schema_version": "mystics-memory/v0.1",
+  "description": "Recent storyline prompts for recap angle selection. Use only as editorial prompts and ground all claims in the current packet.",
+  "storylines": [
+    {
+      "id": "bench-texture",
+      "label": "Bench texture",
+      "prompt": "If bench scoring or reserve minutes show a clear edge, consider whether the second unit changed the game's rhythm.",
+      "requires_packet_signals": [
+        "bench_points"
+      ],
+      "risk_flags": [
+        "Bench impact should be described through points/minutes only unless play-by-play supports more."
+      ]
+    },
+    {
+      "id": "chase-game",
+      "label": "Chasing the game",
+      "prompt": "If an early run or lopsided quarter forced Washington to chase, make the recap about the possessions that made recovery difficult.",
+      "requires_packet_signals": [
+        "biggest_scoring_run",
+        "quarter_margin"
+      ],
+      "risk_flags": [
+        "Do not describe body language, huddles, or mood."
+      ]
+    },
+    {
+      "id": "stat-with-restraint",
+      "label": "Stat with restraint",
+      "prompt": "Use the strongest verified stat edge as the article spine, while acknowledging that one game is not a season-long verdict.",
+      "requires_packet_signals": [
+        "team_stats",
+        "final_score"
+      ],
+      "risk_flags": [
+        "Avoid trend language unless multiple games are included in the packet."
+      ]
+    }
+  ]
+}

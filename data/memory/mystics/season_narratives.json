@@ -1,0 +1,49 @@
+{
+  "schema_version": "mystics-memory/v0.1",
+  "description": "Conservative season-level editorial context for Maya Brooks. Treat as framing guidance, not standalone reportable fact.",
+  "narratives": [
+    {
+      "id": "possession-discipline",
+      "label": "Possession discipline",
+      "context": "When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes.",
+      "use_when_signals_include": [
+        "turnover edge",
+        "rebounding edge",
+        "points off turnovers",
+        "extended scoring run"
+      ],
+      "risk_flags": [
+        "Do not claim a season-long turnover trend from one game.",
+        "Do not assign blame to a player without direct game data."
+      ]
+    },
+    {
+      "id": "quarter-response",
+      "label": "Quarter-to-quarter response",
+      "context": "Use quarter scoring to identify where the recap should live when one period changes the game shape.",
+      "use_when_signals_include": [
+        "double-digit quarter margin",
+        "late-quarter scoring run",
+        "halftime-to-third-quarter swing"
+      ],
+      "risk_flags": [
+        "Avoid calling a quarter a coaching failure without sourced reporting.",
+        "Avoid locker-room or halftime-causality claims."
+      ]
+    },
+    {
+      "id": "frontcourt-glass",
+      "label": "Frontcourt and glass",
+      "context": "If the box score supports it, connect frontcourt production to rebounding, paint touches, and lineup balance.",
+      "use_when_signals_include": [
+        "team rebounding edge",
+        "individual rebounding leader",
+        "points in paint"
+      ],
+      "risk_flags": [
+        "Do not infer injury, fatigue, or availability reasons.",
+        "Do not claim a role change unless the game data or official source states it."
+      ]
+    }
+  ]
+}

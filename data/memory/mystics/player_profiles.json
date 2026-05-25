@@ -1,0 +1,63 @@
+{
+  "schema_version": "mystics-memory/v0.1",
+  "description": "Player-specific editorial lenses. These are not biographical claims and should only be used when supported by current game data.",
+  "profiles": [
+    {
+      "player": "Kiki Iriafen",
+      "editorial_lens": "Use verified box-score production to discuss rebounding, paint involvement, and two-way workload.",
+      "safe_stat_hooks": [
+        "rebounds",
+        "points",
+        "minutes",
+        "plus_minus"
+      ],
+      "avoid": [
+        "career-stage labels unless present in verified context",
+        "claims about development conversations",
+        "unsourced role-change language"
+      ]
+    },
+    {
+      "player": "Shakira Austin",
+      "editorial_lens": "Use game data to describe interior scoring, defensive activity, and frontcourt balance.",
+      "safe_stat_hooks": [
+        "points",
+        "rebounds",
+        "blocks",
+        "field goals"
+      ],
+      "avoid": [
+        "health or availability speculation",
+        "comparison to prior seasons unless supplied in packet"
+      ]
+    },
+    {
+      "player": "Georgia Amoore",
+      "editorial_lens": "Use current-game numbers to frame guard creation, shot profile, and late-clock pressure.",
+      "safe_stat_hooks": [
+        "points",
+        "assists",
+        "turnovers",
+        "three-point shooting"
+      ],
+      "avoid": [
+        "unsourced leadership claims",
+        "college background unless separately sourced"
+      ]
+    },
+    {
+      "player": "Sonia Citron",
+      "editorial_lens": "Use current-game efficiency and possession decisions only when visible in the box score or play-by-play.",
+      "safe_stat_hooks": [
+        "points",
+        "field goals",
+        "three-point shooting",
+        "turnovers"
+      ],
+      "avoid": [
+        "rookie or draft framing unless present in verified context",
+        "off-court motivation or locker-room detail"
+      ]
+    }
+  ]
+}

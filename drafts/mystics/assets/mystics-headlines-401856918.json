@@ -1,0 +1,67 @@
+[
+  {
+    "confidence": 0.88,
+    "headline": "Mystics' possession gap defines loss to Dallas Wings",
+    "rank": 1,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "tone": "direct postgame analysis"
+  },
+  {
+    "confidence": 0.85,
+    "headline": "Mystics' possession math catches up in loss to Dallas Wings",
+    "rank": 2,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "tone": "clear explanatory"
+  },
+  {
+    "confidence": 0.81,
+    "headline": "Mystics fall to Dallas Wings as key quarter widens gap",
+    "rank": 3,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "tone": "scoreboard-driven"
+  },
+  {
+    "confidence": 0.77,
+    "headline": "Georgia Amoore's line gives Mystics a starting point in loss",
+    "rank": 4,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "tone": "player entry point"
+  },
+  {
+    "confidence": 0.73,
+    "headline": "What the box score says about Mystics-Dallas Wings",
+    "rank": 5,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "tone": "analytical"
+  }
+]

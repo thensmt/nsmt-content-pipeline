@@ -1,0 +1,18 @@
+{
+  "advisory_only": true,
+  "confidence": 0.86,
+  "event_id": "401856918",
+  "generated_timestamp": "2026-05-24T23:50:01Z",
+  "human_editor_required": true,
+  "needs_revision": false,
+  "no_auto_publish": true,
+  "no_auto_rewrite": true,
+  "normalized_response_path": "drafts/mystics/external_review/responses/mystics-external-editor-response-401856918.json",
+  "overall_verdict": "approve_with_minor_edits",
+  "publish_blockers_count": 0,
+  "recommended_edits_count": 2,
+  "safe_to_publish_candidate": true,
+  "schema_version": "mystics-external-editor-decision/v0.1",
+  "source_response_path": "tests/fixtures/claude_external_editor_response_401856918.json",
+  "unsupported_claims_count": 0
+}

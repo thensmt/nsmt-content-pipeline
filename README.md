@@ -59,6 +59,166 @@ Default output: `data/packets/{team}_{YYYY-MM-DD}.json`. Source responses cached
 
 Generic ESPN fetcher (`ingestion/fetchers/espn_generic.py`) handles any team with an ESPN profile. Team-specific fetchers exist for fine-grained sources (e.g., `mystics_official.py`, `wnba_com.py`).
 
+## Mystics Postgame Recap MVP
+
+Additive prototype for Washington Mystics postgame drafting:
+
+```bash
+python -m ingestion.mystics_postgame_recap --as-of 2026-05-24
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --dry-run
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --discord-review
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --generate-assets
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --qa
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --generate-assets --qa --discord-review
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --generate-assets --qa --external-editor-packet
+python -m ingestion.mystics_postgame_recap --fixture tests/fixtures/espn_mystics_postgame_401856918.json --ingest-external-editor-response tests/fixtures/claude_external_editor_response_401856918.json
+python3 -m unittest discover -s tests -v
+```
+
+The stable CLI entrypoint is `ingestion/mystics_postgame_recap.py`. It
+orchestrates focused modules for ESPN fetch/fixture loading
+(`ingestion/espn_mystics.py`), packet normalization
+(`ingestion/mystics_normalizer.py`), memory and story angle handling
+(`newsroom/memory.py`, `newsroom/story_angles.py`), draft/assets/QA generation
+(`newsroom/drafts.py`, `newsroom/assets.py`, `newsroom/qa.py`), and local review
+handoffs (`newsroom/external_review.py`, `newsroom/discord_review.py`).
+Artifact validation boundaries live in `newsroom/schemas.py`. The
+pipeline finds the most recent completed game, normalizes it to
+`data/packets/mystics_postgame_{event_id}.json`, extracts recap signals, and
+writes a Maya Brooks markdown draft to `drafts/mystics/`. It does not publish or
+call the admin API.
+
+Maya Brooks' persistent editorial memory lives in `data/memory/mystics/`:
+
+- `season_narratives.json` — conservative season-level framing prompts
+- `player_profiles.json` — player-specific editorial lenses, not bio claims
+- `recent_storylines.json` — reusable storyline prompts for angle selection
+- `editorial_rules.json` — hard limits such as no invented quotes, injuries, or locker-room details
+
+The recap packet attaches those memory files under `memory` and creates exactly
+three ranked `story_angles`. The markdown draft uses the top-ranked angle and
+adds an `Editorial Notes` section with the selected angle, alternate angles,
+supporting signals, risk flags, ESPN event ID, and generated timestamp.
+
+Use `--discord-review` to generate a Discord-ready review package without
+posting it. Review JSON files are saved to `drafts/mystics/review/` as:
+
+```text
+drafts/mystics/review/mystics-postgame-{YYYY-MM-DD}-{event_id}-review.json
+```
+
+Editors should check `thread_title`, `summary_message`, `selected_angle`,
+`alternate_angles`, `risk_flags`, `article_markdown_path`, `packet_path`, and
+`editor_checklist`. The review package is only a handoff artifact for a future
+bot/manual post. If `--qa` is also used, the review package includes
+`qa_report_path`, `overall_recommendation`, `lowest_scoring_items`, and
+`top_issue_flags`. If an external editor packet exists, it includes
+`external_editor_packet_path` and `recommended_external_review`. It does not
+call Discord, Contentful, or the NSMT admin API. If an external editor decision
+summary exists, it also includes the verdict, confidence, blocker count,
+revision flag, and mandatory human-editor flag.
+
+Use `--generate-assets` to create secondary editorial assets from the same
+normalized packet and the top-ranked story angle. Asset files are saved under:
+
+```text
+drafts/mystics/assets/
+```
+
+Generated assets include:
+
+- `mystics-short-recap-{event_id}.md` — 120-180 word fast postgame recap
+- `mystics-takeaways-{event_id}.md` — exactly three title/explanation takeaways
+- `mystics-push-alert-{event_id}.txt` — max-160-character push alert
+- `mystics-newsletter-blurb-{event_id}.md` — conversational newsletter tease
+- `mystics-seo-summary-{event_id}.md` — one-paragraph readable SEO summary
+- `mystics-social-{event_id}.txt` — Instagram/X-compatible caption with final score
+- `mystics-headlines-{event_id}.json` — exactly five ranked headline candidates with tone, confidence, and risk flags
+- `mystics-assets-index-{event_id}.json` — generated paths, selected story angle, timestamp, event ID, writer voice, and risk summary
+
+Editors should treat these as review-ready components, not published copy. The
+assets inherit Maya Brooks' voice and reuse the selected story angle, but they
+remain deterministic templates grounded only in the normalized ESPN packet and
+Mystics editorial memory. Review final score, player stats, headline risk flags,
+and any wording that could imply reporting access before using an asset
+elsewhere. The asset flow does not publish and does not call Discord, Contentful,
+or the NSMT admin API.
+
+Use `--qa` to create an advisory editorial quality report for the generated
+article and any assets created in the same run:
+
+```text
+drafts/mystics/qa/mystics-qa-{event_id}.json
+```
+
+QA reports score each item from 0-100 across factual safety, source support,
+clarity, NSMT voice fit, repetition risk, unsupported-claim risk, and publish
+readiness. The report also includes issue flags such as missing score, missing
+opponent, fake quote risk, too clickbaity, memory overreach, weak headline, and
+weak social caption. The overall recommendation is one of:
+`approve_for_editor_review`, `needs_human_revision`, or
+`reject_and_regenerate`.
+
+Editors should use QA as a triage aid before reading the draft and packet:
+start with the lowest-scoring items, then check top issue flags against the
+normalized ESPN facts and editorial rules. QA is advisory only. It does not
+replace human review, does not approve publishing, and does not post or create
+drafts in any external system.
+
+Use `--claim-audit` to create an advisory v0.2 claim evidence audit:
+
+```text
+drafts/mystics/claim_audit/mystics-claim-audit-{event_id}.json
+```
+
+The audit keeps the backward-compatible top-level `claims` list and adds
+sentence-level grounding via `sentence_map` and `sentence_summary`. Sentence
+records map deterministic claims to packet evidence, memory context, editorial
+rules, weak support, unsupported markers, or obvious contradictions. This is a
+local review aid only, not semantic fact-checking and not a publishing gate.
+
+Use `--external-editor-packet` to prepare a structured package for Claude or
+another external editor model:
+
+```text
+drafts/mystics/external_review/mystics-external-review-{event_id}.json
+```
+
+The packet includes the external editor prompt from
+`prompts/editors/claude_external_editor.md`, the main article markdown, generated
+assets when `--generate-assets` is used, QA summary when `--qa` is used, story
+angles, memory context summary, editorial rules, source event ID, and a compact
+normalized game packet summary. This only prepares material for external review.
+It does not call the Claude API or any other LLM API, does not publish, and does
+not automatically replace generated drafts with external edits. Any returned
+external edits are advisory and must be applied manually after human review.
+
+After manually sending the external editor packet to Claude or another editor
+model, paste/save the model's JSON response to a local file. It must follow the
+schema requested in `prompts/editors/claude_external_editor.md`. Then ingest it:
+
+```bash
+python -m ingestion.mystics_postgame_recap \
+  --fixture tests/fixtures/espn_mystics_postgame_401856918.json \
+  --ingest-external-editor-response path/to/external-editor-response.json \
+  --discord-review
+```
+
+Ingestion validates the response and writes:
+
+```text
+drafts/mystics/external_review/responses/mystics-external-editor-response-{event_id}.json
+drafts/mystics/external_review/mystics-external-editor-decision-{event_id}.json
+```
+
+The decision summary counts publish blockers, unsupported claims, and recommended
+edits. `safe_to_publish_candidate` is true only when the external verdict is
+`approve` or `approve_with_minor_edits` and there are no publish blockers.
+`needs_revision` is true for `needs_revision` or `reject`. `human_editor_required`
+is always true. This step never applies edits, rewrites drafts, publishes, or
+calls Claude, Discord, Contentful, or the admin API.
+
 ---
 
 ## Setup (One-Time)

@@ -1,0 +1,58 @@
+{
+  "event_id": "401856918",
+  "generated_asset_paths": {
+    "headline_candidates": "drafts/mystics/assets/mystics-headlines-401856918.json",
+    "newsletter_blurb": "drafts/mystics/assets/mystics-newsletter-blurb-401856918.md",
+    "push_alert": "drafts/mystics/assets/mystics-push-alert-401856918.txt",
+    "seo_summary": "drafts/mystics/assets/mystics-seo-summary-401856918.md",
+    "short_recap": "drafts/mystics/assets/mystics-short-recap-401856918.md",
+    "social_caption": "drafts/mystics/assets/mystics-social-401856918.txt",
+    "takeaways": "drafts/mystics/assets/mystics-takeaways-401856918.md"
+  },
+  "generation_timestamp": "2026-05-24T23:41:40Z",
+  "review_required": true,
+  "risk_summary": {
+    "editorial_rules": [
+      "Do not invent quotes.",
+      "Do not invent injuries or availability details.",
+      "Do not invent locker-room, huddle, halftime, or practice details.",
+      "Do not make claims that require reporting access.",
+      "Do not call any stat a season high, career high, first, or worst unless the packet explicitly supports it.",
+      "Use memory as editorial context only; current-game facts must come from ESPN payloads or another named source.",
+      "Prefer possession, quarter, and lineup framing over personality or motivation claims."
+    ],
+    "flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "summary": "Memory is contextual and not a hard-news source.; Avoid causality claims beyond what the game data supports.; Do not claim a season-long turnover trend from one game.; Do not assign blame to a player without direct game data."
+  },
+  "selected_story_angle": {
+    "angle_summary": "This result is best read through possession math: turnovers, rebounds, bench scoring, and 3-point volume gave the Dallas Wings more ways to control the game.",
+    "angle_title": "Possession gap defined Washington's chase",
+    "confidence": 0.85,
+    "risk_flags": [
+      "Memory is contextual and not a hard-news source.",
+      "Avoid causality claims beyond what the game data supports.",
+      "Do not claim a season-long turnover trend from one game.",
+      "Do not assign blame to a player without direct game data.",
+      "Avoid trend language unless multiple games are included in the packet."
+    ],
+    "supporting_signals": [
+      "Final score: Dallas Wings 92, Washington Mystics 69",
+      "Scoring margin: 23",
+      "Rebounds: Washington 24 vs opponent 31 (edge: Dallas Wings)",
+      "Turnovers: Washington 19 vs opponent 9 (edge: Dallas Wings)",
+      "Bench points: Washington 21 vs opponent 31 (edge: Dallas Wings)",
+      "3PT: Washington 5-12 vs opponent 11-24 (edge: Dallas Wings)",
+      "Memory context: Possession discipline - When the game data supports it, frame turnovers, rebounding, and second-chance prevention as connected possession-control themes."
+    ]
+  },
+  "writer": {
+    "name": "Maya Brooks",
+    "voice": "clear, observant, and basketball-literate; explains game flow through lineups, possessions, and pressure points without turning the recap into a spreadsheet"
+  }
+}

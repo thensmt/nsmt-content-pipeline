@@ -1,0 +1,335 @@
+"""CLI orchestrator for the Washington Mystics postgame recap MVP.
+
+The focused implementation lives in ingestion.espn_mystics,
+ingestion.mystics_normalizer, and newsroom.* modules. This module keeps the
+stable CLI entrypoint and re-exports the public helpers used by older tests or
+callers. It writes local review artifacts only and does not publish.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from datetime import date, datetime
+from pathlib import Path
+
+from ingestion.espn_mystics import fetch_espn_payloads, load_fixture_payload
+from ingestion.mystics_normalizer import build_postgame_packet
+from newsroom.assets import (
+    format_asset_index,
+    generate_editorial_assets,
+    write_editorial_assets,
+    _preview_asset_paths,
+)
+from newsroom.common import (
+    DEFAULT_DRAFT_DIR,
+    DEFAULT_PACKET_DIR,
+    DEFAULT_REVIEW_DIR,
+    DEFAULT_ASSET_DIR,
+    DEFAULT_QA_DIR,
+    DEFAULT_CLAIM_AUDIT_DIR,
+    DEFAULT_EXTERNAL_REVIEW_DIR,
+    DEFAULT_EXTERNAL_RESPONSE_DIR,
+    DEFAULT_WRITER_PROFILE,
+    DEFAULT_MEMORY_DIR,
+    EXTERNAL_EDITOR_PROMPT_PATH,
+    MAYA_BROOKS_PROFILE,
+    PROJECT_ROOT,
+    TEAM_ABBR,
+    TEAM_ID,
+    TEAM_NAME,
+    _display_path,
+)
+from newsroom.claim_audit import (
+    format_claim_evidence_audit,
+    write_claim_evidence_audit,
+    load_claim_evidence_audit,
+    _preview_claim_audit_path,
+)
+from newsroom.discord_review import (
+    EDITOR_CHECKLIST,
+    format_discord_review_package,
+    write_discord_review_package,
+)
+from newsroom.drafts import render_markdown_draft, write_outputs
+from newsroom.external_review import (
+    EXTERNAL_EDITOR_RESPONSE_FIELDS,
+    EXTERNAL_EDITOR_VERDICTS,
+    format_external_editor_decision_summary,
+    format_external_editor_review_packet,
+    ingest_external_editor_response,
+    load_external_editor_prompt,
+    load_external_editor_response,
+    normalize_external_editor_response,
+    validate_external_editor_response,
+    write_external_editor_review_packet,
+)
+from newsroom.memory import MEMORY_FILES, load_mystics_memory
+from newsroom.qa import (
+    QA_ISSUE_FLAGS,
+    QA_RECOMMENDATIONS,
+    QA_SCORE_CATEGORIES,
+    format_editorial_qa_report,
+    write_editorial_qa_report,
+)
+from newsroom.story_angles import extract_narrative_signals, select_story_angles
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Generate a Mystics postgame recap MVP from ESPN data.")
+    parser.add_argument("--as-of", type=_parse_date, default=date.today(), help="Latest date to consider, YYYY-MM-DD.")
+    parser.add_argument("--season", type=int, default=None, help="WNBA season year. Defaults to --as-of year.")
+    parser.add_argument("--fixture", default=None, help="Path to saved ESPN payload fixture for offline generation.")
+    parser.add_argument("--packet-dir", type=Path, default=DEFAULT_PACKET_DIR)
+    parser.add_argument("--draft-dir", type=Path, default=DEFAULT_DRAFT_DIR)
+    parser.add_argument(
+        "--discord-review",
+        action="store_true",
+        help="Write a Discord-ready review JSON package. Does not call Discord.",
+    )
+    parser.add_argument(
+        "--generate-assets",
+        action="store_true",
+        help="Write secondary editorial assets under the Mystics draft assets directory.",
+    )
+    parser.add_argument(
+        "--qa",
+        action="store_true",
+        help="Write an advisory editorial QA report for generated local outputs.",
+    )
+    parser.add_argument(
+        "--claim-audit",
+        action="store_true",
+        help="Write a deterministic local claim evidence audit JSON.",
+    )
+    parser.add_argument(
+        "--external-editor-packet",
+        action="store_true",
+        help="Write a local packet for external LLM editor review. Does not call any LLM API.",
+    )
+    parser.add_argument(
+        "--ingest-external-editor-response",
+        type=Path,
+        default=None,
+        help="Validate and store an external editor JSON response. Does not apply edits.",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Print normalized JSON and draft path preview without writing.")
+    args = parser.parse_args(argv)
+
+    if args.fixture:
+        payloads = load_fixture_payload(args.fixture)
+    else:
+        payloads = fetch_espn_payloads(as_of=args.as_of, season=args.season)
+    packet = build_postgame_packet(payloads)
+    if args.dry_run:
+        markdown = render_markdown_draft(packet)
+        preview_packet_path = args.packet_dir / f"mystics_postgame_{packet['game']['id']}.json"
+        preview_draft_path = args.draft_dir / f"mystics-postgame-{packet['game']['date'][:10]}-{packet['game']['id']}.md"
+        assets = generate_editorial_assets(packet) if args.generate_assets else None
+        preview_asset_paths = _preview_asset_paths(packet, args.draft_dir / "assets") if args.generate_assets else {}
+        qa_report = None
+        preview_qa_path = args.draft_dir / "qa" / f"mystics-qa-{packet['game']['id']}.json"
+        claim_audit = None
+        preview_claim_audit_path = _preview_claim_audit_path(packet, args.draft_dir / "claim_audit")
+        preview_external_path = args.draft_dir / "external_review" / f"mystics-external-review-{packet['game']['id']}.json"
+        external_decision = None
+        preview_external_decision_path = (
+            args.draft_dir / "external_review" / f"mystics-external-editor-decision-{packet['game']['id']}.json"
+        )
+        if args.qa:
+            qa_report = format_editorial_qa_report(
+                packet,
+                article_markdown=markdown,
+                article_markdown_path=preview_draft_path,
+                packet_path=preview_packet_path,
+                assets=assets,
+                asset_paths=preview_asset_paths,
+            )
+        if args.claim_audit:
+            claim_audit = format_claim_evidence_audit(
+                packet,
+                article_markdown=markdown,
+                article_markdown_path=preview_draft_path,
+                packet_path=preview_packet_path,
+                assets=assets,
+                asset_paths=preview_asset_paths,
+            )
+        print(json.dumps(packet, indent=2, sort_keys=True))
+        print("\n--- MARKDOWN DRAFT ---\n")
+        print(markdown)
+        if args.generate_assets:
+            print("\n--- EDITORIAL ASSETS ---\n")
+            print(json.dumps(assets, indent=2, sort_keys=True))
+            print("\n--- ASSET INDEX ---\n")
+            print(
+                json.dumps(
+                    format_asset_index(packet, asset_paths=preview_asset_paths),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        if args.qa:
+            print("\n--- EDITORIAL QA REPORT ---\n")
+            print(json.dumps(qa_report, indent=2, sort_keys=True))
+        if args.claim_audit:
+            print("\n--- CLAIM EVIDENCE AUDIT ---\n")
+            print(json.dumps(claim_audit, indent=2, sort_keys=True))
+        if args.external_editor_packet:
+            print("\n--- EXTERNAL EDITOR PACKET ---\n")
+            print(
+                json.dumps(
+                    format_external_editor_review_packet(
+                        packet,
+                        article_markdown=markdown,
+                        article_markdown_path=preview_draft_path,
+                        assets=assets,
+                        asset_paths=preview_asset_paths,
+                        qa_report=qa_report,
+                        qa_report_path=preview_qa_path if qa_report else None,
+                    ),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        if args.ingest_external_editor_response:
+            source_response = load_external_editor_response(args.ingest_external_editor_response)
+            normalized_response_path = (
+                args.draft_dir
+                / "external_review"
+                / "responses"
+                / f"mystics-external-editor-response-{packet['game']['id']}.json"
+            )
+            normalized_response = normalize_external_editor_response(
+                source_response,
+                event_id=packet["game"]["id"],
+                source_response_path=args.ingest_external_editor_response,
+            )
+            external_decision = format_external_editor_decision_summary(
+                normalized_response,
+                source_response_path=args.ingest_external_editor_response,
+                normalized_response_path=normalized_response_path,
+            )
+            print("\n--- EXTERNAL EDITOR NORMALIZED RESPONSE ---\n")
+            print(json.dumps(normalized_response, indent=2, sort_keys=True))
+            print("\n--- EXTERNAL EDITOR DECISION SUMMARY ---\n")
+            print(json.dumps(external_decision, indent=2, sort_keys=True))
+        if args.discord_review:
+            print("\n--- DISCORD REVIEW PACKAGE ---\n")
+            print(
+                json.dumps(
+                    format_discord_review_package(
+                        packet,
+                        article_markdown_path=preview_draft_path,
+                        packet_path=preview_packet_path,
+                        qa_report_path=preview_qa_path if qa_report else None,
+                        qa_report=qa_report,
+                        claim_audit_path=preview_claim_audit_path if claim_audit else None,
+                        claim_audit=claim_audit,
+                        external_editor_packet_path=preview_external_path if args.external_editor_packet else None,
+                        external_editor_decision_path=preview_external_decision_path if external_decision else None,
+                        external_editor_decision=external_decision,
+                    ),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        return 0
+
+    response_ingest_only = bool(args.ingest_external_editor_response) and not any(
+        [args.generate_assets, args.qa, args.claim_audit, args.external_editor_packet]
+    )
+    if response_ingest_only:
+        game = packet["game"]
+        packet_path = args.packet_dir / f"mystics_postgame_{game['id']}.json"
+        draft_path = args.draft_dir / f"mystics-postgame-{game['date'][:10]}-{game['id']}.md"
+        print("Skipped packet/draft writes for external editor response ingestion.")
+    else:
+        packet_path, draft_path = write_outputs(packet, packet_dir=args.packet_dir, draft_dir=args.draft_dir)
+        print(f"Wrote normalized packet: {_display_path(packet_path)}")
+        print(f"Wrote markdown draft: {_display_path(draft_path)}")
+    assets = None
+    asset_paths: dict[str, Path] = {}
+    if args.generate_assets:
+        assets = generate_editorial_assets(packet)
+        asset_paths, index_path = write_editorial_assets(packet, asset_dir=args.draft_dir / "assets", assets=assets)
+        for asset_key, asset_path in asset_paths.items():
+            print(f"Wrote {asset_key.replace('_', ' ')} asset: {_display_path(asset_path)}")
+        print(f"Wrote asset index: {_display_path(index_path)}")
+    qa_path = None
+    qa_report = None
+    if args.qa:
+        qa_path = write_editorial_qa_report(
+            packet,
+            article_markdown_path=draft_path,
+            packet_path=packet_path,
+            qa_dir=args.draft_dir / "qa",
+            assets=assets,
+            asset_paths=asset_paths,
+        )
+        qa_report = json.loads(qa_path.read_text())
+        print(f"Wrote editorial QA report: {_display_path(qa_path)}")
+    claim_audit_path = None
+    claim_audit = None
+    if args.claim_audit:
+        claim_audit_path = write_claim_evidence_audit(
+            packet,
+            article_markdown_path=draft_path,
+            packet_path=packet_path,
+            audit_dir=args.draft_dir / "claim_audit",
+            assets=assets,
+            asset_paths=asset_paths,
+        )
+        claim_audit = load_claim_evidence_audit(claim_audit_path, event_id=packet["game"]["id"])
+        print(f"Wrote claim evidence audit: {_display_path(claim_audit_path)}")
+    external_editor_packet_path = None
+    if args.external_editor_packet:
+        external_editor_packet_path = write_external_editor_review_packet(
+            packet,
+            article_markdown_path=draft_path,
+            external_review_dir=args.draft_dir / "external_review",
+            assets=assets,
+            asset_paths=asset_paths,
+            qa_report=qa_report,
+            qa_report_path=qa_path,
+        )
+        print(f"Wrote external editor packet: {_display_path(external_editor_packet_path)}")
+    external_editor_decision_path = None
+    external_editor_decision = None
+    if args.ingest_external_editor_response:
+        _, external_editor_decision_path = ingest_external_editor_response(
+            packet,
+            source_response_path=args.ingest_external_editor_response,
+            external_review_dir=args.draft_dir / "external_review",
+        )
+        external_editor_decision = json.loads(external_editor_decision_path.read_text())
+        normalized_response_path = Path(external_editor_decision["normalized_response_path"])
+        print(f"Wrote normalized external editor response: {_display_path(normalized_response_path)}")
+        print(f"Wrote external editor decision summary: {_display_path(external_editor_decision_path)}")
+    if args.discord_review:
+        review_path = write_discord_review_package(
+            packet,
+            article_markdown_path=draft_path,
+            packet_path=packet_path,
+            review_dir=args.draft_dir / "review",
+            qa_report_path=qa_path,
+            qa_report=qa_report,
+            claim_audit_path=claim_audit_path,
+            claim_audit=claim_audit,
+            external_editor_packet_path=external_editor_packet_path,
+            external_editor_decision_path=external_editor_decision_path,
+            external_editor_decision=external_editor_decision,
+        )
+        print(f"Wrote Discord review package: {_display_path(review_path)}")
+    print("Publish step intentionally skipped.")
+    return 0
+
+
+def _parse_date(value: str) -> date:
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("date must be YYYY-MM-DD") from exc
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
