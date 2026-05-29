@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsmt-content-pipeline"
+version = "0.1.0"
+description = "NSMT content pipeline — source-grounded sports draft generation and review."
+requires-python = ">=3.10"
+
+# Core runtime dependency used by every code path (writer, ingestion,
+# publishing). CI installs exactly this today via `pip install requests`;
+# this manifest documents it as the single base dependency.
+dependencies = [
+    "requests",
+]
+
+[project.optional-dependencies]
+# Mac-side / residential-IP transcript acquisition for the Mystics beat.
+#
+# Stage 2 proved YouTube blocks youtube-transcript-api fetches from GitHub
+# Actions (Azure/datacenter) egress IPs (15/15 attempts blocked across 5 IPs),
+# but they succeed from the Mac's residential IP. So this group runs ONLY on
+# the Mac, alongside the existing Codex launchd jobs. It is intentionally NOT
+# added to any CI install path — the GitHub Actions workflows keep their
+# `pip install requests` step untouched and never import this code.
+#
+# Install locally (Mac):
+#   uv pip install -e '.[transcripts]'
+#   # or: pip install -e '.[transcripts]'
+# Ad-hoc (matches how the Stage 1/2 smoke tests were run):
+#   uv run --with youtube-transcript-api==1.2.4 python -m ingestion.mystics_postgame_recap ...
+#
+# - youtube-transcript-api: pinned to the version proven in Stage 1/2 (1.2.4).
+# - yt-dlp: channel discovery only (ingestion/fetchers/youtube_transcripts.py
+#   discover_game_videos). Unpinned; used solely when no YOUTUBE_API_KEY is set.
+transcripts = [
+    "youtube-transcript-api==1.2.4",
+    "yt-dlp",
+]
+
+[tool.setuptools]
+# Importable library packages for the Mystics postgame pipeline. Top-level
+# scripts (generate_content.py, generate_baselines.py, style_guide.py) are run
+# directly and are not packaged here.
+packages = [
+    "ingestion",
+    "ingestion.fetchers",
+    "newsroom",
+]

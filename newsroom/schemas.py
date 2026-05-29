@@ -81,6 +81,11 @@ CLAIM_SUPPORT_STATUSES = [
     "not_claim",
 ]
 
+# media_transcripts (v0.2) — YouTube highlight/presser transcript attachment
+MEDIA_TRANSCRIPT_KINDS = ["highlights", "presser"]
+MEDIA_TRANSCRIPT_STATUSES = ["ok", "missing"]
+TRANSCRIPT_TRACKS = ["auto", "manual"]
+
 
 def validate_story_angle(angle: dict[str, Any], path: str = "story_angle") -> dict[str, Any]:
     """Validate a single story angle and return it unchanged."""
@@ -124,7 +129,7 @@ def validate_normalized_game_packet(packet: dict[str, Any]) -> dict[str, Any]:
         ),
         errors,
     )
-    _require_exact(packet.get("schema_version"), "mystics-postgame-recap/v0.1", "packet.schema_version", errors)
+    _require_exact(packet.get("schema_version"), "mystics-postgame-recap/v0.2", "packet.schema_version", errors)
     _require_str(packet.get("retrieved_at"), "packet.retrieved_at", errors, allow_empty=False)
     _validate_packet_team(packet.get("team"), "packet.team", errors)
     _validate_game(packet.get("game"), "packet.game", errors)
@@ -134,6 +139,8 @@ def validate_normalized_game_packet(packet: dict[str, Any]) -> dict[str, Any]:
     if "story_angles" in packet:
         _validate_story_angles_exact(packet.get("story_angles"), "packet.story_angles", errors)
     _validate_writer_profile(packet.get("writer_profile"), "packet.writer_profile", errors)
+    if "media_transcripts" in packet:
+        _validate_media_transcripts(packet.get("media_transcripts"), "packet.media_transcripts", errors)
     return _finish("normalized game packet", packet, errors)
 
 
@@ -605,6 +612,66 @@ def _validate_sources(value: Any, path: str, errors: list[str]) -> None:
         _require_str(source.get("name"), f"{source_path}.name", errors, allow_empty=False)
         _require_str(source.get("url"), f"{source_path}.url", errors)
         _require_str(source.get("retrieved_at"), f"{source_path}.retrieved_at", errors, allow_empty=False)
+
+
+def _validate_media_transcripts(value: Any, path: str, errors: list[str]) -> None:
+    """Validate the optional v0.2 media_transcripts block (list of per-video objects).
+
+    Both successful (status "ok") and failed (status "missing") records are
+    accepted; a missing record only needs a reason. Raw segments/text and the
+    name-corrected variant are both required for ok records.
+    """
+    if not _require_list(value, path, errors):
+        return
+    for index, item in enumerate(value):
+        item_path = f"{path}[{index}]"
+        if not _require_mapping(item, item_path, errors):
+            continue
+        _require_keys(item, item_path, ("video_id", "kind", "status", "source_url", "retrieved_at"), errors)
+        _require_str(item.get("video_id"), f"{item_path}.video_id", errors, allow_empty=False)
+        _require_one_of(item.get("kind"), MEDIA_TRANSCRIPT_KINDS, f"{item_path}.kind", errors)
+        _require_one_of(item.get("status"), MEDIA_TRANSCRIPT_STATUSES, f"{item_path}.status", errors)
+        _require_str(item.get("source_url"), f"{item_path}.source_url", errors, allow_empty=False)
+        _require_str(item.get("retrieved_at"), f"{item_path}.retrieved_at", errors, allow_empty=False)
+        status = item.get("status")
+        if status == "ok":
+            _require_one_of(item.get("track"), TRANSCRIPT_TRACKS, f"{item_path}.track", errors)
+            _require_str(item.get("language"), f"{item_path}.language", errors, allow_empty=False)
+            _require_int_range(item.get("snippet_count"), f"{item_path}.snippet_count", errors, minimum=0)
+            _require_int_range(item.get("char_count"), f"{item_path}.char_count", errors, minimum=0)
+            _validate_transcript_segments(item.get("segments"), f"{item_path}.segments", errors)
+            _validate_transcript_segments(item.get("corrected_segments"), f"{item_path}.corrected_segments", errors)
+            _require_str(item.get("text"), f"{item_path}.text", errors)
+            _require_str(item.get("corrected_text"), f"{item_path}.corrected_text", errors)
+            _validate_name_corrections(item.get("name_corrections"), f"{item_path}.name_corrections", errors)
+        elif status == "missing":
+            _require_str(item.get("reason"), f"{item_path}.reason", errors, allow_empty=False)
+
+
+def _validate_transcript_segments(value: Any, path: str, errors: list[str]) -> None:
+    if not _require_list(value, path, errors):
+        return
+    for index, segment in enumerate(value):
+        segment_path = f"{path}[{index}]"
+        if not _require_mapping(segment, segment_path, errors):
+            continue
+        _require_keys(segment, segment_path, ("start", "duration", "text"), errors)
+        _require_number_range(segment.get("start"), f"{segment_path}.start", errors, minimum=0)
+        _require_number_range(segment.get("duration"), f"{segment_path}.duration", errors, minimum=0)
+        _require_str(segment.get("text"), f"{segment_path}.text", errors)
+
+
+def _validate_name_corrections(value: Any, path: str, errors: list[str]) -> None:
+    if not _require_list(value, path, errors):
+        return
+    for index, correction in enumerate(value):
+        correction_path = f"{path}[{index}]"
+        if not _require_mapping(correction, correction_path, errors):
+            continue
+        _require_keys(correction, correction_path, ("from", "to", "count"), errors)
+        _require_str(correction.get("from"), f"{correction_path}.from", errors, allow_empty=False)
+        _require_str(correction.get("to"), f"{correction_path}.to", errors, allow_empty=False)
+        _require_int_range(correction.get("count"), f"{correction_path}.count", errors, minimum=1)
 
 
 def _validate_narrative(value: Any, path: str, errors: list[str]) -> None:

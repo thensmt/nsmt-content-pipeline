@@ -291,7 +291,7 @@ class MysticsPostgameRecapTests(unittest.TestCase):
         payloads = load_fixture_payload(FIXTURE)
         packet = build_postgame_packet(payloads, retrieved_at="2026-05-24T22:30:00Z")
 
-        self.assertEqual(packet["schema_version"], "mystics-postgame-recap/v0.1")
+        self.assertEqual(packet["schema_version"], "mystics-postgame-recap/v0.2")
         self.assertEqual(packet["game"]["id"], "401856918")
         self.assertEqual(packet["game"]["status"]["description"], "Final")
         self.assertEqual(packet["game"]["venue"], "College Park Center")

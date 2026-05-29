@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -17,8 +18,22 @@ def build_postgame_packet(
     *,
     retrieved_at: str | None = None,
     memory_dir: Path | str | None = DEFAULT_MEMORY_DIR,
+    include_transcripts: bool | None = None,
+    transcript_videos: list[Any] | None = None,
+    transcript_team_slugs: tuple[str, ...] = ("mystics",),
+    transcript_name_tokens: dict[str, str] | None = None,
+    transcript_fetcher: Any = None,
 ) -> dict[str, Any]:
-    """Normalize ESPN payloads and add narrative signals."""
+    """Normalize ESPN payloads and add narrative signals.
+
+    Transcript enrichment (Mac-side / residential IP only) is OFF by default, so
+    the deterministic path is unaffected. It turns on when ``include_transcripts``
+    is True, or when ``include_transcripts`` is None and the
+    ``NSMT_INCLUDE_TRANSCRIPTS`` env var is truthy. When on, ``transcript_videos``
+    (``[{"video_id", "kind"}, ...]``) is a manual override that bypasses channel
+    discovery; if omitted, discovery is attempted for the game's two teams. Any
+    network fetch happens only when transcripts are enabled.
+    """
     retrieved = retrieved_at or payloads.get("retrieved_at") or iso_utc()
     event = payloads.get("event") or _event_from_fixture_scoreboards(payloads)
     if not isinstance(event, dict):
@@ -33,7 +48,97 @@ def build_postgame_packet(
     normalized["narrative"] = narrative
     normalized["story_angles"] = select_story_angles(normalized)
     normalized["writer_profile"] = writer_profile
+
+    if _transcripts_enabled(include_transcripts):
+        _attach_transcripts(
+            normalized,
+            transcript_videos=transcript_videos,
+            team_slugs=transcript_team_slugs,
+            name_tokens=transcript_name_tokens,
+            fetcher=transcript_fetcher,
+            retrieved_at=retrieved,
+        )
+
     return validate_normalized_game_packet(normalized)
+
+
+def _transcripts_enabled(include_transcripts: bool | None) -> bool:
+    if include_transcripts is not None:
+        return bool(include_transcripts)
+    return os.environ.get("NSMT_INCLUDE_TRANSCRIPTS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def enrich_packet_with_transcripts(
+    packet: dict[str, Any],
+    *,
+    transcript_videos: list[Any] | None = None,
+    team_slugs: tuple[str, ...] = ("mystics",),
+    name_tokens: dict[str, str] | None = None,
+    fetcher: Any = None,
+    retrieved_at: str | None = None,
+) -> dict[str, Any]:
+    """Attach (or refresh) ``media_transcripts`` on an already-built packet, then
+    re-validate. Manual-override entry point: pass
+    ``transcript_videos=[{"video_id", "kind"}, ...]``."""
+    retrieved = retrieved_at or packet.get("retrieved_at") or iso_utc()
+    _attach_transcripts(
+        packet,
+        transcript_videos=transcript_videos,
+        team_slugs=team_slugs,
+        name_tokens=name_tokens,
+        fetcher=fetcher,
+        retrieved_at=retrieved,
+    )
+    return validate_normalized_game_packet(packet)
+
+
+def _attach_transcripts(
+    normalized: dict[str, Any],
+    *,
+    transcript_videos: list[Any] | None,
+    team_slugs: tuple[str, ...],
+    name_tokens: dict[str, str] | None,
+    fetcher: Any,
+    retrieved_at: str,
+) -> None:
+    """Fetch + name-correct transcripts and attach ``media_transcripts`` + sources.
+
+    Local import keeps the deterministic path free of the transcript dependency.
+    """
+    from ingestion.fetchers.youtube_transcripts import build_media_transcripts, discover_game_videos
+
+    videos = transcript_videos
+    if videos is None:
+        # No manual override: best-effort discovery for the two teams in this game.
+        teams = [team.get("name") for team in normalized.get("game", {}).get("teams", []) if team.get("name")]
+        try:
+            videos = discover_game_videos(normalized.get("game", {}).get("date", ""), teams)
+        except Exception:  # discovery is best-effort; never block packet assembly
+            videos = []
+
+    media = build_media_transcripts(
+        videos,
+        name_tokens=name_tokens,
+        team_slugs=team_slugs,
+        retrieved_at=retrieved_at,
+        fetcher=fetcher,
+    )
+    normalized["media_transcripts"] = media
+
+    sources = normalized.setdefault("sources", [])
+    existing_urls = {src.get("url") for src in sources if isinstance(src, dict)}
+    for item in media:
+        url = item.get("source_url", "")
+        if url and url in existing_urls:
+            continue
+        existing_urls.add(url)
+        sources.append(
+            {
+                "name": f"YouTube {item.get('kind', 'video')} transcript ({item.get('video_id', '')})",
+                "url": url,
+                "retrieved_at": item.get("retrieved_at", retrieved_at),
+            }
+        )
 
 
 def _normalize_game(
@@ -50,7 +155,7 @@ def _normalize_game(
     game_date = _event_date(event)
 
     return {
-        "schema_version": "mystics-postgame-recap/v0.1",
+        "schema_version": "mystics-postgame-recap/v0.2",
         "retrieved_at": retrieved_at,
         "team": {
             "id": TEAM_ID,
