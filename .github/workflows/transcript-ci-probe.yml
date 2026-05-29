@@ -2,12 +2,20 @@ name: Transcript CI Probe (datacenter IP feasibility)
 
 # DIAGNOSTIC ONLY — Stage 2 feasibility gate.
 # Tests whether YouTube blocks youtube-transcript-api fetches from a GitHub
-# Actions (datacenter) egress IP. workflow_dispatch only, no schedule.
-# References ZERO repo secrets. Does not touch the real pipeline, admin API,
-# Discord, or Anthropic. Throwaway — safe to delete the branch when done.
+# Actions (datacenter) egress IP. References ZERO repo secrets. Does not touch
+# the real pipeline, admin API, Discord, or Anthropic. Throwaway scratch branch.
+#
+# Trigger: a branch-only workflow_dispatch is NOT dispatchable (GitHub requires
+# workflow_dispatch workflows to live on the default branch). To keep this fully
+# isolated from main, we trigger via push to the probe branch instead, and use
+# `gh run rerun` to sample additional runner egress IPs. workflow_dispatch is
+# left in place but is inert until/unless this file reaches the default branch.
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - probe/transcript-ci
 
 jobs:
   probe:
