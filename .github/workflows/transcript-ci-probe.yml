@@ -1,0 +1,56 @@
+name: Transcript CI Probe (datacenter IP feasibility)
+
+# DIAGNOSTIC ONLY — Stage 2 feasibility gate.
+# Tests whether YouTube blocks youtube-transcript-api fetches from a GitHub
+# Actions (datacenter) egress IP. workflow_dispatch only, no schedule.
+# References ZERO repo secrets. Does not touch the real pipeline, admin API,
+# Discord, or Anthropic. Throwaway — safe to delete the branch when done.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install youtube-transcript-api
+        run: |
+          pip install youtube-transcript-api
+          echo "installed version:"
+          pip show youtube-transcript-api | grep -i '^Version'
+
+      - name: Probe transcripts 3x (print egress IP before each attempt)
+        run: |
+          set +e   # do not fail-fast; run all 3 attempts then summarize
+          pass=0
+          fail=0
+          for attempt in 1 2 3; do
+            echo "===================================================="
+            echo "ATTEMPT $attempt of 3"
+            ip=$(curl -s https://api.ipify.org)
+            echo "runner public IP: $ip"
+            echo "----------------------------------------------------"
+            python test_transcripts.py
+            rc=$?
+            echo "----------------------------------------------------"
+            echo "attempt $attempt exit code: $rc"
+            if [ "$rc" -eq 0 ]; then
+              pass=$((pass + 1))
+            else
+              fail=$((fail + 1))
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "sleeping 20s before next attempt..."
+              sleep 20
+            fi
+          done
+          echo "===================================================="
+          echo "RUN SUMMARY: ${pass}/3 attempts fully passed, ${fail}/3 attempts had >=1 failure"
