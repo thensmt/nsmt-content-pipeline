@@ -122,22 +122,22 @@ if (( GO == 1 )); then
     echo "Run Step 1 first (no --go) to discover and confirm the videos." >&2
     exit 2
   fi
-  TV_ARGS=()
+  # Build one command array (always non-empty) so empty optional args don't trip
+  # `set -u` on macOS bash 3.2 ("${arr[@]}" on an empty array = unbound variable).
+  CMD=(uv run --with "$PIN" python -m ingestion.mystics_postgame_recap
+       --include-transcripts --llm-writer --review-drop --qa --claim-audit)
   for tv in "${TVIDEOS[@]}"; do
     if [[ "$tv" != *:* ]]; then
       echo "Bad --transcript-video '$tv' (expected VIDEO_ID:KIND, KIND=highlights|presser)." >&2
       exit 2
     fi
-    TV_ARGS+=(--transcript-video "$tv")
+    CMD+=(--transcript-video "$tv")
   done
-  DATE_ARGS=()
-  [[ -n "$DATE" ]] && DATE_ARGS+=(--as-of "$DATE")
+  [[ -n "$DATE" ]] && CMD+=(--as-of "$DATE")
 
   echo "STEP 2: generating LLM recap + Codex fact-check + Discord REVIEW drop (no public publish)..."
   echo "  overrides: ${TVIDEOS[*]}"
-  exec uv run --with "$PIN" python -m ingestion.mystics_postgame_recap \
-    --include-transcripts --llm-writer --review-drop --qa --claim-audit \
-    "${TV_ARGS[@]}" "${DATE_ARGS[@]}"
+  exec "${CMD[@]}"
 fi
 
 # ── Step 1: discover + confirm (no generation) ──────────────────────────────────

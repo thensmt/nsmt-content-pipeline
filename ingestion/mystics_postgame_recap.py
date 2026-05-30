@@ -348,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote normalized external editor response: {_display_path(normalized_response_path)}")
         print(f"Wrote external editor decision summary: {_display_path(external_editor_decision_path)}")
     if review_drop and llm_mode and not response_ingest_only:
-        _post_llm_review_drop(packet, llm_meta)
+        _post_llm_review_drop(packet, llm_meta, args.draft_dir / "external_review")
     if args.discord_review:
         review_path = write_discord_review_package(
             packet,
@@ -515,7 +515,7 @@ def _format_quote_links(quote_verification: dict) -> str:
     return "\n".join(lines)
 
 
-def _post_llm_review_drop(packet: dict, llm_meta: dict) -> None:
+def _post_llm_review_drop(packet: dict, llm_meta: dict, external_review_dir: Path) -> None:
     """Run the Codex fact-check on the LLM recap and post a REVIEW drop to the
     Mystics Discord channel via the existing proxy.
 
@@ -547,6 +547,19 @@ def _post_llm_review_drop(packet: dict, llm_meta: dict) -> None:
     except Exception as exc:  # noqa: BLE001 - review drop must survive a codex failure
         print(f"Codex fact-check unavailable ({type(exc).__name__}: {exc}); review drop will show UNKNOWN verdict.")
 
+    # Persist the Codex verdict + FULL report so the reasoning survives even if the
+    # Discord post fails or gets truncated.
+    try:
+        external_review_dir.mkdir(parents=True, exist_ok=True)
+        codex_path = external_review_dir / f"mystics-codex-review-{game.get('id', 'unknown')}.md"
+        codex_path.write_text(
+            f"# Codex fact-check - Mystics {game.get('id', '')}\n\n"
+            f"Verdict: {verdict}\n\nhuman_editor_required: true\n\n---\n\n{report}\n"
+        )
+        print(f"Wrote Codex fact-check: {_display_path(codex_path)} (verdict {verdict})")
+    except OSError as exc:
+        print(f"Could not write Codex review sidecar ({exc}).")
+
     # (b) Discord review drop via the existing proxy. No public-site save.
     try:
         from generate_content import post_recap_to_discord
@@ -562,13 +575,21 @@ def _post_llm_review_drop(packet: dict, llm_meta: dict) -> None:
         print("Discord review drop aborted: Mystics team entry not found.")
         return
 
+    # Discord sums ALL embed text in a message against a 6000-char cap. Bound the
+    # body (article embed) and the Codex report (fact-check embed) so both fit; the
+    # full recap is in the repo draft and the full Codex report in the sidecar above.
     quote_links = _format_quote_links(quote_verification)
-    discord_body = body
+    core = body
     if quote_links:
-        discord_body += "\n\nVerified quotes (transcript timestamps):\n" + quote_links
-    discord_body += (
+        core += "\n\nVerified quotes (transcript timestamps):\n" + quote_links
+    if len(core) > 2800:
+        core = core[:2800].rstrip() + " [...]"
+    discord_body = core + (
         "\n\nLLM REVIEW DROP. Human editor approval required before publish. "
-        "Not saved to the public site (review only)."
+        "Not saved to the public site (review only). Full draft + Codex report in the repo."
+    )
+    report_for_discord = (
+        report if len(report) <= 1900 else report[:1900].rstrip() + " [...truncated; full report in the Codex sidecar]"
     )
     summary = {"score": final_score}
     try:
@@ -582,7 +603,7 @@ def _post_llm_review_drop(packet: dict, llm_meta: dict) -> None:
         summary,
         game_date,
         fact_verdict=verdict,
-        fact_report=report,
+        fact_report=report_for_discord,
     )
     print(
         f"Discord review drop posted={posted} (channel_target={team.get('channel_target')}). "
