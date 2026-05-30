@@ -43,7 +43,11 @@ from style_guide import (
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
 DEFAULT_MODEL = "claude-sonnet-4-6"
-MAX_WEB_SEARCHES = 2
+# web_search is OFF for the Mystics writer. The 2026-05-29 live run showed it
+# inventing a coach ("Sindey Carter") and sourcing non-verbatim quotes; the
+# packet + transcript already carry every fact this recap needs. The generic
+# generate_content.py writer keeps its own web_search setting untouched.
+MAX_WEB_SEARCHES = 0
 MAX_TOKENS = 2048
 
 # Standard published Sonnet rates ($/token). Cache write = 1.25x input, cache
@@ -259,7 +263,7 @@ def _build_payload(packet: dict[str, Any], writer_profile: dict[str, Any]) -> di
     system_prefix = build_system_prefix(writer_profile)
     transcripts_block = build_transcripts_block(packet)
     facts_block = build_facts_block(packet)
-    return {
+    payload = {
         "model": model,
         "max_tokens": MAX_TOKENS,
         # Cache breakpoint 1: the static persona + style + guardrails prefix.
@@ -278,10 +282,14 @@ def _build_payload(packet: dict[str, Any], writer_profile: dict[str, Any]) -> di
                 ],
             }
         ],
-        "tools": [
-            {"type": "web_search_20250305", "name": "web_search", "max_uses": MAX_WEB_SEARCHES}
-        ],
     }
+    # web_search only when explicitly re-enabled (MAX_WEB_SEARCHES > 0). Omitting
+    # the tool entirely (rather than passing max_uses 0) keeps the request valid.
+    if MAX_WEB_SEARCHES > 0:
+        payload["tools"] = [
+            {"type": "web_search_20250305", "name": "web_search", "max_uses": MAX_WEB_SEARCHES}
+        ]
+    return payload
 
 
 def _default_transport(payload: dict[str, Any], api_key: str) -> dict[str, Any]:

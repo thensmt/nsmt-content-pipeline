@@ -17,7 +17,7 @@ import ingestion.mystics_postgame_recap as recap_cli
 from ingestion.espn_mystics import load_fixture_payload
 from ingestion.mystics_normalizer import build_postgame_packet, enrich_packet_with_transcripts
 from newsroom import llm_writer
-from newsroom.claim_audit import format_claim_evidence_audit, verify_quotes
+from newsroom.claim_audit import format_claim_evidence_audit, validate_person_names, verify_quotes
 from newsroom.llm_writer import _build_payload, _parse_output, build_system_prefix, write_recap
 from newsroom.qa import format_editorial_qa_report
 
@@ -154,8 +154,8 @@ class LLMWriterTests(unittest.TestCase):
         self.assertEqual(payload["messages"][0]["content"][0]["cache_control"], {"type": "ephemeral"})
         # the dynamic facts block is NOT cached
         self.assertNotIn("cache_control", payload["messages"][0]["content"][1])
-        self.assertEqual(payload["tools"][0]["name"], "web_search")
-        self.assertEqual(payload["tools"][0]["max_uses"], 2)
+        # web_search is disabled for the Mystics writer (MAX_WEB_SEARCHES = 0)
+        self.assertNotIn("tools", payload)
         self.assertEqual(payload["model"], "claude-sonnet-4-6")
 
     def test_system_prefix_carries_house_and_transcript_rules(self):
@@ -264,6 +264,59 @@ class AuditAndQAIntegrationTests(unittest.TestCase):
         bad_md = self._document('Amoore said, "We dominated from start to finish and never trailed once."')
         bad_report = format_editorial_qa_report(self.packet, article_markdown=bad_md)
         self.assertIn("fake_quote_risk", bad_report["item_reports"]["main_article"]["issue_flags"])
+
+
+class QuoteTimestampTests(unittest.TestCase):
+    def setUp(self):
+        self.packet = _enriched_packet()
+
+    def test_verified_quote_carries_timestamp_and_link(self):
+        # PRESSER_LINES[1] is the second segment -> start 3s (segments at i*3).
+        body = 'The message was clear: "Amoore set the tone early and we followed her lead."'
+        result = verify_quotes(body, self.packet)
+        quote = result["quotes"][0]
+        self.assertTrue(quote["verified"])
+        self.assertEqual(quote["timestamp"], "00:03")
+        self.assertEqual(quote["source_link"], "https://www.youtube.com/watch?v=PRES1&t=3s")
+        self.assertTrue(result["used_segments"])
+        self.assertIn("source_link", result["used_segments"][0])
+
+
+class NameValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.packet = _enriched_packet()
+
+    def test_wrong_head_coach_name_hard_fails(self):
+        # Real coach is Sydney Johnson; "Cindy Johnson" is the 2026-05-29 live error.
+        result = validate_person_names(self.packet, "Coach Cindy Johnson spoke about shot selection.")
+        self.assertTrue(result["hard_fail"])
+        self.assertTrue(result["requires_external_review"])
+        self.assertTrue(any(f["name"] == "Cindy Johnson" for f in result["flagged_names"]))
+
+    def test_correct_head_coach_not_flagged(self):
+        result = validate_person_names(self.packet, "Coach Sydney Johnson spoke after the game.")
+        self.assertFalse(result["hard_fail"])
+        self.assertEqual(result["flagged_names"], [])
+
+    def test_known_player_speaker_not_flagged(self):
+        result = validate_person_names(self.packet, "Georgia Amoore said the team needs cleaner looks.")
+        self.assertFalse(result["requires_external_review"])
+
+    def test_invented_speaker_flagged_for_review(self):
+        result = validate_person_names(self.packet, "Jane Quartermaine said the defense looked sharp.")
+        self.assertTrue(result["requires_external_review"])
+        self.assertFalse(result["hard_fail"])
+        self.assertTrue(any(f["context"] == "speaker" for f in result["flagged_names"]))
+
+    def test_audit_embeds_name_validation(self):
+        from newsroom.drafts import render_markdown_document
+
+        doc = render_markdown_document(
+            self.packet, headline="Mystics fall", article="Coach Cindy Johnson talked about the loss.", excerpt="x"
+        )
+        audit = format_claim_evidence_audit(self.packet, article_markdown=doc)
+        self.assertIn("name_validation", audit)
+        self.assertTrue(audit["name_validation"]["hard_fail"])
 
 
 if __name__ == "__main__":

@@ -130,7 +130,13 @@ def main(argv: list[str] | None = None) -> int:
         "--llm-writer",
         action="store_true",
         help="Generate the recap with the Maya Brooks LLM writer (default off). Also via NSMT_LLM_WRITER. "
-             "Falls back to the deterministic draft on API failure or an unsalvageable quote hard-fail.",
+             "Falls back to the deterministic draft on API failure or an unsalvageable quote/name hard-fail.",
+    )
+    parser.add_argument(
+        "--review-drop",
+        action="store_true",
+        help="LLM mode only: run the Codex fact-check and post a Discord REVIEW drop (human-gated, "
+             "no public-site publish). Also via NSMT_LLM_REVIEW_DROP. Requires codex CLI + Discord proxy creds.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Print normalized JSON and draft path preview without writing.")
     args = parser.parse_args(argv)
@@ -149,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     llm_mode = bool(args.llm_writer) or _env_flag("NSMT_LLM_WRITER")
+    review_drop = bool(args.review_drop) or _env_flag("NSMT_LLM_REVIEW_DROP")
     if llm_mode and not packet.get("media_transcripts"):
         print("Note: LLM writer is on but no transcripts are attached; the recap will use no quotes.")
     article_markdown, llm_meta = _resolve_article_markdown(packet, llm_mode=llm_mode)
@@ -340,6 +347,8 @@ def main(argv: list[str] | None = None) -> int:
         normalized_response_path = Path(external_editor_decision["normalized_response_path"])
         print(f"Wrote normalized external editor response: {_display_path(normalized_response_path)}")
         print(f"Wrote external editor decision summary: {_display_path(external_editor_decision_path)}")
+    if review_drop and llm_mode and not response_ingest_only:
+        _post_llm_review_drop(packet, llm_meta)
     if args.discord_review:
         review_path = write_discord_review_package(
             packet,
@@ -431,10 +440,29 @@ def _resolve_article_markdown(packet: dict, *, llm_mode: bool) -> tuple[str, dic
         meta["reason"] = "quote_hard_fail"
         return render_markdown_draft(packet), meta
 
+    from newsroom.claim_audit import validate_person_names
+
+    name_validation = validate_person_names(packet, recap["body"])
+    meta["name_validation"] = name_validation
+    if name_validation.get("hard_fail"):
+        print("LLM recap FAILED name validation (wrong or invented coach name). Falling back to deterministic draft.")
+        for flag in name_validation.get("flagged_names", []):
+            print(f"  bio error [{flag['context']}]: {flag['name']} - {flag['reason']}")
+        meta["reason"] = "name_hard_fail"
+        return render_markdown_draft(packet), meta
+
     markdown = render_markdown_document(
         packet, headline=recap["headline"], article=recap["body"], excerpt=recap["excerpt"]
     )
-    meta.update({"llm_used": True, "writer": f"llm:{recap.get('model')}"})
+    meta.update(
+        {
+            "llm_used": True,
+            "writer": f"llm:{recap.get('model')}",
+            "headline": recap["headline"],
+            "body": recap["body"],
+            "excerpt": recap["excerpt"],
+        }
+    )
 
     attributed = quote_verification.get("attributed_quotes") or []
     if attributed:
@@ -444,6 +472,11 @@ def _resolve_article_markdown(packet: dict, *, llm_mode: bool) -> tuple[str, dic
         )
         for quote in attributed:
             print(f"  [{quote.get('speaker')}] {quote['text']!r}")
+    name_flags = name_validation.get("flagged_names") or []
+    if name_flags:
+        print(f"NAME REVIEW: {len(name_flags)} unverified person name(s) flagged for human check:")
+        for flag in name_flags:
+            print(f"  [{flag['context']}] {flag['name']} - {flag['reason']}")
     return markdown, meta
 
 
@@ -462,10 +495,99 @@ def _write_quote_review_sidecar(packet: dict, llm_meta: dict, external_review_di
         "human_editor_required": True,
         "no_auto_publish": True,
         "quote_verification": quote_verification,
+        "name_validation": llm_meta.get("name_validation"),
     }
     path = external_review_dir / f"mystics-quote-review-{event_id}.json"
     path.write_text(json.dumps(sidecar, indent=2, sort_keys=True) + "\n")
     print(f"Wrote quote review (mandatory human review): {_display_path(path)}")
+
+
+def _format_quote_links(quote_verification: dict) -> str:
+    """One line per verified quote: timestamp, speaker, text, and YouTube deep link."""
+    lines = []
+    for quote in (quote_verification or {}).get("quotes", []):
+        if not quote.get("verified") or not quote.get("source_link"):
+            continue
+        speaker = quote.get("speaker") or "unattributed"
+        lines.append(
+            f'[{quote.get("timestamp", "00:00")}] {speaker}: "{quote.get("text", "")}" -> {quote["source_link"]}'
+        )
+    return "\n".join(lines)
+
+
+def _post_llm_review_drop(packet: dict, llm_meta: dict) -> None:
+    """Run the Codex fact-check on the LLM recap and post a REVIEW drop to the
+    Mystics Discord channel via the existing proxy.
+
+    Human-gated review artifact, NOT a live publish: no admin/site save happens
+    here. Lazy imports keep the deterministic path + tests free of
+    generate_content / requests / the codex CLI. Never raises.
+    """
+    if not llm_meta.get("llm_used"):
+        print("Review drop skipped: deterministic fallback in use (no LLM recap to drop).")
+        return
+    headline = llm_meta.get("headline") or "Mystics recap"
+    body = llm_meta.get("body") or ""
+    quote_verification = llm_meta.get("quote_verification") or {}
+    final_score = (packet.get("narrative") or {}).get("final_score", "")
+    game = packet.get("game") or {}
+
+    team = None
+    verdict, report = "UNKNOWN", "(codex fact-check not run)"
+    # (a) Codex fact-check (Mac-side, ChatGPT auth). Failure never blocks the drop.
+    try:
+        from scripts.codex_review import extract_verdict, review_with_codex
+        from generate_content import ALL_TEAMS, load_team_kb
+
+        team = next((t for t in ALL_TEAMS if t["name"] == "Washington Mystics"), None)
+        kb = load_team_kb(team) if team else {}
+        report = review_with_codex({"title": headline, "body": body}, team or {"name": "Washington Mystics"}, kb, packet)
+        verdict = extract_verdict(report)
+        print(f"Codex fact-check verdict: {verdict}")
+    except Exception as exc:  # noqa: BLE001 - review drop must survive a codex failure
+        print(f"Codex fact-check unavailable ({type(exc).__name__}: {exc}); review drop will show UNKNOWN verdict.")
+
+    # (b) Discord review drop via the existing proxy. No public-site save.
+    try:
+        from generate_content import post_recap_to_discord
+
+        if team is None:
+            from generate_content import ALL_TEAMS
+
+            team = next((t for t in ALL_TEAMS if t["name"] == "Washington Mystics"), None)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Discord review drop aborted: cannot import proxy ({exc}).")
+        return
+    if team is None:
+        print("Discord review drop aborted: Mystics team entry not found.")
+        return
+
+    quote_links = _format_quote_links(quote_verification)
+    discord_body = body
+    if quote_links:
+        discord_body += "\n\nVerified quotes (transcript timestamps):\n" + quote_links
+    discord_body += (
+        "\n\nLLM REVIEW DROP. Human editor approval required before publish. "
+        "Not saved to the public site (review only)."
+    )
+    summary = {"score": final_score}
+    try:
+        game_date = _parse_date(str(game.get("date", ""))[:10])
+    except (argparse.ArgumentTypeError, ValueError):
+        game_date = date.today()
+    posted = post_recap_to_discord(
+        f"[REVIEW] {final_score} | Mystics LLM Recap",
+        discord_body,
+        team,
+        summary,
+        game_date,
+        fact_verdict=verdict,
+        fact_report=report,
+    )
+    print(
+        f"Discord review drop posted={posted} (channel_target={team.get('channel_target')}). "
+        "human_editor_required=True; not published to the public site."
+    )
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ QA_ISSUE_FLAGS = [
     "headline_weak",
     "social_caption_weak",
     "memory_overreach",
+    "unverified_name",
 ]
 
 EXTERNAL_EDITOR_VERDICTS = [

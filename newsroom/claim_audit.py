@@ -152,6 +152,7 @@ def format_claim_evidence_audit(
         "summary": summary,
         "sentence_summary": sentence_summary,
         "quote_verification": verify_quotes(_main_article_text(article_markdown), packet),
+        "name_validation": validate_person_names(packet, _main_article_text(article_markdown)),
         "advisory_only": True,
         "human_editor_required": True,
         "no_auto_publish": True,
@@ -1281,33 +1282,57 @@ def _quote_speaker(body: str, pos: int, raw_len: int, names: dict[str, str]) -> 
     return None
 
 
+def _segment_link(video_id: str, start: Any) -> dict[str, Any]:
+    """Timestamp (mm:ss) + clickable deep link to the moment in the source video.
+    For editor review only; these never go into the published article body."""
+    seconds = int(float(start or 0))
+    minutes, secs = divmod(seconds, 60)
+    return {
+        "start_seconds": seconds,
+        "timestamp": f"{minutes:02d}:{secs:02d}",
+        "source_link": f"https://www.youtube.com/watch?v={video_id}&t={seconds}s",
+    }
+
+
+def _match_quote_segments(
+    quote_text: str, video_norm: list[dict[str, Any]], matched_video_id: str | None
+) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Return (video, segment) pairs from the matched video whose corrected text
+    overlaps the quote."""
+    qn = _normalize_for_match(quote_text)
+    pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for video in video_norm:
+        if matched_video_id and video["video_id"] != matched_video_id:
+            continue
+        for segment in video["segments"]:
+            seg_norm = _normalize_for_match(str(segment.get("text") or ""))
+            if not seg_norm:
+                continue
+            if seg_norm in qn or qn in seg_norm or _best_match_ratio(seg_norm, qn) >= 0.8:
+                pairs.append((video, segment))
+    return pairs
+
+
 def _used_segments(quotes_out: list[dict[str, Any]], video_norm: list[dict[str, Any]]) -> list[dict[str, Any]]:
     used: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
     for quote in quotes_out:
         if not quote.get("verified"):
             continue
-        qn = _normalize_for_match(quote["text"])
-        for video in video_norm:
-            if video["video_id"] != quote.get("matched_video_id"):
+        for video, segment in _match_quote_segments(quote["text"], video_norm, quote.get("matched_video_id")):
+            key = (video["video_id"], segment.get("start"), segment.get("text"))
+            if key in seen:
                 continue
-            for segment in video["segments"]:
-                seg_norm = _normalize_for_match(str(segment.get("text") or ""))
-                if not seg_norm:
-                    continue
-                if seg_norm in qn or qn in seg_norm or _best_match_ratio(seg_norm, qn) >= 0.8:
-                    key = (video["video_id"], segment.get("start"), segment.get("text"))
-                    if key not in seen:
-                        seen.add(key)
-                        used.append(
-                            {
-                                "video_id": video["video_id"],
-                                "kind": video["kind"],
-                                "start": segment.get("start"),
-                                "duration": segment.get("duration"),
-                                "text": segment.get("text"),
-                            }
-                        )
+            seen.add(key)
+            entry = {
+                "video_id": video["video_id"],
+                "kind": video["kind"],
+                "start": segment.get("start"),
+                "duration": segment.get("duration"),
+                "text": segment.get("text"),
+            }
+            entry.update(_segment_link(video["video_id"], segment.get("start")))
+            used.append(entry)
     return used
 
 
@@ -1348,19 +1373,24 @@ def verify_quotes(body: str, packet: dict[str, Any], *, threshold: float = QUOTE
                 best_ratio, best_vid, best_kind = ratio, video["video_id"], video["kind"]
         verified = bool(quote_norm) and best_ratio >= threshold
         speaker = _quote_speaker(body, pos, len(raw), names)
-        quotes_out.append(
-            {
-                "text": span,
-                "match_ratio": round(best_ratio, 3),
-                "verified": verified,
-                "gated": gated,
-                "matched_video_id": best_vid if verified else None,
-                "matched_kind": best_kind if verified else None,
-                "attributed": speaker is not None,
-                "speaker": speaker,
-                "requires_external_review": speaker is not None,
-            }
-        )
+        quote = {
+            "text": span,
+            "match_ratio": round(best_ratio, 3),
+            "verified": verified,
+            "gated": gated,
+            "matched_video_id": best_vid if verified else None,
+            "matched_kind": best_kind if verified else None,
+            "attributed": speaker is not None,
+            "speaker": speaker,
+            "requires_external_review": speaker is not None,
+        }
+        # Attach the transcript timestamp + deep link for verified quotes (review only).
+        if verified and best_vid:
+            pairs = _match_quote_segments(span, video_norm, best_vid)
+            if pairs:
+                earliest = min(pairs, key=lambda pair: float(pair[1].get("start") or 0))
+                quote.update(_segment_link(best_vid, earliest[1].get("start")))
+        quotes_out.append(quote)
 
     unverified = [q for q in quotes_out if q["gated"] and not q["verified"]]
     attributed = [q for q in quotes_out if q["attributed"]]
@@ -1376,4 +1406,151 @@ def verify_quotes(body: str, packet: dict[str, Any], *, threshold: float = QUOTE
         "unverified_quotes": unverified,
         "attributed_quotes": attributed,
         "used_segments": _used_segments(quotes_out, video_norm),
+    }
+
+
+# ── Roster / coach name-validation gate (Stage B) ─────────────────────────────
+#
+# After the 2026-05-29 live run wrote "Coach Cindy Johnson" (the Mystics coach is
+# Sydney Johnson), this gate checks person names presented in the body against the
+# known roster + coaching staff of BOTH teams (team KBs + the game's box-score
+# names). Unknown names are flagged for external review; a clearly wrong
+# head-coach name hard-fails (-> deterministic fallback in the orchestrator).
+
+# Capitalized name tokens only; case-sensitive name groups (no re.IGNORECASE).
+_COACH_NAME_RE = re.compile(r"\b(?:[Hh]ead\s+[Cc]oach|[Cc]oach)\s+([A-Z][A-Za-z.'-]+)\s+([A-Z][A-Za-z.'-]+)")
+_SPEAKER_NAME_RE = re.compile(
+    r"\b([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2})\s+(?:said|added|told|noted|explained|continued)\b"
+)
+_NON_PERSON_TOKENS = {
+    "the", "a", "an", "coach", "head", "seattle", "washington", "mystics", "storm", "sparks",
+    "dallas", "wings", "los", "angeles", "indiana", "fever", "new", "york", "liberty", "chicago",
+    "sky", "atlanta", "dream", "climate", "pledge", "arena", "center", "carefirst", "first",
+    "second", "third", "fourth", "quarter", "half", "game", "storm's", "january", "february",
+    "march", "april", "may", "june", "july", "august", "september", "october", "november",
+    "december", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+}
+
+
+def _slugify_team(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", str(name or "").lower()).strip("-")
+
+
+def _known_persons(packet: dict[str, Any], team_slugs: tuple[str, ...] = ("mystics",)):
+    """Build the known-person set from team KBs (both teams) + the game box scores.
+
+    Returns (token_map, full_set, head_coaches) where token_map maps a lowercased
+    name token (first or last, len>=3) to the set of full names that contain it,
+    full_set is lowercased full names, and head_coaches lists {first,last,full}.
+    """
+    token_map: dict[str, set[str]] = {}
+    full_set: set[str] = set()
+    head_coaches: list[dict[str, str]] = []
+
+    def add_person(full: Any) -> None:
+        name = str(full or "").strip()
+        if not name:
+            return
+        full_set.add(name.lower())
+        for part in re.split(r"\s+", name):
+            token = part.strip(".,'").lower()
+            if len(token) >= 3 and re.fullmatch(r"[a-z'-]+", token):
+                token_map.setdefault(token, set()).add(name)
+
+    slugs = list(team_slugs)
+    opponent = _opponent_team((packet.get("game") or {}).get("teams") or [])
+    opp_slug = _slugify_team(opponent.get("name") or "")
+    if opp_slug and opp_slug not in slugs:
+        slugs.append(opp_slug)
+
+    for slug in slugs:
+        path = PROJECT_ROOT / "data" / "teams" / f"{slug}.json"
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        for player in data.get("roster") or []:
+            add_person(player.get("name"))
+        head_coach = (data.get("head_coach") or {}).get("name")
+        if head_coach:
+            add_person(head_coach)
+            parts = [p for p in re.split(r"\s+", str(head_coach).strip()) if p]
+            if len(parts) >= 2:
+                head_coaches.append({"first": parts[0].lower(), "last": parts[-1].lower(), "full": head_coach})
+        for coach in data.get("coaching_staff") or []:
+            add_person(coach.get("name"))
+
+    # The game's ESPN box-score names are verified persons for THIS game (covers
+    # opponent players when no opponent KB file exists).
+    for team in (packet.get("game") or {}).get("teams") or []:
+        for row in team.get("box_score") or []:
+            add_person(row.get("player"))
+    for performer in (packet.get("narrative") or {}).get("top_performers") or []:
+        add_person(performer.get("player"))
+
+    return token_map, full_set, head_coaches
+
+
+def validate_person_names(packet: dict[str, Any], body: str) -> dict[str, Any]:
+    """Flag person names in the body that match no known roster/coaching-staff person.
+
+    - Coach-context names hard-fail when the head-coach name is clearly wrong
+      (right surname, wrong first name) or matches no known person at all.
+    - Speaker-context names ("X said") that match no known person are flagged for
+      external review (advisory), since an invented speaker is a fabrication risk.
+    """
+    token_map, full_set, head_coaches = _known_persons(packet)
+    flagged: list[dict[str, str]] = []
+    hard_fail = False
+
+    def token_known(token: str) -> bool:
+        return token.strip(".,'").lower() in token_map
+
+    for match in _COACH_NAME_RE.finditer(body or ""):
+        first, last = match.group(1), match.group(2)
+        full = f"{first} {last}"
+        fl, ll = first.lower(), last.lower()
+        wrong_head_coach = any(hc["last"] == ll and hc["first"] != fl for hc in head_coaches)
+        is_known = full.lower() in full_set or token_known(first) or token_known(last)
+        if wrong_head_coach:
+            flagged.append({
+                "name": full,
+                "context": "head_coach",
+                "severity": "hard_fail",
+                "reason": "head-coach name does not match the known coach: "
+                          + ", ".join(hc["full"] for hc in head_coaches),
+            })
+            hard_fail = True
+        elif not is_known:
+            flagged.append({
+                "name": full,
+                "context": "head_coach",
+                "severity": "hard_fail",
+                "reason": "coach name matches no known roster or coaching-staff person",
+            })
+            hard_fail = True
+
+    flagged_names_lower = {f["name"].lower() for f in flagged}
+    for match in _SPEAKER_NAME_RE.finditer(body or ""):
+        candidate = match.group(1).strip()
+        tokens = [t for t in re.split(r"\s+", candidate) if t]
+        if not tokens or tokens[0].lower() in _NON_PERSON_TOKENS:
+            continue
+        is_known = candidate.lower() in full_set or any(token_known(t) for t in tokens)
+        if not is_known and candidate.lower() not in flagged_names_lower:
+            flagged_names_lower.add(candidate.lower())
+            flagged.append({
+                "name": candidate,
+                "context": "speaker",
+                "severity": "review",
+                "reason": "attributed speaker matches no known roster or coaching-staff person",
+            })
+
+    return {
+        "known_person_count": len(full_set),
+        "flagged_names": flagged,
+        "hard_fail": hard_fail,
+        "requires_external_review": bool(flagged),
     }

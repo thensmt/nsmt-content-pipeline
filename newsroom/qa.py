@@ -41,6 +41,7 @@ QA_ISSUE_FLAGS = [
     "headline_weak",
     "social_caption_weak",
     "memory_overreach",
+    "unverified_name",
 ]
 
 def format_editorial_qa_report(
@@ -203,6 +204,8 @@ def _qa_issue_flags(packet: dict[str, Any], item_key: str, content: Any, text: s
         flags.append("unsupported_causality")
     if _qa_has_fake_quote_risk(packet, text):
         flags.append("fake_quote_risk")
+    if item_key == "main_article" and _qa_has_unverified_name(packet, text):
+        flags.append("unverified_name")
     if _qa_is_too_generic(item_key, text):
         flags.append("too_generic")
     if _qa_is_clickbaity(text):
@@ -285,6 +288,11 @@ def _qa_scores(item_key: str, text: str, issue_flags: list[str]) -> dict[str, in
             "source_support": 16,
             "unsupported_claim_risk": 22,
             "publish_readiness": 18,
+        },
+        "unverified_name": {
+            "factual_safety": 20,
+            "source_support": 10,
+            "publish_readiness": 16,
         },
     }
     scores = {
@@ -456,6 +464,19 @@ def _qa_has_fake_quote_risk(packet: dict[str, Any], text: str) -> bool:
     quote_like = re.search(r"[\"“][^\"”]{8,}[\"”]", text)
     quote_verbs = re.search(r"\b(said|told)\b", lower)
     return bool(quote_like and quote_verbs)
+
+
+def _qa_has_unverified_name(packet: dict[str, Any], text: str) -> bool:
+    """Flag when a coach/speaker name in the body matches no known roster or
+    coaching-staff person. Reader body only (strip frontmatter + trailing sections)."""
+    if not (packet.get("game") or {}).get("teams"):
+        return False
+    from newsroom.claim_audit import validate_person_names
+
+    body = re.sub(r"^\s*---.*?---\s*", "", text, flags=re.DOTALL)
+    if "**Excerpt:**" in body:
+        body = body.split("**Excerpt:**", 1)[0]
+    return bool(validate_person_names(packet, body).get("flagged_names"))
 
 
 def _qa_is_too_generic(item_key: str, text: str) -> bool:
