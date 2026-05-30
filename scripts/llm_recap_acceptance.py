@@ -31,6 +31,27 @@ MANUAL_OVERRIDE = [
 ]
 
 
+def _load_dotenv(path: str = ".env") -> None:
+    """Minimal .env loader (no python-dotenv): set os.environ for KEY=VALUE lines
+    that are not already set. Reads the value only into the environment, never
+    logs or prints it. Empty placeholder lines (KEY=) are ignored."""
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            for raw in handle:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and value and key not in os.environ:
+                    os.environ[key] = value
+    except OSError:
+        return
+
+
 def _load_base_payloads():
     try:
         payloads = fetch_espn_payloads(as_of=date(2026, 5, 27))
@@ -42,9 +63,10 @@ def _load_base_payloads():
 
 
 def main() -> int:
+    _load_dotenv()  # picks up ANTHROPIC_API_KEY from .env without the set -a ritual
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set. Cannot run the live LLM acceptance.")
-        print("Add it to .env (gitignored) and re-run, or export it for this shell.")
+        print("Paste your key after ANTHROPIC_API_KEY= in .env (gitignored) and re-run.")
         return 2
 
     payloads, base_label = _load_base_payloads()
@@ -103,11 +125,30 @@ def main() -> int:
     print(f"used_segments: {len(qv['used_segments'])} segment(s) traced")
     print()
 
-    # Cost + caching.
-    usage = recap["usage"]
-    cost = estimate_cost(usage, recap["model"])
-    print("--- TOKENS / COST / CACHING ---")
-    print(json.dumps({"model": recap["model"], "raw_usage": usage, "estimate": cost}, indent=2))
+    # Second call on the SAME packet within the 5-minute cache TTL: discard the
+    # content, capture only the usage to prove a cache_read hit. Costs pennies.
+    print("--- SECOND CALL (cache-read probe; output discarded) ---")
+    recap2 = write_recap(packet, writer_profile=packet["writer_profile"])
+    print("second call complete; usage captured")
+    print()
+
+    usage1 = recap["usage"]
+    usage2 = recap2["usage"]
+    cost1 = estimate_cost(usage1, recap["model"])
+    cost2 = estimate_cost(usage2, recap2["model"])
+    cache_write_1 = int(usage1.get("cache_creation_input_tokens") or 0)
+    cache_read_2 = int(usage2.get("cache_read_input_tokens") or 0)
+    print("--- TOKENS / COST / CACHING (dollar figures are ESTIMATES; token counts are exact) ---")
+    print(f"model: {recap['model']}")
+    print("CALL 1 (cache write expected):")
+    print(json.dumps({"raw_usage": usage1, "estimate_usd": cost1["estimated_usd"], "rate_note": cost1["rate_note"]}, indent=2))
+    print("CALL 2 (cache read expected):")
+    print(json.dumps({"raw_usage": usage2, "estimate_usd": cost2["estimated_usd"]}, indent=2))
+    print(
+        f"caching engaged: write_on_call1={cache_write_1 > 0} (cache_creation={cache_write_1}); "
+        f"read_on_call2={cache_read_2 > 0} (cache_read={cache_read_2})"
+    )
+    print(f"two-call total estimated cost: ${round(cost1['estimated_usd'] + cost2['estimated_usd'], 6)}")
     print()
 
     ok = (not qv["hard_fail"]) and em_dashes == 0 and uses_presser

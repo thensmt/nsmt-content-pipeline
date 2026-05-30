@@ -40,11 +40,13 @@ transcripts = [
 ]
 
 [tool.setuptools]
-# Importable library packages for the Mystics postgame pipeline. Top-level
-# scripts (generate_content.py, generate_baselines.py, style_guide.py) are run
-# directly and are not packaged here.
+# Importable library packages for the Mystics postgame pipeline.
 packages = [
     "ingestion",
     "ingestion.fetchers",
     "newsroom",
 ]
+# style_guide.py is a top-level module that newsroom/llm_writer.py imports for the
+# shared GUARDRAILS / style blocks, so it must be installed alongside the packages
+# (generate_content.py / generate_baselines.py stay script-only and are not packaged).
+py-modules = ["style_guide"]
