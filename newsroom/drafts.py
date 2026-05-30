@@ -11,22 +11,38 @@ from newsroom.common import DEFAULT_DRAFT_DIR, DEFAULT_PACKET_DIR, TEAM_ABBR, TE
 from newsroom.schemas import validate_normalized_game_packet
 
 def render_markdown_draft(packet: dict[str, Any]) -> str:
-    """Render a 600-800 word markdown recap draft from normalized facts."""
-    game = packet["game"]
-    narrative = packet["narrative"]
-    writer = packet["writer_profile"]
-    mystics = _team_by_id(game["teams"], TEAM_ID)
-    opponent = _opponent_team(game["teams"])
-
+    """Render a 600-800 word DETERMINISTIC markdown recap draft from normalized facts."""
     title = _headline(packet)
     article = _article_body(packet)
     excerpt = _excerpt(packet)
     word_count = len(re.findall(r"\b[\w'-]+\b", article))
     if not 600 <= word_count <= 800:
         raise ValueError(f"Generated recap draft is {word_count} words; expected 600-800")
+    return render_markdown_document(packet, headline=title, article=article, excerpt=excerpt)
+
+
+def render_markdown_document(
+    packet: dict[str, Any],
+    *,
+    headline: str,
+    article: str,
+    excerpt: str,
+) -> str:
+    """Wrap a headline + article body + excerpt in the standard Mystics recap markdown.
+
+    Shared by the deterministic writer (render_markdown_draft) and the LLM writer
+    (newsroom/llm_writer.py) so downstream QA / claim-audit / assets / review parse
+    the document identically (same frontmatter, ``**By ...**`` byline, ``**Excerpt:**``
+    marker, Editorial Notes, Narrative Signals, and Sources sections). This function
+    does NOT enforce a word count; the deterministic path keeps that gate.
+    """
+    game = packet["game"]
+    narrative = packet["narrative"]
+    writer = packet["writer_profile"]
+    opponent = _opponent_team(game["teams"])
 
     frontmatter = {
-        "title": title,
+        "title": headline,
         "date": game["date"][:10],
         "team": TEAM_NAME,
         "opponent": opponent["name"],
@@ -47,7 +63,7 @@ def render_markdown_draft(packet: dict[str, Any]) -> str:
 
     return (
         f"---\n{yamlish}\n---\n\n"
-        f"# {title}\n\n"
+        f"# {headline}\n\n"
         f"**By {writer['name']}, NSMT {writer['title']}**\n\n"
         f"{article}\n\n"
         f"**Excerpt:** {excerpt}\n\n"
@@ -69,7 +85,13 @@ def write_outputs(
     *,
     packet_dir: Path = DEFAULT_PACKET_DIR,
     draft_dir: Path = DEFAULT_DRAFT_DIR,
+    article_markdown: str | None = None,
 ) -> tuple[Path, Path]:
+    """Write the normalized packet + the markdown draft.
+
+    ``article_markdown`` lets a caller (the LLM writer path) supply a precomputed
+    document; when omitted, the deterministic render_markdown_draft is used.
+    """
     validate_normalized_game_packet(packet)
     packet_dir.mkdir(parents=True, exist_ok=True)
     draft_dir.mkdir(parents=True, exist_ok=True)
@@ -78,8 +100,9 @@ def write_outputs(
     packet_path = packet_dir / f"mystics_postgame_{game['id']}.json"
     draft_path = draft_dir / f"mystics-postgame-{game['date'][:10]}-{game['id']}.md"
 
+    markdown = article_markdown if article_markdown is not None else render_markdown_draft(packet)
     packet_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n")
-    draft_path.write_text(render_markdown_draft(packet) + "\n")
+    draft_path.write_text(markdown + "\n")
     return packet_path, draft_path
 
 

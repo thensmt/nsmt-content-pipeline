@@ -1,7 +1,14 @@
-"""Deterministic claim evidence audit for Mystics recap artifacts."""
+"""Deterministic claim evidence audit for Mystics recap artifacts.
+
+Stage B adds a verifiable-quote guardrail (verify_quotes): every quoted span in a
+draft must match the CORRECTED transcript text attached to the packet, or the
+audit hard-fails. This makes fabricated quotes structurally catchable; speaker
+attribution is flagged for mandatory human/external review.
+"""
 
 from __future__ import annotations
 
+import difflib
 import json
 import re
 from pathlib import Path
@@ -144,6 +151,7 @@ def format_claim_evidence_audit(
         "sentence_map": sentence_map,
         "summary": summary,
         "sentence_summary": sentence_summary,
+        "quote_verification": verify_quotes(_main_article_text(article_markdown), packet),
         "advisory_only": True,
         "human_editor_required": True,
         "no_auto_publish": True,
@@ -1164,3 +1172,208 @@ def _count_terms(lower_text: str, terms: list[str]) -> int:
     for term in _dedupe_strings([str(term).lower() for term in terms if str(term).strip()]):
         count += len(re.findall(rf"\b{re.escape(term)}\b", lower_text))
     return count
+
+
+# ── Verifiable-quote guardrail (Stage B) ──────────────────────────────────────
+#
+# Every quoted span in a draft must match the CORRECTED transcript text attached
+# to the packet (string verification is the HARD gate). Any quote that names a
+# speaker is additionally flagged for mandatory external/human review (attribution
+# is the human gate). verify_quotes() is deterministic and offline; it powers both
+# the claim audit's quote_verification field and the QA fake_quote_risk check.
+
+QUOTE_MATCH_THRESHOLD = 0.9
+_MIN_GATED_QUOTE_CHARS = 10
+
+_STRAIGHT_QUOTE_RE = re.compile(r'"([^"\n]{1,400})"')
+_CURLY_QUOTE_RE = re.compile("[“]([^”\n]{1,400})[”]")
+
+
+def extract_quotes(text: str) -> list[tuple[int, str]]:
+    """Return (position, inner_text) for every straight or curly quoted span."""
+    spans: list[tuple[int, str]] = []
+    for match in _STRAIGHT_QUOTE_RE.finditer(text or ""):
+        spans.append((match.start(), match.group(1)))
+    for match in _CURLY_QUOTE_RE.finditer(text or ""):
+        spans.append((match.start(), match.group(1)))
+    spans.sort(key=lambda item: item[0])
+    return spans
+
+
+def _normalize_for_match(text: str) -> str:
+    lowered = (text or "").lower()
+    lowered = (
+        lowered.replace("’", "'")
+        .replace("‘", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+    )
+    lowered = re.sub(r"[^a-z0-9' ]+", " ", lowered)
+    return re.sub(r"\s+", " ", lowered).strip()
+
+
+def _best_match_ratio(quote_norm: str, transcript_norm: str) -> float:
+    """Best local similarity of a normalized quote against a normalized transcript.
+
+    Fast path: exact containment -> 1.0. Otherwise slide a window the size of the
+    quote across the transcript and take the max SequenceMatcher ratio, which
+    tolerates minor ASR / punctuation drift without being diluted by transcript
+    length.
+    """
+    if not quote_norm or not transcript_norm:
+        return 0.0
+    if quote_norm in transcript_norm:
+        return 1.0
+    length = len(quote_norm)
+    window = max(length + 12, int(length * 1.3))
+    step = max(1, length // 4)
+    matcher = difflib.SequenceMatcher(autojunk=False)
+    matcher.set_seq1(quote_norm)
+    best = 0.0
+    for start in range(0, max(1, len(transcript_norm) - length + 1), step):
+        matcher.set_seq2(transcript_norm[start : start + window])
+        ratio = matcher.ratio()
+        if ratio > best:
+            best = ratio
+            if best >= 0.995:
+                break
+    return best
+
+
+def _person_names(packet: dict[str, Any], team_slugs: tuple[str, ...] = ("mystics",)) -> dict[str, str]:
+    """Map name token (lowercased full name or surname, len>=4) -> canonical full name.
+
+    Includes roster players AND coaching staff, since coaches speak at pressers.
+    """
+    mapping: dict[str, str] = {}
+
+    def add(full: Any) -> None:
+        name = str(full or "").strip()
+        if not name:
+            return
+        mapping.setdefault(name.lower(), name)
+        for part in re.split(r"\s+", name):
+            if len(part) >= 4 and re.fullmatch(r"[A-Za-z'-]+", part):
+                mapping.setdefault(part.lower(), name)
+
+    for slug in team_slugs:
+        path = PROJECT_ROOT / "data" / "teams" / f"{slug}.json"
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        for player in data.get("roster") or []:
+            add(player.get("name"))
+        add((data.get("head_coach") or {}).get("name"))
+        for coach in data.get("coaching_staff") or []:
+            add(coach.get("name"))
+    return mapping
+
+
+def _quote_speaker(body: str, pos: int, raw_len: int, names: dict[str, str]) -> str | None:
+    """Best-effort: return a canonical name if one appears near the quote."""
+    window = body[max(0, pos - 90) : pos + raw_len + 90].lower()
+    for token, full in names.items():
+        if re.search(rf"\b{re.escape(token)}\b", window):
+            return full
+    return None
+
+
+def _used_segments(quotes_out: list[dict[str, Any]], video_norm: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    used: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+    for quote in quotes_out:
+        if not quote.get("verified"):
+            continue
+        qn = _normalize_for_match(quote["text"])
+        for video in video_norm:
+            if video["video_id"] != quote.get("matched_video_id"):
+                continue
+            for segment in video["segments"]:
+                seg_norm = _normalize_for_match(str(segment.get("text") or ""))
+                if not seg_norm:
+                    continue
+                if seg_norm in qn or qn in seg_norm or _best_match_ratio(seg_norm, qn) >= 0.8:
+                    key = (video["video_id"], segment.get("start"), segment.get("text"))
+                    if key not in seen:
+                        seen.add(key)
+                        used.append(
+                            {
+                                "video_id": video["video_id"],
+                                "kind": video["kind"],
+                                "start": segment.get("start"),
+                                "duration": segment.get("duration"),
+                                "text": segment.get("text"),
+                            }
+                        )
+    return used
+
+
+def verify_quotes(body: str, packet: dict[str, Any], *, threshold: float = QUOTE_MATCH_THRESHOLD) -> dict[str, Any]:
+    """Verify every quoted span in ``body`` against the packet's CORRECTED transcripts.
+
+    A quoted, multi-word span (>= _MIN_GATED_QUOTE_CHARS) that does not match any
+    transcript region at >= ``threshold`` is an unverified quote and sets
+    ``hard_fail`` True. Quotes that name a known speaker set
+    ``requires_external_review``. Raw transcript text is preserved on the packet;
+    matching uses the corrected text per Stage B's rule.
+    """
+    transcripts = [
+        t
+        for t in (packet.get("media_transcripts") or [])
+        if isinstance(t, dict) and t.get("status") == "ok"
+    ]
+    video_norm = [
+        {
+            "video_id": str(t.get("video_id") or ""),
+            "kind": str(t.get("kind") or ""),
+            "norm": _normalize_for_match(t.get("corrected_text") or t.get("text") or ""),
+            "segments": t.get("corrected_segments") or t.get("segments") or [],
+        }
+        for t in transcripts
+    ]
+    names = _person_names(packet)
+
+    quotes_out: list[dict[str, Any]] = []
+    for pos, raw in extract_quotes(body):
+        span = raw.strip()
+        gated = len(span) >= _MIN_GATED_QUOTE_CHARS and " " in span
+        quote_norm = _normalize_for_match(span)
+        best_ratio, best_vid, best_kind = 0.0, None, None
+        for video in video_norm:
+            ratio = _best_match_ratio(quote_norm, video["norm"])
+            if ratio > best_ratio:
+                best_ratio, best_vid, best_kind = ratio, video["video_id"], video["kind"]
+        verified = bool(quote_norm) and best_ratio >= threshold
+        speaker = _quote_speaker(body, pos, len(raw), names)
+        quotes_out.append(
+            {
+                "text": span,
+                "match_ratio": round(best_ratio, 3),
+                "verified": verified,
+                "gated": gated,
+                "matched_video_id": best_vid if verified else None,
+                "matched_kind": best_kind if verified else None,
+                "attributed": speaker is not None,
+                "speaker": speaker,
+                "requires_external_review": speaker is not None,
+            }
+        )
+
+    unverified = [q for q in quotes_out if q["gated"] and not q["verified"]]
+    attributed = [q for q in quotes_out if q["attributed"]]
+    return {
+        "checked": len(quotes_out),
+        "gated_count": sum(1 for q in quotes_out if q["gated"]),
+        "verified_count": sum(1 for q in quotes_out if q["verified"]),
+        "unverified_count": len(unverified),
+        "threshold": threshold,
+        "hard_fail": bool(unverified),
+        "requires_external_review": bool(attributed),
+        "quotes": quotes_out,
+        "unverified_quotes": unverified,
+        "attributed_quotes": attributed,
+        "used_segments": _used_segments(quotes_out, video_norm),
+    }

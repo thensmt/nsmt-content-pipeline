@@ -201,7 +201,7 @@ def _qa_issue_flags(packet: dict[str, Any], item_key: str, content: Any, text: s
         flags.append("missing_top_performers")
     if _qa_has_unsupported_causality(text):
         flags.append("unsupported_causality")
-    if _qa_has_fake_quote_risk(text):
+    if _qa_has_fake_quote_risk(packet, text):
         flags.append("fake_quote_risk")
     if _qa_is_too_generic(item_key, text):
         flags.append("too_generic")
@@ -436,7 +436,20 @@ def _qa_has_unsupported_causality(text: str) -> bool:
     return False
 
 
-def _qa_has_fake_quote_risk(text: str) -> bool:
+def _qa_has_fake_quote_risk(packet: dict[str, Any], text: str) -> bool:
+    # When transcripts are attached, defer to the hard verifier: flag only when a
+    # quoted span cannot be matched to the corrected transcript. This keeps QA from
+    # nonsensically flagging legitimate verified presser quotes as fake.
+    if packet.get("media_transcripts"):
+        from newsroom.claim_audit import verify_quotes
+
+        # Verify the reader body only: strip YAML frontmatter (json.dumps wraps
+        # title/score values in quotes that are not transcript quotes) and the
+        # trailing editorial sections after the excerpt marker.
+        body = re.sub(r"^\s*---.*?---\s*", "", text, flags=re.DOTALL)
+        if "**Excerpt:**" in body:
+            body = body.split("**Excerpt:**", 1)[0]
+        return verify_quotes(body, packet)["unverified_count"] > 0
     lower = text.lower()
     if any(marker in lower for marker in ("told reporters", "said after", "said postgame", "quote from")):
         return True

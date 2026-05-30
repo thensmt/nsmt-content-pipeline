@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import date, datetime
 from pathlib import Path
 
@@ -113,6 +114,24 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Validate and store an external editor JSON response. Does not apply edits.",
     )
+    parser.add_argument(
+        "--include-transcripts",
+        action="store_true",
+        help="Attach the media_transcripts block (Mac-side / residential IP). Also via NSMT_INCLUDE_TRANSCRIPTS.",
+    )
+    parser.add_argument(
+        "--transcript-video",
+        action="append",
+        default=[],
+        metavar="VIDEO_ID:KIND",
+        help="Manual transcript override, repeatable (e.g. yvVYc7CfIBo:highlights). Bypasses channel discovery.",
+    )
+    parser.add_argument(
+        "--llm-writer",
+        action="store_true",
+        help="Generate the recap with the Maya Brooks LLM writer (default off). Also via NSMT_LLM_WRITER. "
+             "Falls back to the deterministic draft on API failure or an unsalvageable quote hard-fail.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print normalized JSON and draft path preview without writing.")
     args = parser.parse_args(argv)
 
@@ -120,9 +139,22 @@ def main(argv: list[str] | None = None) -> int:
         payloads = load_fixture_payload(args.fixture)
     else:
         payloads = fetch_espn_payloads(as_of=args.as_of, season=args.season)
-    packet = build_postgame_packet(payloads)
+
+    include_transcripts = bool(args.include_transcripts) or _env_flag("NSMT_INCLUDE_TRANSCRIPTS")
+    transcript_videos = _parse_transcript_videos(args.transcript_video)
+    packet = build_postgame_packet(
+        payloads,
+        include_transcripts=True if include_transcripts else None,
+        transcript_videos=transcript_videos,
+    )
+
+    llm_mode = bool(args.llm_writer) or _env_flag("NSMT_LLM_WRITER")
+    if llm_mode and not packet.get("media_transcripts"):
+        print("Note: LLM writer is on but no transcripts are attached; the recap will use no quotes.")
+    article_markdown, llm_meta = _resolve_article_markdown(packet, llm_mode=llm_mode)
+
     if args.dry_run:
-        markdown = render_markdown_draft(packet)
+        markdown = article_markdown
         preview_packet_path = args.packet_dir / f"mystics_postgame_{packet['game']['id']}.json"
         preview_draft_path = args.draft_dir / f"mystics-postgame-{packet['game']['date'][:10]}-{packet['game']['id']}.md"
         assets = generate_editorial_assets(packet) if args.generate_assets else None
@@ -244,9 +276,12 @@ def main(argv: list[str] | None = None) -> int:
         draft_path = args.draft_dir / f"mystics-postgame-{game['date'][:10]}-{game['id']}.md"
         print("Skipped packet/draft writes for external editor response ingestion.")
     else:
-        packet_path, draft_path = write_outputs(packet, packet_dir=args.packet_dir, draft_dir=args.draft_dir)
+        packet_path, draft_path = write_outputs(
+            packet, packet_dir=args.packet_dir, draft_dir=args.draft_dir, article_markdown=article_markdown
+        )
         print(f"Wrote normalized packet: {_display_path(packet_path)}")
-        print(f"Wrote markdown draft: {_display_path(draft_path)}")
+        print(f"Wrote markdown draft: {_display_path(draft_path)} [{llm_meta['writer']}]")
+        _write_quote_review_sidecar(packet, llm_meta, args.draft_dir / "external_review")
     assets = None
     asset_paths: dict[str, Path] = {}
     if args.generate_assets:
@@ -329,6 +364,108 @@ def _parse_date(value: str) -> date:
         return datetime.strptime(value, "%Y-%m-%d").date()
     except ValueError as exc:
         raise argparse.ArgumentTypeError("date must be YYYY-MM-DD") from exc
+
+
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _parse_transcript_videos(values: list[str] | None) -> list[dict[str, str]] | None:
+    parsed: list[dict[str, str]] = []
+    for value in values or []:
+        if ":" not in value:
+            print(f"Ignoring --transcript-video {value!r}; expected VIDEO_ID:KIND.")
+            continue
+        video_id, kind = value.split(":", 1)
+        video_id, kind = video_id.strip(), kind.strip().lower()
+        if video_id and kind:
+            parsed.append({"video_id": video_id, "kind": kind})
+    return parsed or None
+
+
+def _resolve_article_markdown(packet: dict, *, llm_mode: bool) -> tuple[str, dict]:
+    """Produce the recap markdown.
+
+    LLM writer when on, with a deterministic fallback on API failure or an
+    unsalvageable quote hard-fail; the deterministic render otherwise. The
+    deterministic path is always available as the fallback + comparison baseline.
+    """
+    from newsroom.drafts import render_markdown_document, render_markdown_draft
+
+    meta: dict = {
+        "llm_used": False,
+        "writer": "deterministic",
+        "reason": None,
+        "quote_verification": None,
+        "usage": None,
+        "model": None,
+    }
+    if not llm_mode:
+        return render_markdown_draft(packet), meta
+
+    try:
+        from newsroom.llm_writer import write_recap
+
+        recap = write_recap(packet, writer_profile=packet.get("writer_profile"))
+    except Exception as exc:  # any API / config failure -> deterministic fallback
+        print(f"LLM writer unavailable ({type(exc).__name__}: {exc}). Falling back to deterministic draft.")
+        meta["reason"] = f"llm_error: {exc}"
+        return render_markdown_draft(packet), meta
+
+    quote_verification = recap.get("quote_verification") or {}
+    meta.update(
+        {
+            "quote_verification": quote_verification,
+            "usage": recap.get("usage"),
+            "model": recap.get("model"),
+        }
+    )
+
+    if quote_verification.get("hard_fail"):
+        print(
+            f"LLM recap FAILED quote verification: {quote_verification.get('unverified_count')} "
+            "unverified quote(s). Falling back to deterministic draft."
+        )
+        for quote in quote_verification.get("unverified_quotes", []):
+            print(f"  unverified (ratio {quote['match_ratio']}): {quote['text']!r}")
+        meta["reason"] = "quote_hard_fail"
+        return render_markdown_draft(packet), meta
+
+    markdown = render_markdown_document(
+        packet, headline=recap["headline"], article=recap["body"], excerpt=recap["excerpt"]
+    )
+    meta.update({"llm_used": True, "writer": f"llm:{recap.get('model')}"})
+
+    attributed = quote_verification.get("attributed_quotes") or []
+    if attributed:
+        print(
+            f"MANDATORY EXTERNAL REVIEW: {len(attributed)} speaker-attributed quote(s) "
+            "require human verification before publish:"
+        )
+        for quote in attributed:
+            print(f"  [{quote.get('speaker')}] {quote['text']!r}")
+    return markdown, meta
+
+
+def _write_quote_review_sidecar(packet: dict, llm_meta: dict, external_review_dir: Path) -> None:
+    """Route the LLM recap's quote verification into the external_review area for
+    mandatory human review before any publish step. No-op for the deterministic path."""
+    quote_verification = llm_meta.get("quote_verification")
+    if not llm_meta.get("llm_used") or not quote_verification:
+        return
+    external_review_dir.mkdir(parents=True, exist_ok=True)
+    event_id = packet["game"]["id"]
+    sidecar = {
+        "schema_version": "mystics-quote-review/v0.1",
+        "event_id": event_id,
+        "writer": llm_meta.get("writer"),
+        "human_editor_required": True,
+        "no_auto_publish": True,
+        "quote_verification": quote_verification,
+    }
+    path = external_review_dir / f"mystics-quote-review-{event_id}.json"
+    path.write_text(json.dumps(sidecar, indent=2, sort_keys=True) + "\n")
+    print(f"Wrote quote review (mandatory human review): {_display_path(path)}")
 
 
 if __name__ == "__main__":

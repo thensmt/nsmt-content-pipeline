@@ -14,6 +14,7 @@
   ],
   "id": "maya-brooks",
   "league": "WNBA",
+  "model": "claude-sonnet-4-6",
   "name": "Maya Brooks",
   "publication": "NSMT",
   "title": "Washington Mystics AI beat writer",
